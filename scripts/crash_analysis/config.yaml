@@ -1,0 +1,62 @@
+# FESOM2 Crash Analysis Configuration
+# ====================================
+
+# Mesh configuration
+mesh:
+  path: /work/ab0246/a270092/pism_repro/experiments/movcav4/couple/submesh_1901-12-31T00:00:00
+
+# PyFESOM2 library
+pyfesom2:
+  path: /work/ab0246/a270092/software/pyfesom2
+
+# Data paths
+data:
+  # Directory containing the blowup file
+  work_dir: /work/ab0246/a270092/pism_repro/experiments/movcav4/run_awiesm3_19010101-19011231/work
+  # Blowup file name (relative to work_dir)
+  blowup_file: fesom.1901.oce.blowup.nc
+  # Output directory for generated plots
+  output_dir: /home/a/a270092/esm_tools/movcav4_crash_plots
+
+# Crash location (from error log)
+crash:
+  lon: 108.73
+  lat: -66.09
+
+# Region to plot (bounding box around crash)
+region:
+  lon_min: 100
+  lon_max: 118
+  lat_min: -70
+  lat_max: -62
+
+# Plot settings
+plotting:
+  # DPI for output images
+  dpi: 150
+  # Edge threshold for triangulation masking (degrees)
+  edge_threshold: 0.5
+  # Font sizes
+  fonts:
+    title: 22
+    subtitle: 18
+    axis_label: 16
+    tick_label: 14
+    colorbar_label: 16
+    colorbar_tick: 14
+  # Marker size for crash location
+  crash_marker_size: 20
+  # Line width for profiles
+  profile_linewidth: 2.5
+  # Marker size for profiles
+  profile_markersize: 6
+
+# Categories to plot (set to false to skip)
+categories:
+  tracers: true
+  ssh: true
+  ice: true
+  fluxes: true
+  vertical_velocity: true
+  mixing: true
+  layer_thickness: true
