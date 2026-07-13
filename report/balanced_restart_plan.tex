@@ -20,6 +20,17 @@ for settle-free continuation \quad (rev.~2, post-review)}
 \begin{document}
 \maketitle
 
+\begin{center}\fcolorbox{red}{red!8}{\parbox{0.93\textwidth}{\textbf{\textcolor{red}{SUPERSEDED (2026-07-13).}}
+The central hypothesis of this note --- that the blowup is a geostrophically unbalanced remapped
+state, curable by initialising the changed-cell velocity in thermal-wind balance --- has been
+\textbf{falsified by direct experiment}. The $\nabla p$ velocity init was implemented and failed its
+own offline balance gate (it is noisier than the nearest-neighbour fill), and it ships opt-in only.
+A \textbf{cold start on the same PISM cavity at the same timestep is stable}, so the geometry and the
+balance argument are not the issue; the killer is the \emph{dynamics seam} between the bit-exactly
+preserved evolved state and the patched changed nodes. See
+\texttt{report/dynamics\_seam\_2026-07-13.tex}. Retained for the record: the FESOM cavity pressure
+convention (\S2) and the verification gate remain correct and useful.}}\end{center}
+
 \begin{abstract}
 \noindent
 On every moving-cavity leg the FESOM restart is remapped onto a sub-mesh whose ice front has

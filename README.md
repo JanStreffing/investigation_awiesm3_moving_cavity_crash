@@ -15,20 +15,48 @@ so all components agree on the new coastline.
   (A recurring `voskin` floating-overflow variant still shows up state-dependently — see the
   report / `DATA.md`.)
 
-- **Blocker II — FESOM cavity-margin vertical-CFL blowup — LIVE, now root-caused.** ~5–10 model
-  days in, FESOM blows up with a vertical-CFL runaway ringing the cavity margin. **Root cause: a
-  geostrophically-unbalanced remapped state** — the mesh change plants fresh cavity fronts
-  against salty open water at the moving margin but *zeroes* the balancing current, so the
-  model's `t=0` adjustment grows `w` at the fronts. Every restart-*value* fix (freezing cap;
-  coherent T/S refill to zero density inversions) was tested and does **not** prevent it; 60 s
-  clears the *fast* vertical-CFL mode but a *slow* barotropic `eta_n` mode then grows over
-  ~10 days. **Proposed fix: initialise the changed-cell velocity in thermal-wind balance instead
-  of zero.**
+- **Blocker II — FESOM cavity-margin blowup — ROOT CAUSE REVISED 2026-07-13.**
+  ~4–10 model days in, FESOM blows up at the cavity margin. **Read
+  `report/dynamics_seam_2026-07-13.tex` — it supersedes the earlier root-cause claim.**
+
+  The earlier claim on this page ("a geostrophically-unbalanced remapped state; fix = thermal-wind
+  velocity init") is **FALSIFIED**. That fix was implemented and failed its own offline gate
+  (discrete ∇p at grid-scale fronts is noisier than the NN fill); it ships opt-in only
+  (`REMAP_GEOSTROPHIC=1`), off by default.
+
+  **What we now know, each from a direct control:**
+  - **The geometry is fine.** A **cold start on the very same PISM cavity, at the full 1200 s
+    timestep, is stable** (13+ days, worst CFLz 3.44 — vs 2.61 on the full-mesh control). The same
+    mesh warm-started from our remapped restart dies on day 4.
+  - **Ruled out:** coupling/OIFS (ocean-only reproduces it), CORE2 forcing shock (full-mesh control
+    stable 21 d), remap corruption (unchanged 204,970 nodes are **bit-exact**), the restart *fill
+    values* (5 independent strategies, all die), thin/pathological columns (submesh is *cleaner*
+    than the mother), **basal melt** (melt-OFF still dies), and **timestep** (60 s kills CFLz but
+    dies of η; 120 s dies day 8.9).
+  - **The killer is the remapped *dynamics seam*:** we reproduce the evolved restart bit-exactly on
+    the untouched 98.2% of nodes, then splice *patched* values at the 3840 changed nodes. The
+    runaway grows in the ring around the patch (every escalation site <0.22° from a changed node).
+    Zeroing the dynamics globally removes the crash — which is why all five fill strategies failed:
+    each varied the *patch* while leaving the *seam*.
+  - **A real bug found (but not the cure):** FESOM keeps η≡0 under ice, yet the remap gave the 987
+    nodes newly *under* ice their old open-ocean ssh (≈ −1.6 m). Fixed; the run still dies.
+
+  **We were testing the wrong change.** The CORE3(observed)→PISM swap is a one-off monster
+  (max |Δdraft| = **2711 m**; 1579 nodes flip to sub-ice) that production *never has to survive*.
+  What production must survive is a **10-yr PISM increment (mean |Δdraft| ≈ 22 m)** — and that has
+  **never been tested**.
+
+  **Current strategy:** cold-start the ocean on PISM's cavity (never remap across the swap), then
+  test the remap on a genuine 10-yr increment carrying a year of real spun-up dynamics. That is the
+  experiment that decides whether the coupling is viable (experiment `movcav12`).
 
 ## Repository layout
 
 ```
-report/            movcav_lsm_investigation.{tex,pdf}  — the full investigation log (read first)
+report/
+  dynamics_seam_2026-07-13.{tex,pdf}  — CURRENT root cause; supersedes the plan below (read first)
+  balanced_restart_plan.{tex,pdf}     — SUPERSEDED design note (thermal-wind init; hypothesis falsified)
+  movcav_lsm_investigation.{tex,pdf}  — the original investigation log (Blocker I, evolution view)
 figures/
   initstate/       step-1 (t=0 remapped state) plots — the root-cause evidence (movcav8 v4)
   evolution/       hourly-movie key frames + earlier crash-analysis overviews (movcav4)
