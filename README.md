@@ -50,6 +50,43 @@ so all components agree on the new coastline.
   test the remap on a genuine 10-yr increment carrying a year of real spun-up dynamics. That is the
   experiment that decides whether the coupling is viable (experiment `movcav12`).
 
+## Coupling plumbing (2026-07-13) — latent bugs exposed by a submesh chunk-1
+
+Making chunk-1 run on the **PISM-cavity submesh** (cold start) instead of the full mesh pushed a
+*submesh* leg through `couple_out` for the first time. Every previous run either ran chunk-1 on the
+**full mesh** (where these paths are trivially correct) or died early in chunk-3 (before ever
+reaching the end of a leg). That immediately exposed several latent bugs — none of them physics:
+
+| bug | cause | note |
+|---|---|---|
+| OASIS abort at ~day 300 | `A_Q_ice -> heat_ico` used `GSSPOS` conservation. Its correction is built from the summed source/target ratio; when the summed *target* residual is ~0 while the source residual is small-but-nonzero, it explodes (`gsspos sumdst is zero but sumsrc is not`, `mod_oasis_advance.F90`) | fixed: new `gauswgt_gsmart` transform (GSMART), `heat_ico` switched. Pre-existing. `FCO2_oce` + `awicm3.yaml` still on `gsspos` |
+| namcouple feom dim never patched | `fix_namcouple_feom_dim` read `${MAXMESH_DIR_fesom}`, which is assigned **inside `build_submesh`** — a *different* subjob/shell. So it was always unset, `full=''`, and the guard refused to patch. **On every leg, always.** | fixed: use `MAX_MESH` (what `env_fesom.py` actually exports). Invisible until a submesh leg reached the end-of-leg restart write (`av gsize nx ny mismatch`) |
+| `fesom2ice` broadcast error | passed `--FESOM_MESH ${MESH_DIR_fesom}` (static full mesh) while FESOM's output is on the submesh: `could not broadcast input array from shape (208810,) into shape (12,211567)` | fixed: take the mesh from the run's own `namelist.config` `MeshPath` |
+| `couple_namcouple` skipped on chunk 1 | correct when chunk-1 was a *full-mesh* leg; wrong once chunk-1 became a submesh leg | fixed (self-inflicted, 2026-07-13) |
+
+**Chunk-1 now completes a full year on the submesh** (worst CFLz ~3.75, production 1200 s timestep),
+hands off to PISM, and the workflow proceeds. **Chunk-3 — the remap of a real 10-yr PISM increment
+carrying a year of spun-up dynamics — remains the open, decisive test.**
+
+## Chunk-1 artifacts are pooled
+
+`couple_in`'s chunk-1 outputs are deterministic (they derive from PISM's *initial* geometry), so they
+are pre-staged at `/work/ab0246/a270092/input/fesom2/pism_cavity_ini/` (540 MB; submesh + `dist_1792`,
+OASIS grids/masks/areas/rmp, ICMGG, plit, remapped `rstas`/`rstos`). With
+`couple_in: skip_chunk_number: 1`, chunk-1 needs **no** `couple_dir` paths, so `esm_runscripts` can be
+run straight from the **login node** — it just submits the compute job (no ~7 min regen, no sbatch
+wrapper). `couple_namcouple` must still run. Chunk >=3 regenerates per PISM increment as before.
+
+## Known cost: the post-model tail
+
+After the model finishes, the leg spends **~9.5 min still holding all 45 nodes**: `tidy` moves
+**53 GB** of output (42 GB OIFS 6-hourly pressure-level fields + 11 GB FESOM), then `fesom2ice`
+(~87 s of real work) and `esm2pism` run. Two levers:
+- the runscript had **`parallel_file_movements: false`** (a login-node workaround) overriding the
+  awiesm3 default `'threads'` — so 53 GB was being copied **sequentially**. Removed.
+- the 42 GB of 6-hourly `u/v/w/q/t/z/vo` on pressure levels is not needed by PISM (it consumes only
+  the `*_for_ice` fields) and could be trimmed for coupling test runs.
+
 ## Repository layout
 
 ```
