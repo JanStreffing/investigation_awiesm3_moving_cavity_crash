@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  14 JUL 2026 07:15
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  14 JUL 2026 07:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -505,7 +505,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 File: ../figures/pism_change/pism_change_planview.png Graphic file (type png)
 <use ../figures/pism_change/pism_change_planview.png>
 Package pdftex.def Info: ../figures/pism_change/pism_change_planview.png  used 
-on input line 81.
+on input line 84.
 (pdftex.def)             Requested size: 472.31595pt x 205.6pt.
  [1
 
@@ -517,10 +517,10 @@ cm-super/cm-super-t1.enc}]
 File: ../figures/pism_change/pism_change_section.png Graphic file (type png)
 <use ../figures/pism_change/pism_change_section.png>
 Package pdftex.def Info: ../figures/pism_change/pism_change_section.png  used o
-n input line 85.
+n input line 88.
 (pdftex.def)             Requested size: 434.5298pt x 199.62817pt.
  [2 <../figures/pism_change/pism_change_planview.png> <../figures/pism_change/p
-ism_change_section.png>] [3]
+ism_change_section.png>] [3] [4]
 (./increment_test_2026-07-13.aux)
  ***********
 LaTeX2e <2025-11-01>
@@ -528,16 +528,16 @@ L3 programming layer <2025-11-06>
  ***********
 Package rerunfilecheck Info: File `increment_test_2026-07-13.out' has not chang
 ed.
-(rerunfilecheck)             Checksum: C1BF6C45F61153CAAA9BD5499B0F59CA;1201.
+(rerunfilecheck)             Checksum: 43B595650353F37388490F86E505179D;1212.
  ) 
 Here is how much of TeX's memory you used:
- 11067 strings out of 467538
- 169035 string characters out of 5410173
- 600329 words of memory out of 5000000
- 39812 multiletter control sequences out of 15000+600000
- 646730 words of font info for 92 fonts, out of 8000000 for 9000
+ 11072 strings out of 467538
+ 169090 string characters out of 5410173
+ 600431 words of memory out of 5000000
+ 39815 multiletter control sequences out of 15000+600000
+ 647431 words of font info for 93 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,9n,79p,298b,524s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,9n,79p,298b,541s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/amsf
 onts/cm/cmbx10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/
 type1/public/amsfonts/cm/cmmi10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/
@@ -547,23 +547,26 @@ levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy1
 0.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/
 amsfonts/cm/cmsy7.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fon
 ts/type1/public/amsfonts/cm/cmsy8.pfb></sw/spack-levante/texlive-live2025-uaw7o
-7/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></sw/spack-levante/texliv
-e-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx1095.pfb></sw/spac
-k-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx14
-40.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public
-/cm-super/sfbx1728.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fo
-nts/type1/public/cm-super/sfit1095.pfb></sw/spack-levante/texlive-live2025-uaw7
-o7/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></sw/spack-levante/texli
-ve-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></sw/spa
+7/texmf-dist/fonts/type1/public/cm-super/sfbi1095.pfb></sw/spack-levante/texliv
+e-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></sw/spac
+k-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx10
+95.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public
+/cm-super/sfbx1440.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fo
+nts/type1/public/cm-super/sfbx1728.pfb></sw/spack-levante/texlive-live2025-uaw7
+o7/texmf-dist/fonts/type1/public/cm-super/sfit1095.pfb></sw/spack-levante/texli
+ve-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></sw/spa
 ck-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm1
-200.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/publi
-c/cm-super/sfti1000.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/f
-onts/type1/public/cm-super/sfti1095.pfb></sw/spack-levante/texlive-live2025-uaw
-7o7/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb>
-Output written on increment_test_2026-07-13.pdf (3 pages, 784414 bytes).
+095.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/publi
+c/cm-super/sfrm1200.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/f
+onts/type1/public/cm-super/sfti1000.pfb></sw/spack-levante/texlive-live2025-uaw
+7o7/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></sw/spack-levante/texl
+ive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb></sw/sp
+ack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sftt
+1095.pfb>
+Output written on increment_test_2026-07-13.pdf (4 pages, 839675 bytes).
 PDF statistics:
- 149 PDF objects out of 1000 (max. 8388607)
- 102 compressed objects within 2 object streams
- 13 named destinations out of 1000 (max. 500000)
+ 164 PDF objects out of 1000 (max. 8388607)
+ 112 compressed objects within 2 object streams
+ 14 named destinations out of 1000 (max. 500000)
  59 words of extra memory for PDF output out of 10000 (max. 10000000)
 

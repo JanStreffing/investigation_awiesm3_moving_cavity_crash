@@ -57,7 +57,7 @@ The cold-start strategy worked: chunk-1 ran a clean model year on PISM's cavity,
 across a real PISM increment**. It crashed on day 15.7 — but the *way* it crashed inverts the
 conclusion.
 
-**The ocean is doing fine. PISM is collapsing.**
+**PISM is collapsing, and our ocean reacts violently to it.**
 
 | | monster swap (CORE3→PISM) | real increment (this leg) |
 |---|---|---|
@@ -91,15 +91,28 @@ removed outright** (magenta) ring the *entire* Antarctic margin.
 increment is a gentle ~22 m change, which motivated the whole "sidestep the swap and the increments
 will be fine" strategy, was **wrong**.
 
-**The encouraging half:** of the 1399 fully-opened nodes, only **17 rang**. The ocean absorbed ~99%
-of even this.
+**Read the 99% soberly.** Of the 1399 fully-opened nodes only 17 rang, and CFLz peaked then
+decayed — so the remap machinery is doing better than a "crashed at day 15" headline suggests.
+**But the run still crashed.** What this tells us is that **our ocean reacts violently to ice-shelf
+and cavity changes mid-run**: a handful of columns where the ice vanishes outright is enough to kill
+a leg. Absorbing 99% of the change is not a passing grade when the remaining 1% is fatal. **This is
+not good news.**
 
-**So the priority moves upstream:**
-1. **Look at PISM.** A run shedding 24% of its floating area per decade is the anomaly. **In
-   particular, check the sub-shelf melt we feed it** — if our ocean hands PISM unrealistic melt,
-   PISM's collapse is *our* doing.
-2. A per-leg **|Δulev| cap** is worth having as a robustness guard, but it papers over a PISM problem.
-3. The **fully-opened column** is now a narrow, well-defined case worth handling explicitly.
+**Where to go from here** — two branches of work, plus the thing that would actually fix it:
+
+1. **Find out why PISM is collapsing, and stop it.** A run shedding 24% of its floating area in a
+   decade is the anomaly and everything downstream inherits it. **First thing to check is the
+   sub-shelf melt *we* feed PISM** — if our ocean hands it unrealistic melt, PISM's collapse is our
+   own doing.
+2. **Try to stabilise the ocean locally**: reduce the ocean timestep and/or raise viscosity *in the
+   neighbourhood of the changed columns*. A mitigation, not a cure — but it may keep the coupling
+   running while (1) is sorted. Note the *global* knobs are exhausted: a global timestep cut does not
+   help (60 s merely swaps the CFLz symptom for an η one).
+3. **The lasting way forward: compute physically consistent fields for the newly opened cavity.**
+   Patching such a column with plausible *values* is exactly what does not work (five fill
+   strategies, all dead). What is needed is a state for the newly opened water that is *dynamically
+   consistent with its surroundings*, not merely a sensible number in each cell. That is the real
+   problem, and the one worth solving.
 
 Also fixed on the way (esm_tools `eef4f6db`): the remap **manufactured** a −45 °C value via an
 **unbounded linear extrapolation** below the old seabed (a value present nowhere in the source).

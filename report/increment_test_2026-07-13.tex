@@ -8,7 +8,7 @@
 \graphicspath{{../figures/}}
 
 \title{\vspace{-1.5em}\textbf{The real increment test}\\[0.2em]
-       \large the ocean absorbs 99\% of it --- but PISM is collapsing\\[0.3em]
+       \large PISM is collapsing, and our ocean reacts violently to it\\[0.3em]
        \normalsize\textit{2026-07-13, evening. Follows \texttt{dynamics\_seam\_2026-07-13}.}}
 \author{}
 \date{}
@@ -30,6 +30,9 @@ massive disequilibrium and is shedding its ice shelves}. The Ross front retreats
 of latitude ($\approx$440~km) in a \emph{single} 10-yr leg, and \textbf{1399 nodes have their ice
 removed outright}, ringing the whole Antarctic margin. The ``gentle 22\,m increment'' framing used
 to justify this whole strategy was wrong.
+\textbf{This is not good news}: the run still crashed, and what it tells us is that our ocean reacts
+violently to ice-shelf and cavity changes mid-run. Absorbing 99\% of the change is not a passing
+grade when the remaining 1\% is fatal.
 \end{abstract}
 
 \section{What the increment test actually did}
@@ -117,15 +120,23 @@ PISM, started from the inherited spin-up state, is \textbf{not in equilibrium}: 
 shelves catastrophically. No ocean model should be expected to swallow 440~km of ice-front retreat
 in one coupling step.
 
-\section{The encouraging half}
+\section{This is not good news}\label{sec:sober}
 
-Of the \textbf{1399} nodes whose ice was removed outright, only \textbf{17 rang}. The ocean absorbed
-$\sim$99\% of even \emph{this}, with the vertical-CFL transient peaking and then decaying. The remap
-machinery --- which we have now shown to be bit-exact on unchanged nodes, inversion-free,
-geometrically sound, and (after the fix below) free of manufactured values --- is performing far
-better than a ``crashed at day 15'' headline suggests.
+It is tempting to read the numbers optimistically: of the \textbf{1399} nodes whose ice was removed
+outright, only \textbf{17 rang}; the ocean absorbed $\sim$99\% of even \emph{this}; the vertical-CFL
+transient peaked and \emph{decayed}. All true, and it does mean the remap machinery --- bit-exact on
+unchanged nodes, inversion-free, geometrically sound, and (after \S\ref{sec:extrap}) free of
+manufactured values --- is performing better than a ``crashed at day 15'' headline suggests.
 
-\section{A real remap bug fixed on the way}
+\medskip\noindent
+\textbf{But the honest reading is negative.} The run still \emph{crashed}. It got further, and it
+crashed. What we have learned is that \textbf{our ocean reacts violently to ice-shelf and cavity
+changes mid-run}: it does not need many bad nodes to kill a leg, and a handful of columns where the
+ice vanishes outright is enough. A coupled setup in which the ice sheet is \emph{allowed} to change
+its cavity every 10~years cannot be one leg's worth of extreme nodes away from failure. Absorbing
+99\% of the change is not a passing grade when the remaining 1\% is fatal.
+
+\section{A real remap bug fixed on the way}\label{sec:extrap}
 
 The first attempt at this leg died at \textbf{mstep 1} with \code{found temperture becomes NaN or
 <-5.0, >60}. The remapped restart contained $-45.02^\circ$C --- a value that exists \emph{nowhere} in
@@ -147,18 +158,35 @@ nodes) exercises this path for the first time. (esm\_tools \code{eef4f6db}.)
 
 \section{Where this leaves the strategy}
 
+Two branches of work, plus the thing that would actually fix it for good.
+
 \begin{enumerate}
-\item \textbf{Look at PISM first.} A run whose shelves collapse 24\%/decade is the anomaly. If PISM
-      were equilibrated, the per-leg change would genuinely be small and the ocean side would very
-      likely just work. \textbf{In particular: check the sub-shelf melt we are feeding PISM.} If our
-      ocean hands PISM unrealistic melt, PISM's collapse is \emph{our} doing --- and that closes the
-      loop.
-\item \textbf{A per-leg $|\Delta\mathrm{ulev}|$ cap} is worth having as a robustness guard (defer the
-      extreme tail across legs, so the ocean never sees 16 levels open at once). But it papers over
-      a PISM problem rather than fixing one.
-\item \textbf{The fully-opened column} is now a narrow, well-defined case (donor water + zero
-      velocity + $\eta$ against still-cavity neighbours). Worth handling explicitly regardless.
+\item \textbf{Find out why PISM is collapsing, and stop it.} A run shedding 24\% of its floating area
+      in a decade is the anomaly, and everything downstream inherits it. \textbf{The first thing to
+      check is the sub-shelf melt \emph{we} feed PISM}: if our ocean is handing it unrealistic melt,
+      then PISM's collapse is our own doing, and the loop closes. Until PISM is behaving, the ocean
+      is being asked an unreasonable question every leg.
+
+\item \textbf{Try to stabilise the ocean locally.} Reduce the ocean timestep and/or raise the
+      viscosity \emph{in the neighbourhood of the changed columns} and see whether the transient can
+      be damped enough to survive. This is a mitigation, not a cure --- but if a handful of extreme
+      nodes is all that stands between us and a completed leg, it may be enough to keep the coupling
+      running while (1) is sorted out. Note the global knobs are already exhausted: a global timestep
+      cut does \emph{not} help (60\,s merely swaps the CFLz symptom for an $\eta_n$ one).
+
+\item \textbf{The lasting way forward: compute physically consistent fields for the newly opened
+      cavity.} The 17 failures all have the same shape --- a column where the ice vanishes, handed
+      donor water, zero velocity, and a free surface that cannot match its still-cavity neighbours
+      ($\eta \equiv 0$ under ice). Patching such a column with plausible \emph{values} is what we
+      have been doing, and it is exactly what does not work (five fill strategies, all dead; see
+      \texttt{dynamics\_seam\_2026-07-13}). What is needed is a state for the newly opened water that
+      is \emph{dynamically consistent with its surroundings} --- not merely a sensible number in each
+      cell. That is the real problem, and it is the one worth solving.
 \end{enumerate}
+
+\noindent
+A per-leg cap on $|\Delta\mathrm{ulev}|$ (defer the extreme tail across legs) remains available as a
+blunt robustness guard, but it papers over (1) rather than fixing anything.
 
 \section{Method note (continued)}
 
