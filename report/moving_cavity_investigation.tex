@@ -1,0 +1,325 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,longtable,xcolor,hyperref,graphicx}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\dead}[1]{\textcolor{gray}{\sout{#1}}}
+\setlength{\parskip}{0.35em}
+\graphicspath{{../figures/}}
+
+\title{\vspace{-1.5em}\textbf{AWI-ESM3 $\leftrightarrow$ PISM moving-cavity coupling}\\[0.3em]
+       \large the investigation log\\[0.4em]
+       \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
+\author{}
+\date{Last updated: 2026-07-13}
+
+\begin{document}
+\maketitle
+\vspace{-2em}
+
+\begin{abstract}
+\noindent
+\textbf{Where we are.} PISM is in massive disequilibrium and is shedding its ice shelves: it loses
+\textbf{24\% of its floating area per decade}, \textbf{1399 mesh nodes lose their ice entirely in a
+single 10-yr leg}, and the Ross front retreats $\approx$440~km. Our ocean \textbf{reacts violently}
+to that: it absorbs $\sim$99\% of the change, but the remaining 1\% (columns where the ice vanishes
+outright) is enough to kill the leg. \textbf{This is not good news.} Absorbing 99\% is not a passing
+grade when the rest is fatal.
+
+\medskip\noindent
+\textbf{Two root causes we published and later falsified} are struck through below. The current
+understanding: the cavity \emph{geometry} is fine (a cold start on it is stable at the production
+timestep); the killer is the \emph{seam} in our remapped restart, where patched values at the changed
+nodes meet a fully evolved dynamical state everywhere else.
+\end{abstract}
+
+\tableofcontents
+
+%======================================================================
+\section{Blocker I --- OIFS step-0 coastline crash (RESOLVED)}
+
+A floating-point NaN struck exactly the coastline cells whose land--sea type flipped. \code{ocp-tool}
+half-converted a flipped cell (only mask + soil type), OIFS re-ingested the inconsistency from the
+regenerated \code{ICMGG} and NaN'd in moist physics. Fixed by a masked nearest-neighbour rebuild of
+each flipped cell's full column, plus the \code{ICMGG} re-ingest (\code{PUTALLFLDS\_M} in
+\code{reresf\_part2.F90}). A recurring \code{voskin} floating-overflow variant shows up
+state-dependently and was traced to the native-pipeline \code{ICMGG} coastal lsm.
+
+%======================================================================
+\section{Blocker II --- FESOM cavity-margin blowup}
+
+\subsection{Two root causes we got wrong}
+
+\begin{center}\fcolorbox{red}{red!8}{\parbox{0.95\textwidth}{%
+\textbf{\textcolor{red}{FALSIFIED \#1 --- ``a geostrophically-unbalanced remapped state''.}}
+\dead{The mesh change plants fresh cavity fronts against salty open water but zeroes the balancing
+current; initialise the changed-cell velocity in thermal-wind balance instead of zero.} That fix was
+implemented (per-level $\mathbf{u}_g = (1/f\rho_0)\,\hat{z}\times\nabla p$, using FESOM's own cavity
+pressure convention) and \textbf{failed its own offline gate}: the discrete $\nabla p$ at grid-scale
+fronts is \emph{noisier} than the nearest-neighbour fill. It ships opt-in only
+(\code{REMAP\_GEOSTROPHIC=1}), off by default.
+
+\medskip
+\textbf{\textcolor{red}{FALSIFIED \#2 --- ``the sub-ice free-surface BC violation''.}}
+\dead{FESOM keeps $\eta \equiv 0$ under ice, yet the remap gave the 987 newly-sub-ice nodes their old
+open-ocean ssh ($\approx -1.6$~m); fixing that will cure the blowup.} A \textbf{real bug}, and fixed
+(esm\_tools \code{b17fb5c8}) --- but \textbf{not the cure}: the fixed run still died on day 4.4.
+}}\end{center}
+
+\subsection{Every hypothesis, and the experiment that killed it}
+
+\begin{longtable}{@{}p{4.6cm}p{7.0cm}p{3.2cm}@{}}
+\toprule
+\textbf{Hypothesis} & \textbf{Experiment} & \textbf{Verdict} \\
+\midrule
+\endhead
+Atmosphere / OASIS / coupling & ocean-only standalone FESOM reproduces the crash exactly
+  (day~4, CFLz~9.24) & \textbf{ruled out} \\
+CORE2 forcing shock (standalone artefact) & full-mesh control, \emph{same} forcing + native
+  restart: stable 21~d, worst CFLz \textbf{2.61} & \textbf{ruled out} \\
+Remap corrupting the state & remapped vs.\ source over the 204\,970 unchanged nodes:
+  $\max|\Delta| = \mathbf{0.000}$ for \code{temp}, \code{salt}, \code{ssh}, \code{hnode} &
+  \textbf{ruled out} (bit-exact) \\
+The restart \emph{fill values} at changed nodes & five independent fill strategies
+  (donor, coherent-column, shelf-base hold, NN velocity, full balance hygiene) &
+  \textbf{ruled out} (all die $\approx$day 4) \\
+Pathological thin water columns & submesh min wet column $30$~m vs.\ mother's $25$~m; zero
+  1--2-layer columns & \textbf{ruled out} (submesh is \emph{cleaner}) \\
+Basal melt flux shock & \code{cavity\_flux\_ramp\_days} implemented; melt effectively
+  \textbf{OFF} still dies (mstep 328) & \textbf{ruled out} \\
+Timestep / unresolved $w$ & 1200\,s: CFLz kill day 4.0. 60\,s: \textbf{0} CFLz warnings, dies
+  day 4.4 via $\eta_n$. 120\,s: dies day 8.9 & \textbf{ruled out} \\
+Sub-ice free-surface BC & real bug, fixed; run still dies day 4.4 & \textbf{not the cure} \\
+\textbf{Cavity geometry itself} & \textbf{cold start on the same PISM submesh @1200\,s:
+  STABLE, day 13+, worst CFLz 3.44} & \textbf{ruled out} \\
+\bottomrule
+\end{longtable}
+
+\subsection{The decisive control: a cold start on PISM's cavity is stable}\label{sec:cold}
+
+Same submesh, same forcing, same production timestep --- only the initial state differs:
+
+\begin{center}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Run & $\Delta t$ & Initial state & Outcome \\
+\midrule
+full-mesh control & 1200\,s & native spun-up CORE3 restart & stable 21\,d, worst CFLz \textbf{2.61} \\
+\textbf{PISM cavity, cold} & \textbf{1200\,s} & \textbf{cold (climatology, at rest)} &
+  \textbf{stable 13+\,d, worst CFLz 3.44} \\
+PISM cavity, warm & 1200\,s & our remapped restart & \textbf{dies day 4.0}, CFLz 9.24 \\
+PISM cavity, warm & \phantom{0}120\,s & our remapped restart & dies day 8.9 ($\eta_n$) \\
+PISM cavity, warm & \phantom{00}60\,s & our remapped restart & dies day 4.4 ($\eta_n$, 0 CFLz) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+\textbf{The ocean has no difficulty living in PISM's cavity at the production timestep.} Whatever is
+wrong is in \emph{our restart}, not in the mesh, the physics, or the coupling.
+
+\subsection{What is actually wrong: the dynamics seam}\label{sec:seam}
+
+The remap produces an internally inconsistent state: on the \textbf{unchanged nodes (98\%)} it
+reproduces the evolved restart \textbf{bit-exactly} (a fully developed, balanced dynamic state:
+$\mathbf{u}$, $\eta$, AB history); on the \textbf{changed nodes} it substitutes \emph{patched} values.
+The two regions are mutually incompatible, and the \textbf{seam between them} is the instability.
+Zeroing the dynamics globally removes the crash (the ocean re-derives its own balanced flow from
+rest) --- which is exactly why all five fill strategies failed: each varied the \emph{patch} while
+leaving the \emph{seam}. Zero-dynamics is not a production fix: discarding the ocean's circulation
+every leg is unacceptable.
+
+%======================================================================
+\section{The real increment test (2026-07-13)}\label{sec:increment}
+
+Cold-starting the ocean on PISM's cavity sidesteps the one-off CORE3(observed)$\to$PISM swap
+($\max|\Delta\mathrm{draft}| = 2711$~m) entirely. That was done: chunk~1 ran a clean model year, PISM
+ran its 10 years, and the remap was finally asked to carry \emph{a year of spun-up ocean dynamics
+across a real PISM increment}. It crashed on day~15.7.
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+ & \textbf{one-off swap} (CORE3$\to$PISM) & \textbf{real increment} \\
+\midrule
+CFLz over time & $4.46 \to 6.43 \to 7.25 \to 9.24$ & $5.26 \to \mathbf{5.78} \to 5.40 \to \mathbf{4.15}$ \\
+               & \textbf{monotonic runaway} & \textbf{peaks, then decays} \\
+died at        & day $\sim$4 & day 15.7 \\
+$\eta_n$ NaN   & yes & \textbf{none} --- all 209\,172 nodes finite \\
+$|\eta|>3$ nodes & 3611, basin-wide & \textbf{17}, one cluster, \textbf{all changed nodes} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+All 17 ringing nodes share one signature: \code{ulev 17 $\to$ 1} --- \textbf{16 ocean levels opening
+at once}, i.e.\ the ice shelf above them removed \emph{entirely}. Their $\eta$ alternates in sign
+($+24.4, -17.9, +15.9, +8.3$): a grid-scale \textbf{checkerboard}, not a basin mode.
+
+%----------------------------------------------------------------------
+\subsection{The finding: PISM is collapsing}\label{sec:pism}
+
+\begin{center}\includegraphics[width=\textwidth]{pism_change/pism_change_planview.png}\end{center}
+\begin{center}\includegraphics[width=0.92\textwidth]{pism_change/pism_change_section.png}\end{center}
+
+\noindent
+The cutaway is the clearest statement of the problem: the ice base goes from $-200\ldots-280$~m to
+\textbf{zero (open ocean)} across the whole span $-82.2^\circ$ to $-78.2^\circ$~latitude.
+\textbf{The Ross ice-shelf front retreats $\approx$440~km in ONE 10-yr leg.} The plan view shows this
+is not a Ross anomaly: the 1399 fully-opened nodes (magenta) ring the \emph{entire} Antarctic margin.
+
+\begin{center}
+\begin{tabular}{@{}lr@{}}
+\toprule
+changed nodes this leg & 3248 \quad(1.55\% of mesh) \\
+$|\Delta \mathrm{ulev}| \ge 10$ & 1582 \\
+\textbf{nodes with the ice removed ENTIRELY} & \textbf{1399} \\
+\midrule
+\dead{mean $|\Delta \mathrm{draft}|$} & \dead{2.9\,m} \quad\textcolor{red}{$\leftarrow$ \textbf{meaningless}} \\
+max $|\Delta \mathrm{draft}|$ & \textbf{923\,m} \\
+PISM floating cells & 24\,815 $\to$ 20\,093 \quad(\textbf{$-$24\% in 10~yr}) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}\fcolorbox{red}{red!8}{\parbox{0.95\textwidth}{%
+\textbf{\textcolor{red}{FALSIFIED \#3 --- ``the per-leg increment is gentle''.}}
+\dead{Production never has to survive the one-off swap; the per-leg PISM increment is two orders of
+magnitude smaller (mean $|\Delta\mathrm{draft}| \approx 22$\,m) and therefore absorbable.}
+\textbf{Wrong, and wrong in a way that mattered} --- it motivated the entire ``sidestep the swap and
+the increments will be fine'' strategy. The mean is diluted by the 98\% of the domain that does not
+change; the distribution is wildly skewed. PISM is \emph{not} in equilibrium.
+}}\end{center}
+
+%----------------------------------------------------------------------
+\subsection{This is not good news}\label{sec:sober}
+
+It is tempting to read the numbers optimistically: only 17 of 1399 fully-opened nodes rang; the ocean
+absorbed $\sim$99\%; the CFLz transient peaked and \emph{decayed}. All true, and it does mean the
+remap machinery is performing better than a ``crashed at day 15'' headline suggests.
+
+\medskip\noindent
+\textbf{But the honest reading is negative.} The run still crashed. What we have learned is that
+\textbf{our ocean reacts violently to ice-shelf and cavity changes mid-run}: a handful of columns
+where the ice vanishes outright is enough to kill a leg. A coupled setup in which the ice sheet is
+\emph{allowed} to change its cavity every 10 years cannot be one leg's worth of extreme nodes away
+from failure. \textbf{Absorbing 99\% of the change is not a passing grade when the remaining 1\% is
+fatal.}
+
+%======================================================================
+\section{Where to go from here}\label{sec:forward}
+
+\begin{enumerate}
+\item \textbf{Find out why PISM is collapsing, and stop it.} A run shedding 24\% of its floating area
+      in a decade is the anomaly, and everything downstream inherits it. \textbf{The first thing to
+      check is the sub-shelf melt \emph{we} feed PISM}: if our ocean hands it unrealistic melt, then
+      PISM's collapse is our own doing, and the loop closes.
+
+\item \textbf{Try to stabilise the ocean locally.} Reduce the ocean timestep and/or raise viscosity
+      \emph{in the neighbourhood of the changed columns}, and see whether the transient can be damped
+      enough to survive. A mitigation, not a cure --- but it may keep the coupling running while (1)
+      is sorted out. Note the \emph{global} knobs are already exhausted: a global timestep cut does
+      \textbf{not} help (60\,s merely swaps the CFLz symptom for an $\eta_n$ one).
+
+\item \textbf{The lasting way forward: compute physically consistent fields for the newly opened
+      cavity.} Patching such a column with plausible \emph{values} is what we have been doing, and it
+      is exactly what does not work (five fill strategies, all dead; \S\ref{sec:seam}). What is needed
+      is a state for the newly opened water that is \textbf{dynamically consistent with its
+      surroundings}, not merely a sensible number in each cell. That is the real problem, and the one
+      worth solving.
+\end{enumerate}
+
+\noindent
+A per-leg cap on $|\Delta\mathrm{ulev}|$ (defer the extreme tail across legs) remains available as a
+blunt robustness guard, but it papers over (1) rather than fixing anything.
+
+%======================================================================
+\section{Bugs found and fixed along the way}
+
+\subsection{In the remap}
+
+\textbf{Unbounded extrapolation below the old seabed} (esm\_tools \code{eef4f6db}). The first attempt
+at the increment leg died at \textbf{mstep 1}: the remapped restart contained $-45.02^\circ$C, a value
+present \emph{nowhere} in the source (wet range $[-2.32, 41.72]$, dry cells $0.0$). The remap
+\emph{manufactured} it. The column shows the mechanism:
+$1.22, -0.99, -3.19, -5.39, -8.69, -13.09, -18.6, -25.2, -34.01, \mathbf{-45.02}$ --- smooth and
+accelerating. For columns that get \emph{deeper}, the remap fitted a straight line through the last
+two old levels and continued it downward with no clamp. Fixed by taking such water from the nearest
+old node actually wet at that depth. \textbf{Never hit before} because every previous remap went
+mother\,$\to$\,submesh (a strict \emph{subset}); ice \emph{retreating} grows the mesh and exercises
+this path for the first time.
+
+\medskip\noindent
+Also: sub-ice \code{ssh}/\code{hbar} zeroing (\code{b17fb5c8}); a \textbf{size guard} so the remap
+refuses a restart that does not match the old mesh, instead of silently writing garbage
+(\code{3b44a704}).
+
+\subsection{In the coupling plumbing}
+
+Making chunk~1 a \emph{submesh} leg pushed a submesh leg through \code{couple\_out} for the first
+time. Every previous run either ran chunk~1 on the \emph{full mesh} (where these paths are trivially
+correct) or died early in chunk~3 (before reaching the end of a leg). That exposed:
+
+\begin{itemize}
+\item \textbf{OASIS \code{GSSPOS} abort at $\sim$day 300.} Its conservation correction is built from
+      the summed source/target ratio; when the summed target residual is $\approx 0$ while the source
+      residual is small-but-nonzero, it explodes. Only the heat-to-ice flux (\code{A\_Q\_ice
+      $\to$ heat\_ico}) used it. Fixed: new \code{gauswgt\_gsmart} transform (\code{3e94d4da}).
+\item \textbf{The namcouple \code{feom} dimension had NEVER been patched, on any leg.}
+      \code{fix\_namcouple\_feom\_dim} read \code{\$\{MAXMESH\_DIR\_fesom\}}, which is assigned
+      \emph{inside} \code{build\_submesh} --- a different subjob's shell. Always unset $\Rightarrow$
+      guard refused $\Rightarrow$ silent no-op. Fixed (\code{3cf29e9e}).
+\item \textbf{\code{fesom2ice} loaded the static full mesh} while FESOM's output is on the submesh
+      (broadcast error) (\code{63cfcc91}).
+\item \textbf{\code{previous\_submesh} is read but never created} --- anywhere. Every leg from chunk~5
+      on would have remapped against the wrong mesh (\code{3b44a704}).
+\item \textbf{A failed \code{couple\_in} did not stop the workflow.} The coupling function is
+      backgrounded, the observe job is not its parent (so it can never see the exit code), and
+      \code{observe.py} returns an \emph{empty} error list for every non-compute job. The next leg
+      started on an un-remapped restart. Fixed with a \code{.coupling\_failed} sentinel
+      (\code{3b44a704}).
+\end{itemize}
+
+\noindent
+\textbf{The pattern:} the guards were right, and the plumbing around them defeated them.
+\code{remap\_oasis\_restart} correctly refused a mis-sized restart --- and the run proceeded anyway.
+
+%======================================================================
+\section{Assets}
+
+\begin{itemize}
+\item \textbf{A 2-minute offline reproducer}: standalone ocean-only FESOM on the PISM-cavity submesh,
+      14 nodes, crashes in $\sim$2\,min (vs.\ the 45-node coupled system). Requires the
+      \code{FESOM\_COUPLED=OFF} build at the current SHA.
+\item \textbf{A stable control}: full mesh + native restart + same forcing (21\,d, CFLz 2.61).
+\item \textbf{Chunk-1 artifacts pooled} at \code{input/fesom2/pism\_cavity\_ini/} (540\,MB), so
+      chunk~1 needs no \code{couple\_in} and \code{esm\_runscripts} can be run straight from the login
+      node.
+\item \code{cavity\_flux\_ramp\_days} (FESOM \code{\&run\_config}, default 0 = off, bit-identical).
+\item \code{verify\_balance.py}: offline balance/stability gate (min $N^2$,
+      $\max|\nabla\!\cdot\!(H\bar{\mathbf{u}})|$, CFL, Ri) --- it caught the geostrophic $\nabla p$
+      init being worse than the NN baseline \emph{before} it cost a model run.
+\end{itemize}
+
+%======================================================================
+\section{Method note}
+
+Three root causes were asserted with more confidence than the evidence supported, and all three were
+later falsified by a control that was cheap and should have come \emph{first}:
+
+\begin{enumerate}
+\item ``geostrophic imbalance'' --- killed by the \textbf{cold start} (is it the geometry or our
+      state?);
+\item ``the sub-ice ssh BC'' --- killed by simply \textbf{running the fix};
+\item ``the increment is gentle ($\approx$22\,m)'' --- killed by \textbf{plotting the distribution}
+      instead of trusting a mean over a domain that is 98\% unchanged.
+\end{enumerate}
+
+\noindent
+The third is the sharpest: the 22\,m figure was computed correctly and reported honestly, and it was
+still misleading enough to steer the strategy for a day. \textbf{Two figures did in ten minutes what
+a summary statistic obscured for a day.}
+
+\end{document}

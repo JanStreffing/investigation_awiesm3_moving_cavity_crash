@@ -17,7 +17,7 @@ so all components agree on the new coastline.
 
 - **Blocker II — FESOM cavity-margin blowup — ROOT CAUSE REVISED 2026-07-13.**
   ~4–10 model days in, FESOM blows up at the cavity margin. **Read
-  `report/dynamics_seam_2026-07-13.tex` — it supersedes the earlier root-cause claim.**
+  `report/moving_cavity_investigation.tex` — it supersedes the earlier root-cause claim.**
 
   The earlier claim on this page ("a geostrophically-unbalanced remapped state; fix = thermal-wind
   velocity init") is **FALSIFIED**. That fix was implemented and failed its own offline gate
@@ -50,7 +50,7 @@ so all components agree on the new coastline.
   test the remap on a genuine 10-yr increment carrying a year of real spun-up dynamics. That is the
   experiment that decides whether the coupling is viable (experiment `movcav12`).
 
-## THE CURRENT PICTURE (2026-07-13, evening) — read `report/increment_test_2026-07-13`
+## THE CURRENT PICTURE (2026-07-13, evening) — read `report/moving_cavity_investigation`
 
 The cold-start strategy worked: chunk-1 ran a clean model year on PISM's cavity, PISM ran its
 10 years, and for the first time the remap was asked to carry **a year of spun-up ocean dynamics
@@ -160,9 +160,8 @@ After the model finishes, the leg spends **~9.5 min still holding all 45 nodes**
 
 ```
 report/
-  dynamics_seam_2026-07-13.{tex,pdf}  — CURRENT root cause; supersedes the plan below (read first)
-  balanced_restart_plan.{tex,pdf}     — SUPERSEDED design note (thermal-wind init; hypothesis falsified)
-  movcav_lsm_investigation.{tex,pdf}  — the original investigation log (Blocker I, evolution view)
+  moving_cavity_investigation.{tex,pdf}  — THE report. Single living document; superseded
+                                          claims are struck through, not deleted.
 figures/
   initstate/       step-1 (t=0 remapped state) plots — the root-cause evidence (movcav8 v4)
   evolution/       hourly-movie key frames + earlier crash-analysis overviews (movcav4)
@@ -187,7 +186,7 @@ DATA.md            experiments, data paths, key files, jobs, analysis env — st
 
 ## Build the report
 ```
-cd report && pdflatex movcav_lsm_investigation.tex    # figure paths are relative to report/? no — see note
+cd report && pdflatex moving_cavity_investigation.tex    # figure paths are relative to report/? no — see note
 ```
 Note: the `.tex` uses `\includegraphics{movcav4_crash_plots/...}` paths from the original
 working tree; the packaged `.pdf` is the built version. To rebuild against this repo, point the
