@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  14 JUL 2026 14:41
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  14 JUL 2026 14:51
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -621,28 +621,35 @@ Overfull \hbox (0.45874pt too wide) in paragraph at lines 342--347
 /n/10.95 ,
  []
 
+
+Overfull \hbox (42.9452pt too wide) in paragraph at lines 384--392
+[]\T1/cmr/bx/n/10.95 Attempt 6 (run-ning): the paired swap test. \T1/cmr/m/n/10
+.95 Clean \T1/cmtt/m/n/10 ICMGGab45INIT_CORE3 \T1/cmr/m/it/10.95 plus \T1/cmtt/
+m/n/10 ECE_LANDICE=.false.
+ []
+
 [8{/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/enc/dvips/cm-supe
 r/cm-super-ts1.enc}]
-Overfull \hbox (19.07083pt too wide) in paragraph at lines 386--390
+Overfull \hbox (19.07083pt too wide) in paragraph at lines 392--396
 []\T1/cmr/m/n/10.95 Launch hy-giene from at-tempts 2--3: launch from the it-er-
 a-tive mas-ter (\T1/cmtt/m/n/10 spinup_couplePI_core3.yaml\T1/cmr/m/n/10.95 ;
  []
 
 
-Overfull \hbox (47.17427pt too wide) in paragraph at lines 427--431
+Overfull \hbox (47.17427pt too wide) in paragraph at lines 433--437
 []\T1/cmr/bx/n/10.95 The nam-cou-ple \T1/cmtt/m/n/10 feom \T1/cmr/bx/n/10.95 di
 -men-sion had NEVER been patched, on any leg. \T1/cmtt/m/n/10 fix_namcouple_feo
 m_dim
  []
 
-
-Overfull \hbox (23.96672pt too wide) in paragraph at lines 442--445
+[9]
+Overfull \hbox (23.96672pt too wide) in paragraph at lines 448--451
 \T1/cmr/bx/n/10.95 The pat-tern: \T1/cmr/m/n/10.95 the guards were right, and t
 he plumb-ing around them de-feated them. \T1/cmtt/m/n/10 remap_oasis_restart
  []
 
-[9]
-Overfull \hbox (25.2597pt too wide) in paragraph at lines 450--453
+
+Overfull \hbox (25.2597pt too wide) in paragraph at lines 456--459
 \T1/cmr/m/n/10.95 mesh, 14 nodes, crashes in $\OMS/cmsy/m/n/10.95 ^^X$\T1/cmr/m
 /n/10.95 2min (vs. the 45-node cou-pled sys-tem). Re-quires the \T1/cmtt/m/n/10
  FESOM_COUPLED=OFF
@@ -692,7 +699,7 @@ k-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm10
 nts/type1/public/cm-super/sfti1000.pfb></sw/spack-levante/texlive-live2025-uaw7
 o7/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></sw/spack-levante/texli
 ve-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb>
-Output written on moving_cavity_investigation.pdf (10 pages, 1108488 bytes).
+Output written on moving_cavity_investigation.pdf (10 pages, 1113583 bytes).
 PDF statistics:
  290 PDF objects out of 1000 (max. 8388607)
  230 compressed objects within 3 object streams

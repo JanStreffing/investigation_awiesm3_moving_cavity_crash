@@ -375,14 +375,20 @@ Four attempts. Attempts 2 and 3 exposed a \textbf{third ordering bug}, sibling o
   $\approx$ 0.04, ice tile effectively off). Every OIFS libsurf/convection crash ever observed
   (voskin/vsurf/cubasen) is on a native-ICMGG run; movcav4/7 with the clean CORE3 file never crashed; and
   the chunk-3 swap test already \emph{proved} the ICMGG mechanism there.
-\item \textbf{Attempt 5 (running): the chunk-1 swap test.} \code{ICMGG\_INIT} $\to$ clean
-  \code{ICMGGab45INIT\_CORE3} (verified in the work dir: 0 lsm cells differ from clean, 74 from native),
-  everything else unchanged. Known cost: 62 Antarctic coastal cells are OIFS-ocean but OASIS-masked (the
-  pool mask was built for the native lsm), so they keep their initial climatological SST/ci --- numerically
-  stable (this is how the chunk-3 swap survived), physically a compromise over the PISM-shelf difference
-  zone. Verdict logic: past day $\sim$50 starts separating, full year = ICMGG convicted for chunk-1; a
-  libsurf/convection crash instead clears the ICMGG $\to$ next run instrumented with OASIS EXPOUT to catch
-  the runaway cell in the act.
+\item \textbf{Attempt 5: an invalid test with a lesson.} \code{ICMGG\_INIT} $\to$ clean
+  \code{ICMGGab45INIT\_CORE3}, everything else unchanged --- died at \emph{step 0} in
+  \code{radaca.F90:810} (radiation), dividing by a \emph{zero half-level temperature}, on a far-south rank.
+  Cause (verified by cell count): the pool \emph{plit} still flips land-ice on \textbf{62 cells the clean
+  lsm calls ocean} --- the degenerate-skin-T trigger the plit machinery exists to avoid.
+  \textbf{ICMGG and plit must be swapped as a pair.} (With the native lsm the plit conflict count is 0.)
+\item \textbf{Attempt 6 (running): the paired swap test.} Clean \code{ICMGGab45INIT\_CORE3}
+  \emph{plus} \code{ECE\_LANDICE=.false.} and no plit staged = movcav4's exact atmosphere surface
+  description over the PISM-cavity submesh ocean, with all three coupling fixes in. All three knobs
+  verified in the work dir before model start. Verdict logic: past day $\sim$50 starts separating (attempt
+  4's horizon was 44), full year = the native ICMGG surface set convicted for chunk-1; a physics crash
+  instead clears the ICMGG $\to$ next run instrumented with OASIS EXPOUT to catch the poisoned cell in the
+  act. Crash-rank geography so far: attempts 2--4 died on far-north ranks (10/27/29/50 of 384), attempt 5
+  far-south (367) --- polar both times, never tropical.
 \item Launch hygiene from attempts 2--3: launch from the iterative master
   (\code{spinup\_couplePI\_core3.yaml}; the model1 sub-runscript alone dies with
   \code{KeyError: model1}), and \code{use\_venv: False} so non-tty launches cannot hang on the venv
