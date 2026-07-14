@@ -381,14 +381,24 @@ Four attempts. Attempts 2 and 3 exposed a \textbf{third ordering bug}, sibling o
   Cause (verified by cell count): the pool \emph{plit} still flips land-ice on \textbf{62 cells the clean
   lsm calls ocean} --- the degenerate-skin-T trigger the plit machinery exists to avoid.
   \textbf{ICMGG and plit must be swapped as a pair.} (With the native lsm the plit conflict count is 0.)
-\item \textbf{Attempt 6 (running): the paired swap test.} Clean \code{ICMGGab45INIT\_CORE3}
-  \emph{plus} \code{ECE\_LANDICE=.false.} and no plit staged = movcav4's exact atmosphere surface
-  description over the PISM-cavity submesh ocean, with all three coupling fixes in. All three knobs
-  verified in the work dir before model start. Verdict logic: past day $\sim$50 starts separating (attempt
-  4's horizon was 44), full year = the native ICMGG surface set convicted for chunk-1; a physics crash
-  instead clears the ICMGG $\to$ next run instrumented with OASIS EXPOUT to catch the poisoned cell in the
-  act. Crash-rank geography so far: attempts 2--4 died on far-north ranks (10/27/29/50 of 384), attempt 5
-  far-south (367) --- polar both times, never tropical.
+\item \textbf{Attempt 6: same step-0 death $\Rightarrow$ the native surface set is REQUIRED.} Clean
+  ICMGG \emph{plus} \code{ECE\_LANDICE=.false.} and no plit (movcav4's exact atmosphere) died
+  \emph{identically} to attempt 5: \code{radaca.F90:810}, step 0, far-south rank, zero half-level
+  temperature. So the zero-T column is not the plit flip --- it is the \textbf{62 difference-zone cells
+  themselves}: ocean per the clean lsm, but never delivered by the feom$\to$A096 mapping, so their
+  coupled SST stays \textbf{0\,K} (the original ``degenerate-skin-T trigger''). Conclusion: on the PISM
+  submesh there is \emph{no valid static-lsm configuration}; the native, coastline-following surface set
+  (lsm+slt+plit+A096 mask+weights) is the only one that can even initialize --- which is also what the
+  moving-cavity mission requires. The swap test cannot run, and the ICMGG is \emph{not} convicted for the
+  mid-run crashes.
+\item \textbf{Attempt 7 (running): native set + OASIS EXPOUT instrumentation.} Every o2a exchange
+  (\code{sst/sie/snt/ist/sia/u/v}) is dumped to netcdf (\code{oasis\_expout\_o2a} runscript flag, esm\_tools
+  \code{8b5dfca2}). On the next crash the last records identify the poisoned cell and field directly.
+  Suspicion is guided by the FP-error family: \code{FOEEW}-style saturation math blows up on near-zero or
+  near-32\,K temperatures, so a near-zero \code{A\_SST}/\code{A\_Ice\_temp} at some cell, some hour, is the
+  expected signature. Also cleared meanwhile: raw weight-sums on all active A096 cells are exactly 1.0
+  (no under-delivered tiny-sum cells). Crash-rank geography: attempts 2--4 died far-north
+  (ranks 10/27/29/50 of 384), attempts 5/6 far-south (367/381) --- polar always, tropics never.
 \item Launch hygiene from attempts 2--3: launch from the iterative master
   (\code{spinup\_couplePI\_core3.yaml}; the model1 sub-runscript alone dies with
   \code{KeyError: model1}), and \code{use\_venv: False} so non-tty launches cannot hang on the venv
