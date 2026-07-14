@@ -14,8 +14,9 @@
 \contentsline {section}{\numberline {5}Falsified: the SPP claim}{7}{section.5}%
 \contentsline {section}{\numberline {6}Where to go from here}{7}{section.6}%
 \contentsline {subsection}{\numberline {6.1}movcav16 launch log (2026-07-14) --- and Bug III}{8}{subsection.6.1}%
-\contentsline {section}{\numberline {7}Bugs found and fixed along the way}{9}{section.7}%
-\contentsline {subsection}{\numberline {7.1}In the remap}{9}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}In the coupling plumbing}{9}{subsection.7.2}%
-\contentsline {section}{\numberline {8}Assets}{10}{section.8}%
-\contentsline {section}{\numberline {9}Method note}{10}{section.9}%
+\contentsline {subsection}{\numberline {6.2}Bug IV --- the FESIM ice-surface-temperature runaway (the mid-run crash family)}{9}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Bugs found and fixed along the way}{10}{section.7}%
+\contentsline {subsection}{\numberline {7.1}In the remap}{10}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}In the coupling plumbing}{10}{subsection.7.2}%
+\contentsline {section}{\numberline {8}Assets}{11}{section.8}%
+\contentsline {section}{\numberline {9}Method note}{11}{section.9}%

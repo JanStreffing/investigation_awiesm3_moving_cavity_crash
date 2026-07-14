@@ -391,14 +391,60 @@ Four attempts. Attempts 2 and 3 exposed a \textbf{third ordering bug}, sibling o
   (lsm+slt+plit+A096 mask+weights) is the only one that can even initialize --- which is also what the
   moving-cavity mission requires. The swap test cannot run, and the ICMGG is \emph{not} convicted for the
   mid-run crashes.
-\item \textbf{Attempt 7 (running): native set + OASIS EXPOUT instrumentation.} Every o2a exchange
-  (\code{sst/sie/snt/ist/sia/u/v}) is dumped to netcdf (\code{oasis\_expout\_o2a} runscript flag, esm\_tools
-  \code{8b5dfca2}). On the next crash the last records identify the poisoned cell and field directly.
-  Suspicion is guided by the FP-error family: \code{FOEEW}-style saturation math blows up on near-zero or
-  near-32\,K temperatures, so a near-zero \code{A\_SST}/\code{A\_Ice\_temp} at some cell, some hour, is the
-  expected signature. Also cleared meanwhile: raw weight-sums on all active A096 cells are exactly 1.0
-  (no under-delivered tiny-sum cells). Crash-rank geography: attempts 2--4 died far-north
-  (ranks 10/27/29/50 of 384), attempts 5/6 far-south (367/381) --- polar always, tropics never.
+\item \textbf{Attempt 7: the EXPOUT probe that caught Bug IV.} Every o2a exchange
+  (\code{sst/sie/snt/ist/sia/u/v}) dumped to netcdf (\code{oasis\_expout\_o2a} flag, esm\_tools
+  \code{8b5dfca2}; $\sim$20$\times$ slowdown, growing with file size --- crash-window probes only). The
+  probe ran 60 days without crashing, and the dump scan found the smoking gun anyway: see Bug IV below.
+  Also cleared meanwhile: raw weight-sums on all active A096 cells are exactly 1.0. Crash-rank geography:
+  attempts 2--4 far-north ranks (10/27/29/50 of 384), attempts 5/6 far-south (367/381) --- polar always.
+\end{itemize}
+
+\subsection{Bug IV --- the FESIM ice-surface-temperature runaway (the mid-run crash family)}
+\label{sec:bug4}
+The o2a stream is clean in every field except one: \textbf{\code{ist} (ice surface temperature) is
+chronically unphysical} --- the \emph{typical} per-record minimum FESOM sends is 173--183\,K
+($-$90\,$^\circ$C over a 271\,K ocean), with a measured excursion to \textbf{145\,K} at day 53 on 1135
+nodes with 90\%+ ice cover, in the Sea of Okhotsk and Gulf of St.\ Lawrence --- \emph{marginal ice
+zones}, in the latitude band of the crashing OIFS ranks.
+
+\textbf{Mechanism (each step verified in code or data):}
+\begin{enumerate}
+\item FESOM sends \emph{raw} \code{ist}; ice-\emph{free} nodes send the seawater freezing point
+  ($\approx$271\,K) (\code{ice\_thermo\_cpl.F90:180}).
+\item The GAUSWGT cell blend in the marginal ice zone is therefore dominated by warm ice-free nodes ---
+  OIFS's ice tile sees a surface tens of K warmer than the actual ice.
+\item OIFS computes a strongly negative ice-tile heat flux for that too-warm surface; the a2o remap hands
+  it back to the fully-iced nodes.
+\item FESIM's surface solve (\code{ice\_thermo\_cpl.F90:590}) is an implicit relaxation toward
+  $t^{*} = T_{f} + \mathrm{a2ihf}\cdot\mathrm{zsniced}/\mathrm{con}$ with an upper clamp at 273.15\,K and
+  \emph{no lower bound} --- for a sustained $-$90\,W/m$^2$ under 2\,m of ice+snow, $t^{*}$ sits
+  $\sim$90\,K below freezing. The measured 173--183\,K floors \emph{are} these false equilibria.
+\item Deep excursions reach the single-precision limits of OIFS's saturation function \code{FOEEW}
+  (underflow $\to$ 0 below $\sim$60\,K $\Rightarrow$ divide-by-zero; pole at 32.19\,K $\Rightarrow$
+  overflow) in whichever routine consumes the value first: \code{cubasen} (via
+  $q_{sat}(T_{\mathrm{KLEV}})$), \code{vsurf} (\code{FOEEW(ZTSK)}), \code{voskin}. Random timing, polar
+  ranks, three different crash sites --- the whole observed family, most likely including chunk-3's
+  ``voskin/ICMGG'' crash (the ICMGG swap moved the marginal ice zone).
+\item \textbf{Why jigsaw runs were immune}: scrambled a2o fluxes clamp the solve at the 273.15\,K upper
+  bound, and OIFS's ice tile was inactive anyway (ci $\approx$ 0.04); correct coupling re-enabled the
+  loop. movcav4 and attempt 1 simply never rolled a deep-enough spike.
+\end{enumerate}
+
+\textbf{Root fix (no invented bounds --- the established EC-Earth mechanism):} OIFS already implements
+concentration-weighted ice-temperature ingest behind \code{ECE\_CPL\_NEMO\_WEIGHTED\_ICE}
+(\code{ece\_updclie\_cpl.F90:270}: divides received \code{A\_Ice\_temp} by received ice fraction, with
+epsilon guard and melting cap) --- built for NEMO-LIM, which solved this exact aliasing. FESOM now sends
+\code{ist$\cdot$a\_ice} (fesom-2.7 local commit \code{3ddb0af0}; \code{\_\_oasis+\_\_oifs} branch only,
+ECHAM/ifsinterface untouched), the namelist flag is on, and the pool \code{rstos.nc} carries the weighted
+convention (backup kept). \emph{Binary and flag must move together: either alone is catastrophic.}
+Ice-free nodes then contribute nothing to the cell's ice-tile temperature and the false equilibrium
+disappears at its source. This is upstream-relevant: mainline FESOM2/AWI-CM3 carries the same raw-\code{ist}
+send, so production awicm3 runs live with the same latent (if rarer) crash mode.
+
+\begin{itemize}
+\item \textbf{Attempt 8 (running): all four fixes} --- corrected weights (Bug II), corrected+weighted
+  rstos (Bug III + IV), weighted-ist FESOM binary + paired OIFS flag (Bug IV), DIRECT melt route (Bug I),
+  native ICMGG/plit (proven required), full speed (no EXPOUT).
 \item Launch hygiene from attempts 2--3: launch from the iterative master
   (\code{spinup\_couplePI\_core3.yaml}; the model1 sub-runscript alone dies with
   \code{KeyError: model1}), and \code{use\_venv: False} so non-tty launches cannot hang on the venv
