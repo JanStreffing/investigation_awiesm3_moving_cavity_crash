@@ -50,6 +50,62 @@ so all components agree on the new coastline.
   test the remap on a genuine 10-yr increment carrying a year of real spun-up dynamics. That is the
   experiment that decides whether the coupling is viable (experiment `movcav12`).
 
+## THE CURRENT PICTURE (2026-07-13, evening) — read `report/increment_test_2026-07-13`
+
+The cold-start strategy worked: chunk-1 ran a clean model year on PISM's cavity, PISM ran its
+10 years, and for the first time the remap was asked to carry **a year of spun-up ocean dynamics
+across a real PISM increment**. It crashed on day 15.7 — but the *way* it crashed inverts the
+conclusion.
+
+**The ocean is doing fine. PISM is collapsing.**
+
+| | monster swap (CORE3→PISM) | real increment (this leg) |
+|---|---|---|
+| CFLz over time | 4.46 → 6.43 → 7.25 → **9.24** (runaway) | 5.26 → **5.78** → 5.40 → 4.51 → **4.15** (**peaks, then DECAYS**) |
+| η NaN | yes | **none** — all 209,172 nodes finite |
+| \|η\|>3 nodes | 3611, basin-wide, radiating | **17**, one tight cluster, all on changed nodes |
+
+All 17 ringing nodes share one signature: **`ulev 17 → 1`** — 16 ocean levels opening *at once*,
+i.e. the ice shelf above them removed **entirely** in a single leg. Their η alternates in sign
+(+24, −18, +16) — a grid-scale checkerboard, not a basin mode.
+
+**Why the tail is so extreme: PISM is in massive disequilibrium.**
+
+![PISM change, plan view](figures/pism_change/pism_change_planview.png)
+![PISM change, side cutaway](figures/pism_change/pism_change_section.png)
+
+The cutaway says it plainly: the Ross ice-shelf front retreats **~4° of latitude (~440 km) in ONE
+10-yr leg**. The plan view shows it is not a Ross anomaly — the **1399 nodes where the ice is
+removed outright** (magenta) ring the *entire* Antarctic margin.
+
+| | |
+|---|---|
+| changed nodes this leg | 3248 (1.55% of mesh) |
+| \|Δulev\| ≥ 10 | 1582 |
+| **ice removed ENTIRELY** | **1399** |
+| mean \|Δdraft\| | **2.9 m** ← *meaningless* |
+| max \|Δdraft\| | **923 m** |
+| PISM floating cells | 24,815 → 20,093 (**−24% in 10 yr**) |
+
+**The mean is a lie** — diluted by the vast unchanged interior. The earlier claim that a 10-yr PISM
+increment is a gentle ~22 m change, which motivated the whole "sidestep the swap and the increments
+will be fine" strategy, was **wrong**.
+
+**The encouraging half:** of the 1399 fully-opened nodes, only **17 rang**. The ocean absorbed ~99%
+of even this.
+
+**So the priority moves upstream:**
+1. **Look at PISM.** A run shedding 24% of its floating area per decade is the anomaly. **In
+   particular, check the sub-shelf melt we feed it** — if our ocean hands PISM unrealistic melt,
+   PISM's collapse is *our* doing.
+2. A per-leg **|Δulev| cap** is worth having as a robustness guard, but it papers over a PISM problem.
+3. The **fully-opened column** is now a narrow, well-defined case worth handling explicitly.
+
+Also fixed on the way (esm_tools `eef4f6db`): the remap **manufactured** a −45 °C value via an
+**unbounded linear extrapolation** below the old seabed (a value present nowhere in the source).
+Never hit before because the mesh had never *grown* — ice retreat exercises that path for the first
+time.
+
 ## Coupling plumbing (2026-07-13) — latent bugs exposed by a submesh chunk-1
 
 Making chunk-1 run on the **PISM-cavity submesh** (cold start) instead of the full mesh pushed a
