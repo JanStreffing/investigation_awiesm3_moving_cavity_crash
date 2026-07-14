@@ -442,9 +442,38 @@ disappears at its source. This is upstream-relevant: mainline FESOM2/AWI-CM3 car
 send, so production awicm3 runs live with the same latent (if rarer) crash mode.
 
 \begin{itemize}
-\item \textbf{Attempt 8 (running): all four fixes} --- corrected weights (Bug II), corrected+weighted
-  rstos (Bug III + IV), weighted-ist FESOM binary + paired OIFS flag (Bug IV), DIRECT melt route (Bug I),
-  native ICMGG/plit (proven required), full speed (no EXPOUT).
+\item \textbf{Attempt 8: day 141.} All four fixes (corrected weights, corrected+weighted rstos,
+  weighted-ist pair, DIRECT route, native ICMGG/plit). Survived 3.2$\times$ the previous horizon, then
+  \code{cubasen} overflow on a far-\emph{south} rank at day 141 (austral-winter MIZ). Weighted-ist removed
+  the aliasing \emph{driver}, not the oscillator itself: FESIM's hourly explicit flux coupling has no
+  d$Q$/d$T$ feedback within the interval, and the loop gain ($\propto$ zsniced/con) peaks in snow-loaded
+  winter pack ice. The tile-fraction/frozen-ocean-tile theory was checked and \textbf{retracted}
+  (\code{surfbc\_ctl}: binary \code{LDLAND} gate --- no fractional water tiles). Proper stabilization =
+  export d$Q$/d$T$ from OIFS (ECHAM-style implicit term in the FESIM solve): scoped, not yet built.
+  A snow-heat-capacity regularization was tried, argued down on physics (skin equation, bulk mass), and
+  reverted --- the binary stays weighted-ist-only.
+\item \textbf{Attempt 9: chunk-1 COMPLETE.} Same config re-rolled: the full year 1900 ran through
+  (the oscillator is metastable, not deterministic). \textbf{Verification checklist 1--4 all PASS} on its
+  output: (1) January SST physical, zero translocated cells (tropics 26.7$^\circ$C, Antarctic
+  +0.2$^\circ$C; Fig.~\ref{fig:jigsaw}'s counterpart \code{sst\_healthy\_global.png}); (2) OIFS Weddell
+  September ci = 0.61 mean / 0.99 max (was \textbf{0.04}); (3) sea ice survives winter in both hemispheres
+  with proper annual cycles (NH 0.87$\to$0.57$\to$regrowth, SH 0.42$\to$0.85); (4) cavity melt
+  \textbf{2.16 m/yr mean / 0.66 median} (healthy reference 2.2/0.72; jigsaw 28) and cavity thermal driving
+  \textbf{+0.18 K} mean (reference $\sim$0.2; jigsaw +1.25). The coupled ocean--atmosphere state is
+  quantitatively healthy.
+\item \textbf{The cycle's first live handover found the last plumbing gap.} chunk-1 \code{couple\_out}
+  (DIRECT route, first execution): the pism.nc bundle synthesized fine, but the 2D interpolator
+  (\code{fesom\_scalar\_array\_to\_LonLat.py}) ignores the bundle and opens
+  \code{<var>.fesom.<year>.nc} itself --- \code{Tsurf/Ssurf} exist only inside the bundle $\to$
+  \code{FileNotFoundError}; and because \code{fesom2ice} had no \code{couple\_fail} wiring, the workflow
+  marched on: the PISM leg ran \emph{without ocean forcing} and died empty, and chunk-3's
+  \code{couple\_in} then failed on the missing ice geometry --- a three-stage cascade from one missing
+  file. Fix \code{7953585b}: synthesized fields staged per-variable in \code{COUPLE\_DIR} (the 2D loop
+  points there when they exist) + \code{fesom2ice} now drops the \code{.coupling\_failed} sentinel.
+  The completed run is preserved as \code{movcav16\_run1}.
+\item \textbf{Attempt 10 (running): the full-cycle rerun} on the fixed handover --- chunk-1 $\to$
+  DIRECT couple\_out $\to$ PISM leg (checklist item 5: floating-area change) $\to$ chunk-3 = the real
+  increment test (item 6).
 \item Launch hygiene from attempts 2--3: launch from the iterative master
   (\code{spinup\_couplePI\_core3.yaml}; the model1 sub-runscript alone dies with
   \code{KeyError: model1}), and \code{use\_venv: False} so non-tty launches cannot hang on the venv
