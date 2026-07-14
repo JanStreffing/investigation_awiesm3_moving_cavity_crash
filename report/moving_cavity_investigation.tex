@@ -323,6 +323,29 @@ Verification checklist for chunk-1 (each item targets one of this week's failure
 \item then chunk-3: the \emph{real} increment test, finally on clean evidence.
 \end{enumerate}
 
+\subsection{movcav16 launch log (2026-07-14)}
+Three attempts were needed to get movcav16 airborne; none of the failures indicts the two fixes.
+\begin{itemize}
+\item \textbf{Attempt 1} (job 26245041): healthy to day 120 (worst CFL$_z$ 2.41, EVP active, $\sim$17\,d/min) --
+  killed by a launcher bug of ours (\code{env\_fesom.py} looked up \code{oce2ice\_method} under the setup name
+  instead of \code{config['fesom']}; fixed in esm\_tools \code{d5a8039d}). The teardown of the crashed launcher
+  cancelled the healthy compute job.
+\item \textbf{Attempt 2} (job 26245420): real model crash. OIFS floating overflow in the convection scheme
+  (\code{cubasen.F90:453}, rank 29) on 19 January; the watchdog then cancelled the job correctly.
+  FESOM was healthy. The work dir's \code{rmp\_*feom*} files are bit-identical to the corrected pool
+  weights, so the ordering fix \emph{was} in effect. Attempt 1 ran the same inputs past day 120, so the
+  overflow is \emph{not deterministic}: a marginal convection state that reproducibility noise (OpenMP
+  physics scheduling) flips. \code{BETAMFBC=-1} was already set (not the qmfixer overflow).
+  Noted for the suspect list should it reproduce: chunk-1 uses the native-pipeline
+  \code{ICMGGab45INIT\_feomdyn}, which hardens 74 Antarctic coastal cells from fractional ocean to
+  full land vs.\ movcav4's clean CORE3 file (intentional -- the cavity coastline; soil fields on those
+  cells are sane glacier-convention values). Forensics: \code{movcav16\_crash1\_forensics/}.
+\item \textbf{Attempt 3}: relaunched from the iterative master runscript
+  (\code{spinup\_couplePI\_core3.yaml}; launching the model1 sub-runscript directly fails with
+  \code{KeyError: model1}). \code{use\_venv: False} added to the sub-runscript so non-tty launches
+  cannot hang on the venv prompt.
+\end{itemize}
+
 \section{Bugs found and fixed along the way}
 
 \subsection{In the remap}

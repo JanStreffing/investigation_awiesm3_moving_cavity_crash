@@ -13,8 +13,9 @@
 \contentsline {subsection}{\numberline {4.2}This is not good news}{7}{subsection.4.2}%
 \contentsline {section}{\numberline {5}Falsified: the SPP claim}{7}{section.5}%
 \contentsline {section}{\numberline {6}Where to go from here}{7}{section.6}%
-\contentsline {section}{\numberline {7}Bugs found and fixed along the way}{7}{section.7}%
-\contentsline {subsection}{\numberline {7.1}In the remap}{7}{subsection.7.1}%
+\contentsline {subsection}{\numberline {6.1}movcav16 launch log (2026-07-14)}{7}{subsection.6.1}%
+\contentsline {section}{\numberline {7}Bugs found and fixed along the way}{8}{section.7}%
+\contentsline {subsection}{\numberline {7.1}In the remap}{8}{subsection.7.1}%
 \contentsline {subsection}{\numberline {7.2}In the coupling plumbing}{8}{subsection.7.2}%
-\contentsline {section}{\numberline {8}Assets}{8}{section.8}%
-\contentsline {section}{\numberline {9}Method note}{8}{section.9}%
+\contentsline {section}{\numberline {8}Assets}{9}{section.8}%
+\contentsline {section}{\numberline {9}Method note}{9}{section.9}%

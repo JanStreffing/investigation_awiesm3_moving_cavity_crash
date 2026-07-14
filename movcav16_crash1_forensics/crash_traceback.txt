@@ -1,0 +1,41 @@
+2177:    received from other model
+1792:   13:33:47 STEP     456 H=     456:00 +CPU=  0.556
+1792:            STEP  456 :## EC_MEMINFO    0 l30577                   408     554       0       237   25532      396   29736      359   29754      531   29512      210   26924      219   29872      319   29832      814   28870    235170    4512      0.2   0.0         0      0   94.21  Sm/p
+1792:   13:33:47 STEP     457 H=     457:00 +CPU=  0.207
+1792:            STEP  457 :## EC_MEMINFO    0 l30577                   408     554       0       237   25532      396   29736      361   29754      530   29512      209   26924      218   29872      319   29832      814   28870    235167    4512      0.2   0.0         0      0   94.21  Sm/p
+1792:   13:33:47 STEP     458 H=     458:00 +CPU=  0.336
+1792:            STEP  458 :## EC_MEMINFO    0 l30577                   408     554       0       237   25532      395   29736      363   29754      531   29512      208   26924      218   29872      320   29832      814   28870    235170    4512      0.2   0.0         0      0   94.21  Sm/p
+1821: forrtl: error (72): floating overflow
+1821: Image              PC                Routine            Line        Source             
+1821: libfckit.so        000015553EB1C2EC  for__signal_handl     Unknown  Unknown
+1821: libpthread-2.28.s  000015553BB93990  Unknown               Unknown  Unknown
+1821: libarpifs.SP.so    00001555494DC285  cubasen_                  453  cubasen.F90
+1821: libarpifs.SP.so    0000155549515675  cumastrn_                 438  cumastrn.F90
+1821: libarpifs.SP.so    00001555494E7F86  cucalln_                  368  cucalln.F90
+1821: libarpifs.SP.so    00001555494BE81C  convection_layer_         123  convection_layer.F90
+1821: libarpifs.SP.so    00001555493D30BE  callpar_                 1182  callpar.F90
+1821: libarpifs.SP.so    0000155549542366  ec_phys_                  581  ec_phys.F90
+1821: libarpifs.SP.so    00001555495529FC  ec_phys_drv_              576  ec_phys_drv.F90
+1821: libiomp5.so        000015553CD3EBB3  __kmp_invoke_micr     Unknown  Unknown
+1821: libiomp5.so        000015553CCBA903  Unknown               Unknown  Unknown
+1821: libiomp5.so        000015553CCBC3DE  __kmp_fork_call       Unknown  Unknown
+1821: libiomp5.so        000015553CC7CCB5  __kmpc_fork_call      Unknown  Unknown
+1821: libarpifs.SP.so    0000155549555206  ec_phys_drv_              421  ec_phys_drv.F90
+1821: libarpifs.SP.so    0000155548949AB7  gp_model_                 777  gp_model.F90
+1821: libarpifs.SP.so    000015554895C3F9  gp_model_heap2_           109  gp_model_heap2.F90
+1821: libarpifs.SP.so    00001555489A7DA3  scan2m_                   617  scan2m.F90
+1821: libarpifs.SP.so    00001555489BB105  stepo_                    467  stepo.F90
+1821: libarpifs.SP.so    0000155548918D72  cnt4_                    1009  cnt4.F90
+1821: libarpifs.SP.so    0000155548913B4B  cnt3_                     200  cnt3.F90
+1821: libarpifs.SP.so    0000155548913660  cnt2_                     110  cnt2.F90
+1821: libarpifs.SP.so    0000155548913428  cnt1_                     169  cnt1.F90
+1821: libarpifs.SP.so    0000155548912AA0  cnt0_                     210  cnt0.F90
+1821: OpenIFS            000000000040EAEC  MAIN__                    251  master.F90
+1821: OpenIFS            000000000040E6A2  Unknown               Unknown  Unknown
+1821: libc-2.28.so       000015553B7E5865  __libc_start_main     Unknown  Unknown
+1821: OpenIFS            000000000040E5AE  Unknown               Unknown  Unknown
+1821: ./script_oifs.sh: line 4: 174510 Aborted                 ./OpenIFS -v ecmwf -e awi3
+srun: error: l30577: task 1821: Exited with exit code 134
+srun: Terminating StepId=26245420.0
+   0: slurmstepd: error: *** STEP 26245420.0 ON l30548 CANCELLED AT 2026-07-14T13:33:48 ***
+srun: error: l30589: task 2176: Terminated

@@ -1,0 +1,4 @@
+OIFS forrtl error(72) floating overflow, cubasen.F90:453, task 1821, 1900-01-19/20. Attempt 1 (26245041) same setup reached day 120 healthy -> nondeterministic. Weights verified = fixed pool. ICMGG = pool feomdyn (74 Antarctic coastal lsm cells hardened vs CORE3 clean; soil fields sane, glacier convention).
+
+Large artifacts (ICMGG grib, NODE log) are kept on disk here but excluded from git:
+/work/ab0246/a270092/postprocessing/investigation_awiesm3_moving_cavity_crash/movcav16_crash1_forensics/
