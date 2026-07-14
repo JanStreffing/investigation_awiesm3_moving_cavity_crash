@@ -21,26 +21,105 @@
 
 \begin{abstract}
 \noindent
-\textbf{ROOT CAUSE FOUND (2026-07-14): the salt plume parameterisation was OFF}
-(\code{spp = .false.}). \code{spp} distributes the brine rejected when sea ice grows
-\emph{downward} through the water column instead of leaving it at the surface. That is how High
-Salinity Shelf Water forms. Without it no dense shelf water forms, warm deep water floods the
-Antarctic shelf and then the ice-shelf cavities. Our cavity sat \textbf{$\approx$1.2\,K above
-freezing}, melted the shelves at \textbf{$\approx$28\,m/yr ($30\times$ observed)}, and PISM duly
-collapsed --- shedding \textbf{24\% of its floating area per decade}. \textbf{The catastrophic ice
-geometry the ocean kept failing on was manufactured by our own melt.} Xiaojie had already
-demonstrated this in standalone CORE3 (\S\ref{sec:spp}).
+\textbf{Where we are (2026-07-14, after the fixes).} Two real, independent bugs explain the
+catastrophes of the past week; both are now fixed and under test (movcav16):
 
 \medskip\noindent
-\textbf{Three root causes we published and later falsified} are struck through below. The
-moving-cavity blowup itself is real but secondary: the cavity \emph{geometry} is fine (a cold start
-on it is stable at the production timestep); the killer is the \emph{seam} in our remapped restart,
-where patched values at the changed nodes meet a fully evolved dynamical state everywhere else.
+\textbf{Bug I --- PISM's ocean forcing was surface water.} The \code{-ocean th} route averaged
+FESOM level indices 1--20 = \textbf{0--410\,m including the summer surface}: PISM received ice-base
+water of up to \textbf{$+6.5^\circ$C} even from a healthy ocean, melted accordingly
+($\sim$30\,m/yr), and shed \textbf{24\% of its floating area per decade} --- so every mesh-change
+leg had to absorb a catastrophic geometry increment. FESOM's \emph{own} cavity melt in the same
+healthy runs is sane: \textbf{2.2\,m/yr mean, 0.72 median}. Fix: PISM now consumes FESOM's own melt
+directly (\code{-ocean given}, the DIRECT route; esm\_tools \code{93a207ee}).
+
+\medskip\noindent
+\textbf{Bug II --- the offline feom exchange weights were in the wrong node ordering.} FESOM
+exchanges coupling fields in \emph{partition (my\_list/rank) order}; the offline weight engine
+(2026-06-17) built them in \emph{nod2d.out order}. Result: every A096$\leftrightarrow$feom exchange
+in every submesh leg was \textbf{geographically tile-translocated} --- the atmosphere was coupled to
+a jigsaw ocean (Fig.~\ref{fig:jigsaw}): OIFS saw Weddell ice fraction \textbf{0.04} while FESOM had
+\textbf{0.95}; global sea-ice death followed within months. Fix: permute to runtime ordering +
+a mandatory weight validator that aborts the leg on ordering mismatch (\code{c21fe7c2}).
+
+\medskip\noindent
+\textbf{Four earlier root-cause claims are falsified} and struck through below. Sections whose
+measurements were made on jigsaw-coupled runs are marked \textbf{TAINTED} and will be re-measured
+under movcav16.
 \end{abstract}
 
 \tableofcontents
 
 %======================================================================
+\section{The two real bugs (2026-07-14)}\label{sec:bugs}
+
+\subsection{Bug I: PISM was fed surface water as ice-base forcing}\label{sec:bug1}
+
+\code{coupling\_ocean2pism.functions} built PISM's \code{-ocean th} forcing as a vertical mean over
+FESOM level \emph{indices} 1--20 (\code{-sellevidx,1/20}) = \textbf{0--410\,m, surface included};
+the correct \code{-sellevel,150/600} sat in dead code behind \code{if [ 0 -eq 1 ]}. Measured
+consequence in the \emph{healthy} chain (movcav8): \code{theta\_ocean} fed to PISM had mean
+$-0.43^\circ$C and \textbf{max $+6.53^\circ$C} (realistic ice-base: $\approx -1.9$). PISM's
+three-equation scheme melted from that at $\sim$30\,m/yr and collapsed the shelves: $-24\%$
+floating area per decade, 1399 nodes losing their ice \emph{entirely} per 10-yr leg, Ross front
+$-440$\,km (Fig.~\ref{fig:pism}). Meanwhile \textbf{FESOM's own melt} in those same healthy runs:
+\textbf{2.2\,m/yr mean, 0.72 median, deep-cavity 2.6} --- sane.
+
+\medskip\noindent
+\textbf{Fix (\code{93a207ee}):} the DIRECT route. PISM consumes FESOM's own cavity fluxes via
+\code{-ocean given}: \code{fw}$\to$\code{shelfbmassflux} ($\times 1000$; sign preserved --- FESOM
+melt is $fw<0$ and PISM's \code{shelfbmassflux} is ``positive if ice is freezing on''),
+\code{sst}(level 1 = ice base under the virtual-column convention)$\to$\code{shelfbtemp}. One model
+owns the ice--ocean interface. The \code{-ocean given} machinery existed all along; it silently
+fell back to \code{th} because its input is a FESOM1.x-era file (\code{EXP.year.pism.nc}) that
+FESOM2 never writes --- \code{fesom2ice} now synthesizes it from the standard monthly streams. The
+150--600\,m band is also enabled as a safety for anyone still on \code{th}.
+
+\subsection{Bug II: the exchange weights scrambled the coupled ocean}\label{sec:bug2}
+
+\begin{figure}[h]\centering
+\includegraphics[width=\textwidth]{spp/sst_scramble_global.png}
+\caption{\textbf{The picture that settles it.} January (month 1) sea-surface temperature as OIFS
+holds it. Top: movcav4, pool weights --- textbook. Bottom: movcav15, offline-engine weights ---
+the ocean is a \emph{tile-translocated jigsaw}: tropical blocks at $55^\circ$S, polar blocks on the
+equator, a straight seam at lon 180 where the mesh node ordering breaks.}\label{fig:jigsaw}
+\end{figure}
+
+FESOM registers its OASIS partition rank-contiguously (Apple partition, \code{cpl\_driver.F90}):
+the exchange field is the concatenation of each rank's owned nodes in \code{my\_list} order ---
+\textbf{not} \code{nod2d.out} order (median displacement between the two: $58^\circ$ of latitude).
+The offline weight engine introduced on 2026-06-17 built the feom geometry in nod2d order. The
+weights were validated structurally (dims, layout) but never \emph{applied to a field} --- and at
+runtime every exchange was tile-translocated. The canonical pool weights are correct because they
+were \emph{harvested from a real coupled run} (hence the per-nproc pool directories).
+
+\medskip\noindent
+\textbf{Evidence} (all on movcav15 itself): OIFS ci = 0.04 vs FESOM a\_ice = 0.95 in month 1;
+1920 tropical cells $<5^\circ$C and 746 polar cells $>15^\circ$C in OIFS's January SST (0 and 0 in
+movcav4); offline application of the exact staged weights to the exact FESOM ice field reproduces
+OIFS's received 0.04; global sea-ice death with \textbf{no winter regrowth} in both hemispheres;
+cavity $+1.25$\,K, melt 28\,m/yr \emph{regardless of initial state} --- the heat arrived through the
+scrambled exchange every timestep. Every submesh leg since June carried this (masked there by the
+day-4 crashes); the healthy chunk-1 runs (movcav4/7/8) used pool weights.
+
+\medskip\noindent
+\textbf{Fix (\code{c21fe7c2}, option B1 --- in the coupling layer, ocp-tool untouched):}
+\code{permute\_feom\_to\_runtime.py} reorders \code{feom.*} in grids/masks/areas to runtime order
+(from the submesh's own \code{dist\_<nproc>/rpart.out}, verified identical to the \code{my\_list}
+concatenation FESOM reads); \code{validate\_feom\_weights.py} then applies every weight file to the
+runtime-ordered node latitudes and \textbf{aborts the leg} (couple\_fail) if the median error
+exceeds $1^\circ$ (nod2d-ordered weights fail at 42--58$^\circ$; correct ones pass at
+$\le 0.025^\circ$). The validator would have caught the bug the day the engine was introduced.
+Round-trip tested on compute; the pooled chunk-1 artifacts are fixed in place (backups kept).
+
+\subsection{How the two bugs interlocked}
+
+Bug I collapsed PISM even in healthy runs $\Rightarrow$ monstrous per-leg geometry increments.
+Bug II poisoned the runs used to diagnose Bug I: measured on jigsaw-coupled movcav15, ``FESOM's own
+melt'' appeared to be 28\,m/yr, which falsely disqualified the DIRECT fix and sent the
+investigation into the cavity-water/SPP dead end. \textbf{Measurements from a corrupted run are
+worse than no measurements.}
+
 \section{Blocker I --- OIFS step-0 coastline crash (RESOLVED)}
 
 A floating-point NaN struck exactly the coastline cells whose land--sea type flipped. \code{ocp-tool}
@@ -135,7 +214,15 @@ leaving the \emph{seam}. Zero-dynamics is not a production fix: discarding the o
 every leg is unacceptable.
 
 %======================================================================
-\section{The real increment test (2026-07-13)}\label{sec:increment}
+\section{The increment test (2026-07-13) --- \textcolor{red}{TAINTED, to be re-run}}\label{sec:increment}
+
+\begin{center}\fcolorbox{red}{red!8}{\parbox{0.95\textwidth}{\textbf{\textcolor{red}{TAINTED:}}
+everything in this section was measured on movcav12, whose chunk-1 climate was jigsaw-coupled
+(Bug~II) and whose PISM leg was additionally driven by Bug~I forcing. The qualitative machinery
+findings (the remap carried the increment; the failure mode was 17 fully-opened columns) may
+survive, but no number here should be trusted until the test is repeated under movcav16.}}
+\end{center}
+
 
 Cold-starting the ocean on PISM's cavity sidesteps the one-off CORE3(observed)$\to$PISM swap
 ($\max|\Delta\mathrm{draft}| = 2711$~m) entirely. That was done: chunk~1 ran a clean model year, PISM
@@ -212,73 +299,28 @@ from failure. \textbf{Absorbing 99\% of the change is not a passing grade when t
 fatal.}
 
 %======================================================================
-\section{ROOT CAUSE: the salt plume parameterisation was off}\label{sec:spp}
+\section{Falsified: the SPP claim}\label{sec:spp}
 
-\subsection{The chain}
-
-\begin{enumerate}
-\item \code{spp = .false.} $\Rightarrow$ brine rejected by growing sea ice stays in the surface layer
-      and is mixed away.
-\item No brine plume $\Rightarrow$ \textbf{no High Salinity Shelf Water forms}.
-\item No HSSW $\Rightarrow$ nothing excludes the warm deep water, which floods the Antarctic shelf
-      and then the cavities.
-\item Cavity sits \textbf{$\approx$1.2\,K above freezing} instead of $\approx$0.2\,K.
-\item FESOM melts the shelves at \textbf{$\approx$28\,m/yr} (observed area-mean $\approx$0.8\,m/yr).
-\item PISM, fed that, sheds \textbf{24\% of its floating area per decade}: 1399 nodes lose their ice
-      \emph{entirely} in one leg, the Ross front retreats $\approx$440\,km.
-\item The ocean is then asked to swallow that geometry change every leg --- and fails.
-\end{enumerate}
-
-\noindent
-\textbf{The ``PISM is collapsing'' problem and the ``the ocean cannot absorb the increment'' problem
-are the same problem, and we caused both.}
-
-\subsection{The evidence}
-
-\textbf{The initial condition is irrelevant --- the model heats the cavity itself.} We prepared a
-chunk-1 restart with a properly cold cavity (thermal driving $+0.06$\,K, from the spun-up CORE3
-tracers). After \emph{one model year} it had warmed to $+1.25$\,K --- and the cold-started run
-converged to the same $+1.21$\,K. The melt was identical (28.28 vs 28.29\,m/yr). Initialising the
-cavity correctly buys nothing if the model then warms it back up.
-
-\medskip\noindent
-\textbf{Xiaojie had already shown this in standalone CORE3} (West Weddell transect, 1972--1981;
-\code{/home/a/a270234/my\_work/20260407/temp\_fesom\_core3\_WWS.ipynb}):
-
-\begin{center}\includegraphics[width=\textwidth]{spp/xiaojie_core3_WWS_spp_transect.png}\end{center}
-
-\noindent
-Top row (\code{spp} ON): the shelf is cold to the bottom and the warm deep water is pushed offshore
-and down. Bottom row (\code{spp} OFF, \textbf{our configuration}): the warm water sits right against
-the shelf break, ready to intrude. \code{spp} is the dominant switch.
-
-\subsection{The fix}
-
-\code{spp: ".true."} in \code{namelist.oce} \code{\&oce\_dyn} (runscript
-\code{awiesm3\_dyn\_ocean\_core3.yaml}). Note \code{use\_momix} is already on by FESOM's default.
+\begin{center}\fcolorbox{red}{red!8}{\parbox{0.95\textwidth}{%
+\textbf{\textcolor{red}{FALSIFIED \#4 --- ``the salt plume parameterisation was off''.}}
+\dead{spp=.false.\ means no brine plume, no HSSW, warm shelf --- turn spp on.} Checked against the
+numbers instead of the figure: in Xiaojie's CORE3 runs the \textbf{spp-OFF cavity is the coldest}
+(thermal driving $+0.177$\,K vs $+0.246$ with spp on), and CORE3 standalone keeps a cold cavity
+\emph{with our exact setting}. The warm cavity in movcav12/15 was Bug II (the jigsaw), not spp.
+The claim was made from reading a shelf-transect figure without checking whether the signal reached
+the cavity. Config change reverted.}}\end{center}
 
 \section{Where to go from here}\label{sec:forward}
 
+movcav16 is the clean end-to-end test: fixed weights + warm-tracer init + DIRECT melt coupling.
+Verification checklist for chunk-1 (each item targets one of this week's failure modes):
 \begin{enumerate}
-\item \textbf{Re-run with \code{spp = .true.}} and confirm the chain unwinds: cavity thermal driving
-      should fall to $\approx$0.2\,K, melt to order 1\,m/yr, PISM should stop collapsing, and the
-      per-leg geometry increment should become genuinely small --- which is what the remap was
-      always designed for.
-\item \textbf{Then re-test the increment.} With a sane increment, the dynamics seam
-      (\S\ref{sec:seam}) may never be exercised hard enough to matter. If it still bites, the
-      remaining case is narrow and well defined: a column where the ice vanishes entirely, handed
-      donor water, zero velocity, and a free surface that cannot match its still-cavity neighbours.
-\item \textbf{Independently, fix the PISM ocean forcing.} \code{coupling\_ocean2pism.functions}
-      averages FESOM levels \textbf{1--20 = 0--410\,m, starting at the surface}
-      (\code{-sellevidx,1/20}) and hands that to PISM's \code{-ocean th}, a \emph{local
-      boundary-layer} scheme that needs the water \emph{in contact with the ice base}. The correct
-      code (\code{-sellevel,150/600}) sits right there, disabled behind \code{if [ 0 -eq 1 ]}. This
-      is a second, independent error --- it did not cause the collapse (FESOM's own melt was equally
-      catastrophic) but it is wrong and should go.
-\item \textbf{Consider passing FESOM's melt directly} (\code{-ocean given}). We run an explicit
-      cavity and FESOM already computes basal melt; having PISM recompute it with its own
-      three-equation scheme means two implementations disagreeing about the same interface, and ice
-      and ocean seeing different melt.
+\item OIFS January SST map is physical (the jigsaw figure \emph{is} the test);
+\item OIFS \code{ci} $\approx$ FESOM \code{a\_ice} (was 0.04 vs 0.95);
+\item sea ice survives the winter in both hemispheres (was: dead by April, no regrowth);
+\item FESOM cavity melt $\approx$2\,m/yr (was 28); cavity thermal driving $\approx$0.2\,K (was 1.25);
+\item PISM leg: floating-area change per decade $\ll$ 24\%;
+\item then chunk-3: the \emph{real} increment test, finally on clean evidence.
 \end{enumerate}
 
 \section{Bugs found and fixed along the way}
