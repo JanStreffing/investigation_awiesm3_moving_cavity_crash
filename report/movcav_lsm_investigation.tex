@@ -45,6 +45,18 @@
 \date{2026-07-05}
 
 \begin{document}
+
+\begin{center}\fcolorbox{red}{red!8}{\parbox{0.93\textwidth}{%
+\textbf{\textcolor{red}{BLOCKER II ROOT CAUSE REFUTED (2026-07-13).}} Blocker~I (OIFS coastline
+crash) stands. \textbf{Blocker~II's stated root cause --- ``a geostrophically-unbalanced remapped
+state'', cured by a thermal-wind velocity init --- is FALSIFIED.} That fix was implemented and
+failed its own offline gate. A \textbf{cold start on the very same PISM cavity, at the same 1200\,s
+timestep, is stable}, so neither the geometry nor the balance argument is the problem; the killer is
+the \emph{dynamics seam} between the bit-exactly preserved evolved state and the patched changed
+nodes. Read \texttt{report/dynamics\_seam\_2026-07-13}, then
+\texttt{report/increment\_test\_2026-07-13}. The evolution/step-1 analysis and figures below remain
+valid as \emph{observations}; the \emph{causal claim} does not.}}\end{center}
+
 \maketitle
 \thispagestyle{fancy}
 

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  13 JUL 2026 11:55
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  14 JUL 2026 07:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -361,33 +361,45 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 y
 Package: fontenc 2025/07/18 v2.1d Standard LaTeX package
 )
-Package hyperref Info: Option `colorlinks' set `true' on input line 5.
+(/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/generic/ulem/ulem.sty
+\UL@box=\box60
+\UL@hyphenbox=\box61
+\UL@skip=\skip59
+\UL@hook=\toks25
+\UL@height=\dimen184
+\UL@pe=\count319
+\UL@pixel=\dimen185
+\ULC@box=\box62
+Package: ulem 2019/11/18
+\ULdepth=\dimen186
+)
+Package hyperref Info: Option `colorlinks' set `true' on input line 6.
 
 (/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/latex/l3backend/l3bac
 kend-pdftex.def
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count319
+\l__color_backend_stack_int=\count320
 ) (./dynamics_seam_2026-07-13.aux)
 \openout1 = `dynamics_seam_2026-07-13.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 16.
+LaTeX Font Info:    ... okay on input line 16.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -427,69 +439,69 @@ LaTeX Font Info:    ... okay on input line 15.
 (/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/context/base/mkii/sup
 p-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count320
-\scratchdimen=\dimen184
-\scratchbox=\box60
-\nofMPsegments=\count321
-\nofMParguments=\count322
-\everyMPshowfont=\toks25
-\MPscratchCnt=\count323
-\MPscratchDim=\dimen185
-\MPnumerator=\count324
-\makeMPintoPDFobject=\count325
-\everyMPtoPDFconversion=\toks26
+\scratchcounter=\count321
+\scratchdimen=\dimen187
+\scratchbox=\box63
+\nofMPsegments=\count322
+\nofMParguments=\count323
+\everyMPshowfont=\toks26
+\MPscratchCnt=\count324
+\MPscratchDim=\dimen188
+\MPnumerator=\count325
+\makeMPintoPDFobject=\count326
+\everyMPtoPDFconversion=\toks27
 )
-Package hyperref Info: Link coloring ON on input line 15.
+Package hyperref Info: Link coloring ON on input line 16.
  (./dynamics_seam_2026-07-13.out) (./dynamics_seam_2026-07-13.out)
 \@outlinefile=\write3
 \openout3 = `dynamics_seam_2026-07-13.out'.
 
-LaTeX Font Info:    Trying to load font information for U+msa on input line 17.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 18.
 
 
 (/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/latex/amsfonts/umsa.f
 d
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 17.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 18.
 
 
 (/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/latex/amsfonts/umsb.f
 d
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Underfull \hbox (badness 8056) in paragraph at lines 52--53
+Underfull \hbox (badness 8056) in paragraph at lines 64--65
 []|\T1/cmr/m/n/10.95 ocean-only stan-dalone FE-SOM re-
  []
 
 
-Underfull \hbox (badness 1859) in paragraph at lines 52--53
+Underfull \hbox (badness 1859) in paragraph at lines 64--65
 \T1/cmr/m/n/10.95 pro-duces the crash ex-actly (day 4,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 58--59
+Underfull \hbox (badness 10000) in paragraph at lines 70--71
 []|\T1/cmr/bx/n/10.95 ruled out \T1/cmr/m/n/10.95 (bit-
  []
 
 
-Underfull \hbox (badness 4792) in paragraph at lines 59--59
+Underfull \hbox (badness 4792) in paragraph at lines 71--71
 []|\T1/cmr/m/n/10.95 The restart \T1/cmr/m/it/10.95 fill val-ues \T1/cmr/m/n/10
 .95 at
  []
 
 
-Underfull \hbox (badness 2418) in paragraph at lines 59--60
+Underfull \hbox (badness 2418) in paragraph at lines 71--72
 []|\T1/cmr/m/n/10.95 five in-de-pen-dent fill strate-gies (v2--
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 62--62
+Underfull \hbox (badness 10000) in paragraph at lines 74--74
 []|\T1/cmr/m/n/10.95 Pathological thin wa-ter
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 65--66
+Underfull \hbox (badness 10000) in paragraph at lines 77--78
 []|\T1/cmtt/m/n/10 cavity_flux_ramp_days \T1/cmr/m/n/10.95 im-ple-mented;
  []
 
@@ -498,12 +510,17 @@ ignored error: Infinite glue shrinkage found in box being split [1
 {/sw/spack-levante/texlive-live2025-uaw7o7/texmf-var/fonts/map/pdftex/updmap/pd
 ftex.map}{/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/enc/dvips/
 cm-super/cm-super-t1.enc}]
-Overfull \hbox (5.59538pt too wide) in paragraph at lines 82--94
+Overfull \hbox (5.59538pt too wide) in paragraph at lines 94--106
  [] 
  []
 
 [2{/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/enc/dvips/cm-supe
-r/cm-super-ts1.enc}] [3] [4] (./dynamics_seam_2026-07-13.aux)
+r/cm-super-ts1.enc}]
+Overfull \hbox (300.68466pt too wide) in paragraph at lines 188--200
+ [] 
+ []
+
+[3] [4] [5] (./dynamics_seam_2026-07-13.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-06>
@@ -513,13 +530,13 @@ d.
 (rerunfilecheck)             Checksum: 981F9A713C128BE806F173B11F11C3ED;1989.
  ) 
 Here is how much of TeX's memory you used:
- 10658 strings out of 467538
- 160831 string characters out of 5410173
- 599526 words of memory out of 5000000
- 39421 multiletter control sequences out of 15000+600000
- 646512 words of font info for 90 fonts, out of 8000000 for 9000
+ 10750 strings out of 467538
+ 162013 string characters out of 5410173
+ 601086 words of memory out of 5000000
+ 39507 multiletter control sequences out of 15000+600000
+ 646618 words of font info for 91 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,8n,79p,437b,581s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,9n,79p,437b,581s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/amsf
 onts/cm/cmbx10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/
 type1/public/amsfonts/cm/cmmi10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/
@@ -541,11 +558,12 @@ k-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfti10
 00.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public
 /cm-super/sfti1095.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fo
 nts/type1/public/cm-super/sfti1200.pfb></sw/spack-levante/texlive-live2025-uaw7
-o7/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb>
-Output written on dynamics_seam_2026-07-13.pdf (4 pages, 331210 bytes).
+o7/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb></sw/spack-levante/texli
+ve-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sftt1095.pfb>
+Output written on dynamics_seam_2026-07-13.pdf (5 pages, 362592 bytes).
 PDF statistics:
- 164 PDF objects out of 1000 (max. 8388607)
- 119 compressed objects within 2 object streams
- 18 named destinations out of 1000 (max. 500000)
+ 174 PDF objects out of 1000 (max. 8388607)
+ 126 compressed objects within 2 object streams
+ 19 named destinations out of 1000 (max. 500000)
  65 words of extra memory for PDF output out of 10000 (max. 10000000)
 

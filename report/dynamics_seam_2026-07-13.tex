@@ -2,6 +2,7 @@
 \usepackage[margin=2.2cm]{geometry}
 \usepackage{amsmath,amssymb,booktabs,longtable,xcolor,hyperref}
 \usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
 \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
 \newcommand{\code}[1]{\texttt{\small #1}}
 \setlength{\parskip}{0.35em}
@@ -15,6 +16,17 @@
 \begin{document}
 \maketitle
 \vspace{-2em}
+
+\begin{center}\fcolorbox{red}{red!8}{\parbox{0.93\textwidth}{%
+\textbf{\textcolor{red}{PARTIALLY REFUTED (2026-07-13, evening).}} The core diagnosis in this note
+stands: the cavity \emph{geometry} is fine, a cold start on it is stable, and the killer is the
+remapped \emph{dynamics seam}. \textbf{But its central premise about the FIX is wrong.} This note
+argues the per-leg PISM increment is ``two orders of magnitude smaller'' (mean
+$|\Delta\mathrm{draft}| \approx 22$\,m) and therefore absorbable. It is not. The increment test was
+run: \textbf{1399 nodes have their ice removed ENTIRELY in one leg}, the Ross front retreats
+$\approx$440~km, and PISM loses 24\% of its floating area per decade. The mean is diluted by the
+98\% unchanged interior and is \textbf{meaningless}. Struck-out passages below are the refuted ones.
+See \texttt{report/increment\_test\_2026-07-13}.}}\end{center}
 
 \begin{abstract}
 \noindent
@@ -182,7 +194,7 @@ nodes with $|\Delta \mathrm{draft}| > 200$\,m & 1853 \\
 nodes flipping open-ocean $\to$ sub-ice & 1579 \\
 nodes flipping sub-ice $\to$ open-ocean & 1436 \\
 \midrule
-\textbf{a genuine 10-yr PISM increment}: mean $|\Delta \mathrm{draft}|$ & \textbf{$\approx$22\,m} \\
+\sout{\textbf{a genuine 10-yr PISM increment}: mean $|\Delta \mathrm{draft}|$} & \sout{\textbf{$\approx$22\,m}} \textcolor{red}{$\leftarrow$ \textbf{REFUTED: the mean is meaningless; 1399 nodes lose their ice entirely, max 923\,m}} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -190,9 +202,12 @@ nodes flipping sub-ice $\to$ open-ocean & 1436 \\
 \noindent
 This swap is an artefact of bolting an ocean spun up on the \emph{observed} cavity onto PISM's
 \emph{equilibrium} cavity --- two different ice sheets. \textbf{Production never has to survive
-it.} What production must survive, forever, is the \emph{incremental} change from one PISM
-chunk to the next --- two orders of magnitude smaller --- and \textbf{that has never been
+it.} \sout{What production must survive, forever, is the \emph{incremental} change from one PISM
+chunk to the next --- two orders of magnitude smaller ---} and \textbf{that has never been
 tested}.
+\textcolor{red}{\textbf{REFUTED:} the increment is \emph{not} ``two orders of magnitude smaller''.
+PISM is in disequilibrium and sheds its shelves: 1399 nodes lose their ice outright in a single leg
+(Ross front $-$440\,km, floating area $-$24\%/decade). The strike-through above is the error.}
 
 \section{The strategy that follows}\label{sec:strategy}
 
@@ -202,11 +217,11 @@ tested}.
       enters the coupled run. This is experiment \textbf{movcav12} (running).
 \item \textbf{Then test the change that matters.} By chunk~3 the cold-started ocean carries a
       year of genuine, spun-up dynamics; the remap must then carry \emph{that} across a real
-      10-yr PISM increment ($\approx$22\,m). \textbf{This is the experiment that decides whether
+      10-yr PISM increment \sout{($\approx$22\,m)} \textcolor{red}{(in fact: 1399 nodes fully opened)}. \textbf{This is the experiment that decides whether
       the coupling is viable}, and it is the first honest test of the remap we will have run.
 \item \textbf{If the increment survives}, the machinery is fit for purpose --- we have already
       proven the remap is bit-exact on unchanged nodes, inversion-free, and geometrically sound.
-\item \textbf{If even $\approx$22\,m dies}, the seam is fundamental and the remaining option is
+\item \textbf{If even \sout{$\approx$22\,m} \textcolor{red}{a real increment} dies}, the seam is fundamental and the remaining option is
       to stage the geometry change so the ocean never sees a discontinuity (a geometry ramp), or
       to relax the dynamics locally toward balance across the seam rather than patching it.
 \end{enumerate}
