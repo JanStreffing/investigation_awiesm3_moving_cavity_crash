@@ -21,18 +21,21 @@
 
 \begin{abstract}
 \noindent
-\textbf{Where we are.} PISM is in massive disequilibrium and is shedding its ice shelves: it loses
-\textbf{24\% of its floating area per decade}, \textbf{1399 mesh nodes lose their ice entirely in a
-single 10-yr leg}, and the Ross front retreats $\approx$440~km. Our ocean \textbf{reacts violently}
-to that: it absorbs $\sim$99\% of the change, but the remaining 1\% (columns where the ice vanishes
-outright) is enough to kill the leg. \textbf{This is not good news.} Absorbing 99\% is not a passing
-grade when the rest is fatal.
+\textbf{ROOT CAUSE FOUND (2026-07-14): the salt plume parameterisation was OFF}
+(\code{spp = .false.}). \code{spp} distributes the brine rejected when sea ice grows
+\emph{downward} through the water column instead of leaving it at the surface. That is how High
+Salinity Shelf Water forms. Without it no dense shelf water forms, warm deep water floods the
+Antarctic shelf and then the ice-shelf cavities. Our cavity sat \textbf{$\approx$1.2\,K above
+freezing}, melted the shelves at \textbf{$\approx$28\,m/yr ($30\times$ observed)}, and PISM duly
+collapsed --- shedding \textbf{24\% of its floating area per decade}. \textbf{The catastrophic ice
+geometry the ocean kept failing on was manufactured by our own melt.} Xiaojie had already
+demonstrated this in standalone CORE3 (\S\ref{sec:spp}).
 
 \medskip\noindent
-\textbf{Two root causes we published and later falsified} are struck through below. The current
-understanding: the cavity \emph{geometry} is fine (a cold start on it is stable at the production
-timestep); the killer is the \emph{seam} in our remapped restart, where patched values at the changed
-nodes meet a fully evolved dynamical state everywhere else.
+\textbf{Three root causes we published and later falsified} are struck through below. The
+moving-cavity blowup itself is real but secondary: the cavity \emph{geometry} is fine (a cold start
+on it is stable at the production timestep); the killer is the \emph{seam} in our remapped restart,
+where patched values at the changed nodes meet a fully evolved dynamical state everywhere else.
 \end{abstract}
 
 \tableofcontents
@@ -209,33 +212,75 @@ from failure. \textbf{Absorbing 99\% of the change is not a passing grade when t
 fatal.}
 
 %======================================================================
-\section{Where to go from here}\label{sec:forward}
+\section{ROOT CAUSE: the salt plume parameterisation was off}\label{sec:spp}
+
+\subsection{The chain}
 
 \begin{enumerate}
-\item \textbf{Find out why PISM is collapsing, and stop it.} A run shedding 24\% of its floating area
-      in a decade is the anomaly, and everything downstream inherits it. \textbf{The first thing to
-      check is the sub-shelf melt \emph{we} feed PISM}: if our ocean hands it unrealistic melt, then
-      PISM's collapse is our own doing, and the loop closes.
-
-\item \textbf{Try to stabilise the ocean locally.} Reduce the ocean timestep and/or raise viscosity
-      \emph{in the neighbourhood of the changed columns}, and see whether the transient can be damped
-      enough to survive. A mitigation, not a cure --- but it may keep the coupling running while (1)
-      is sorted out. Note the \emph{global} knobs are already exhausted: a global timestep cut does
-      \textbf{not} help (60\,s merely swaps the CFLz symptom for an $\eta_n$ one).
-
-\item \textbf{The lasting way forward: compute physically consistent fields for the newly opened
-      cavity.} Patching such a column with plausible \emph{values} is what we have been doing, and it
-      is exactly what does not work (five fill strategies, all dead; \S\ref{sec:seam}). What is needed
-      is a state for the newly opened water that is \textbf{dynamically consistent with its
-      surroundings}, not merely a sensible number in each cell. That is the real problem, and the one
-      worth solving.
+\item \code{spp = .false.} $\Rightarrow$ brine rejected by growing sea ice stays in the surface layer
+      and is mixed away.
+\item No brine plume $\Rightarrow$ \textbf{no High Salinity Shelf Water forms}.
+\item No HSSW $\Rightarrow$ nothing excludes the warm deep water, which floods the Antarctic shelf
+      and then the cavities.
+\item Cavity sits \textbf{$\approx$1.2\,K above freezing} instead of $\approx$0.2\,K.
+\item FESOM melts the shelves at \textbf{$\approx$28\,m/yr} (observed area-mean $\approx$0.8\,m/yr).
+\item PISM, fed that, sheds \textbf{24\% of its floating area per decade}: 1399 nodes lose their ice
+      \emph{entirely} in one leg, the Ross front retreats $\approx$440\,km.
+\item The ocean is then asked to swallow that geometry change every leg --- and fails.
 \end{enumerate}
 
 \noindent
-A per-leg cap on $|\Delta\mathrm{ulev}|$ (defer the extreme tail across legs) remains available as a
-blunt robustness guard, but it papers over (1) rather than fixing anything.
+\textbf{The ``PISM is collapsing'' problem and the ``the ocean cannot absorb the increment'' problem
+are the same problem, and we caused both.}
 
-%======================================================================
+\subsection{The evidence}
+
+\textbf{The initial condition is irrelevant --- the model heats the cavity itself.} We prepared a
+chunk-1 restart with a properly cold cavity (thermal driving $+0.06$\,K, from the spun-up CORE3
+tracers). After \emph{one model year} it had warmed to $+1.25$\,K --- and the cold-started run
+converged to the same $+1.21$\,K. The melt was identical (28.28 vs 28.29\,m/yr). Initialising the
+cavity correctly buys nothing if the model then warms it back up.
+
+\medskip\noindent
+\textbf{Xiaojie had already shown this in standalone CORE3} (West Weddell transect, 1972--1981;
+\code{/home/a/a270234/my\_work/20260407/temp\_fesom\_core3\_WWS.ipynb}):
+
+\begin{center}\includegraphics[width=\textwidth]{spp/xiaojie_core3_WWS_spp_transect.png}\end{center}
+
+\noindent
+Top row (\code{spp} ON): the shelf is cold to the bottom and the warm deep water is pushed offshore
+and down. Bottom row (\code{spp} OFF, \textbf{our configuration}): the warm water sits right against
+the shelf break, ready to intrude. \code{spp} is the dominant switch.
+
+\subsection{The fix}
+
+\code{spp: ".true."} in \code{namelist.oce} \code{\&oce\_dyn} (runscript
+\code{awiesm3\_dyn\_ocean\_core3.yaml}). Note \code{use\_momix} is already on by FESOM's default.
+
+\section{Where to go from here}\label{sec:forward}
+
+\begin{enumerate}
+\item \textbf{Re-run with \code{spp = .true.}} and confirm the chain unwinds: cavity thermal driving
+      should fall to $\approx$0.2\,K, melt to order 1\,m/yr, PISM should stop collapsing, and the
+      per-leg geometry increment should become genuinely small --- which is what the remap was
+      always designed for.
+\item \textbf{Then re-test the increment.} With a sane increment, the dynamics seam
+      (\S\ref{sec:seam}) may never be exercised hard enough to matter. If it still bites, the
+      remaining case is narrow and well defined: a column where the ice vanishes entirely, handed
+      donor water, zero velocity, and a free surface that cannot match its still-cavity neighbours.
+\item \textbf{Independently, fix the PISM ocean forcing.} \code{coupling\_ocean2pism.functions}
+      averages FESOM levels \textbf{1--20 = 0--410\,m, starting at the surface}
+      (\code{-sellevidx,1/20}) and hands that to PISM's \code{-ocean th}, a \emph{local
+      boundary-layer} scheme that needs the water \emph{in contact with the ice base}. The correct
+      code (\code{-sellevel,150/600}) sits right there, disabled behind \code{if [ 0 -eq 1 ]}. This
+      is a second, independent error --- it did not cause the collapse (FESOM's own melt was equally
+      catastrophic) but it is wrong and should go.
+\item \textbf{Consider passing FESOM's melt directly} (\code{-ocean given}). We run an explicit
+      cavity and FESOM already computes basal melt; having PISM recompute it with its own
+      three-equation scheme means two implementations disagreeing about the same interface, and ice
+      and ocean seeing different melt.
+\end{enumerate}
+
 \section{Bugs found and fixed along the way}
 
 \subsection{In the remap}

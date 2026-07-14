@@ -1,0 +1,19 @@
+\contentsline {section}{\numberline {1}Blocker I --- OIFS step-0 coastline crash (RESOLVED)}{2}{section.1}%
+\contentsline {section}{\numberline {2}Blocker II --- FESOM cavity-margin blowup}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Two root causes we got wrong}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Every hypothesis, and the experiment that killed it}{2}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}The decisive control: a cold start on PISM's cavity is stable}{3}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}What is actually wrong: the dynamics seam}{3}{subsection.2.4}%
+\contentsline {section}{\numberline {3}The real increment test (2026-07-13)}{3}{section.3}%
+\contentsline {subsection}{\numberline {3.1}The finding: PISM is collapsing}{4}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}This is not good news}{5}{subsection.3.2}%
+\contentsline {section}{\numberline {4}ROOT CAUSE: the salt plume parameterisation was off}{5}{section.4}%
+\contentsline {subsection}{\numberline {4.1}The chain}{5}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}The evidence}{5}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}The fix}{6}{subsection.4.3}%
+\contentsline {section}{\numberline {5}Where to go from here}{6}{section.5}%
+\contentsline {section}{\numberline {6}Bugs found and fixed along the way}{7}{section.6}%
+\contentsline {subsection}{\numberline {6.1}In the remap}{7}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}In the coupling plumbing}{7}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Assets}{7}{section.7}%
+\contentsline {section}{\numberline {8}Method note}{8}{section.8}%

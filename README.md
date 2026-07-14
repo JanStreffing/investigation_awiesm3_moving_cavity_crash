@@ -50,111 +50,49 @@ so all components agree on the new coastline.
   test the remap on a genuine 10-yr increment carrying a year of real spun-up dynamics. That is the
   experiment that decides whether the coupling is viable (experiment `movcav12`).
 
-## THE CURRENT PICTURE (2026-07-13, evening) — read `report/moving_cavity_investigation`
+## ROOT CAUSE FOUND (2026-07-14): the salt plume parameterisation was OFF
 
-The cold-start strategy worked: chunk-1 ran a clean model year on PISM's cavity, PISM ran its
-10 years, and for the first time the remap was asked to carry **a year of spun-up ocean dynamics
-across a real PISM increment**. It crashed on day 15.7 — but the *way* it crashed inverts the
-conclusion.
+**`spp = .false.`** — that's it.
 
-**PISM is collapsing, and our ocean reacts violently to it.**
+`spp` distributes the **brine rejected when sea ice grows** *downward* through the water column
+(`SPP_dep_S = -80 m`) instead of leaving it in the surface layer. **That is how High Salinity Shelf
+Water forms.** Without it, the brine is mixed away at the surface, no dense shelf water forms,
+nothing excludes the warm deep water — and it floods the Antarctic shelf and then the cavities.
 
-| | monster swap (CORE3→PISM) | real increment (this leg) |
-|---|---|---|
-| CFLz over time | 4.46 → 6.43 → 7.25 → **9.24** (runaway) | 5.26 → **5.78** → 5.40 → 4.51 → **4.15** (**peaks, then DECAYS**) |
-| η NaN | yes | **none** — all 209,172 nodes finite |
-| \|η\|>3 nodes | 3611, basin-wide, radiating | **17**, one tight cluster, all on changed nodes |
-
-All 17 ringing nodes share one signature: **`ulev 17 → 1`** — 16 ocean levels opening *at once*,
-i.e. the ice shelf above them removed **entirely** in a single leg. Their η alternates in sign
-(+24, −18, +16) — a grid-scale checkerboard, not a basin mode.
-
-**Why the tail is so extreme: PISM is in massive disequilibrium.**
-
-![PISM change, plan view](figures/pism_change/pism_change_planview.png)
-![PISM change, side cutaway](figures/pism_change/pism_change_section.png)
-
-The cutaway says it plainly: the Ross ice-shelf front retreats **~4° of latitude (~440 km) in ONE
-10-yr leg**. The plan view shows it is not a Ross anomaly — the **1399 nodes where the ice is
-removed outright** (magenta) ring the *entire* Antarctic margin.
+**The chain:**
 
 | | |
 |---|---|
-| changed nodes this leg | 3248 (1.55% of mesh) |
-| \|Δulev\| ≥ 10 | 1582 |
-| **ice removed ENTIRELY** | **1399** |
-| mean \|Δdraft\| | **2.9 m** ← *meaningless* |
-| max \|Δdraft\| | **923 m** |
-| PISM floating cells | 24,815 → 20,093 (**−24% in 10 yr**) |
+| `spp = .false.` | no brine plume |
+| → no HSSW | nothing excludes warm deep water |
+| → cavity **+1.2 K** above freezing (should be ~0.2 K) | |
+| → FESOM melts shelves at **~28 m/yr** (observed ~0.8 m/yr) | |
+| → PISM sheds **24% of floating area per decade** | 1399 nodes lose their ice *entirely* per leg; Ross front −440 km |
+| → the ocean is asked to swallow that every leg | and fails |
 
-**The mean is a lie** — diluted by the vast unchanged interior. The earlier claim that a 10-yr PISM
-increment is a gentle ~22 m change, which motivated the whole "sidestep the swap and the increments
-will be fine" strategy, was **wrong**.
+**"PISM is collapsing" and "the ocean can't absorb the increment" are the same problem, and we
+caused both.**
 
-**Read the 99% soberly.** Of the 1399 fully-opened nodes only 17 rang, and CFLz peaked then
-decayed — so the remap machinery is doing better than a "crashed at day 15" headline suggests.
-**But the run still crashed.** What this tells us is that **our ocean reacts violently to ice-shelf
-and cavity changes mid-run**: a handful of columns where the ice vanishes outright is enough to kill
-a leg. Absorbing 99% of the change is not a passing grade when the remaining 1% is fatal. **This is
-not good news.**
+**The initial condition is irrelevant — the model heats the cavity itself.** We prepared a chunk-1
+restart with a properly cold cavity (driving **+0.06 K**). After *one model year* it had warmed to
+**+1.25 K**, and the cold-started run converged to the same **+1.21 K**. Melt identical (28.28 vs
+28.29 m/yr).
 
-**Where to go from here** — two branches of work, plus the thing that would actually fix it:
+**Xiaojie had already shown this in standalone CORE3** — West Weddell transect, 1972–1981
+(`/home/a/a270234/my_work/20260407/temp_fesom_core3_WWS.ipynb`):
 
-1. **Find out why PISM is collapsing, and stop it.** A run shedding 24% of its floating area in a
-   decade is the anomaly and everything downstream inherits it. **First thing to check is the
-   sub-shelf melt *we* feed PISM** — if our ocean hands it unrealistic melt, PISM's collapse is our
-   own doing.
-2. **Try to stabilise the ocean locally**: reduce the ocean timestep and/or raise viscosity *in the
-   neighbourhood of the changed columns*. A mitigation, not a cure — but it may keep the coupling
-   running while (1) is sorted. Note the *global* knobs are exhausted: a global timestep cut does not
-   help (60 s merely swaps the CFLz symptom for an η one).
-3. **The lasting way forward: compute physically consistent fields for the newly opened cavity.**
-   Patching such a column with plausible *values* is exactly what does not work (five fill
-   strategies, all dead). What is needed is a state for the newly opened water that is *dynamically
-   consistent with its surroundings*, not merely a sensible number in each cell. That is the real
-   problem, and the one worth solving.
+![spp on vs off, West Weddell](figures/spp/xiaojie_core3_WWS_spp_transect.png)
 
-Also fixed on the way (esm_tools `eef4f6db`): the remap **manufactured** a −45 °C value via an
-**unbounded linear extrapolation** below the old seabed (a value present nowhere in the source).
-Never hit before because the mesh had never *grown* — ice retreat exercises that path for the first
-time.
+Top row (**spp ON**): shelf cold to the bottom, warm deep water pushed offshore and down.
+Bottom row (**spp OFF — our config**): warm water sits right against the shelf break.
 
-## Coupling plumbing (2026-07-13) — latent bugs exposed by a submesh chunk-1
+**Fix:** `spp: ".true."` in `namelist.oce` `&oce_dyn`. (`use_momix` is already on by FESOM default.)
 
-Making chunk-1 run on the **PISM-cavity submesh** (cold start) instead of the full mesh pushed a
-*submesh* leg through `couple_out` for the first time. Every previous run either ran chunk-1 on the
-**full mesh** (where these paths are trivially correct) or died early in chunk-3 (before ever
-reaching the end of a leg). That immediately exposed several latent bugs — none of them physics:
-
-| bug | cause | note |
-|---|---|---|
-| OASIS abort at ~day 300 | `A_Q_ice -> heat_ico` used `GSSPOS` conservation. Its correction is built from the summed source/target ratio; when the summed *target* residual is ~0 while the source residual is small-but-nonzero, it explodes (`gsspos sumdst is zero but sumsrc is not`, `mod_oasis_advance.F90`) | fixed: new `gauswgt_gsmart` transform (GSMART), `heat_ico` switched. Pre-existing. `FCO2_oce` + `awicm3.yaml` still on `gsspos` |
-| namcouple feom dim never patched | `fix_namcouple_feom_dim` read `${MAXMESH_DIR_fesom}`, which is assigned **inside `build_submesh`** — a *different* subjob/shell. So it was always unset, `full=''`, and the guard refused to patch. **On every leg, always.** | fixed: use `MAX_MESH` (what `env_fesom.py` actually exports). Invisible until a submesh leg reached the end-of-leg restart write (`av gsize nx ny mismatch`) |
-| `fesom2ice` broadcast error | passed `--FESOM_MESH ${MESH_DIR_fesom}` (static full mesh) while FESOM's output is on the submesh: `could not broadcast input array from shape (208810,) into shape (12,211567)` | fixed: take the mesh from the run's own `namelist.config` `MeshPath` |
-| `couple_namcouple` skipped on chunk 1 | correct when chunk-1 was a *full-mesh* leg; wrong once chunk-1 became a submesh leg | fixed (self-inflicted, 2026-07-13) |
-
-**Chunk-1 now completes a full year on the submesh** (worst CFLz ~3.75, production 1200 s timestep),
-hands off to PISM, and the workflow proceeds. **Chunk-3 — the remap of a real 10-yr PISM increment
-carrying a year of spun-up dynamics — remains the open, decisive test.**
-
-## Chunk-1 artifacts are pooled
-
-`couple_in`'s chunk-1 outputs are deterministic (they derive from PISM's *initial* geometry), so they
-are pre-staged at `/work/ab0246/a270092/input/fesom2/pism_cavity_ini/` (540 MB; submesh + `dist_1792`,
-OASIS grids/masks/areas/rmp, ICMGG, plit, remapped `rstas`/`rstos`). With
-`couple_in: skip_chunk_number: 1`, chunk-1 needs **no** `couple_dir` paths, so `esm_runscripts` can be
-run straight from the **login node** — it just submits the compute job (no ~7 min regen, no sbatch
-wrapper). `couple_namcouple` must still run. Chunk >=3 regenerates per PISM increment as before.
-
-## Known cost: the post-model tail
-
-After the model finishes, the leg spends **~9.5 min still holding all 45 nodes**: `tidy` moves
-**53 GB** of output (42 GB OIFS 6-hourly pressure-level fields + 11 GB FESOM), then `fesom2ice`
-(~87 s of real work) and `esm2pism` run. Two levers:
-- the runscript had **`parallel_file_movements: false`** (a login-node workaround) overriding the
-  awiesm3 default `'threads'` — so 53 GB was being copied **sequentially**. Removed.
-- the 42 GB of 6-hourly `u/v/w/q/t/z/vo` on pressure levels is not needed by PISM (it consumes only
-  the `*_for_ice` fields) and could be trimmed for coupling test runs.
+**Also wrong, independently:** the PISM ocean forcing averages FESOM levels **1–20 = 0–410 m,
+starting at the surface** (`-sellevidx,1/20`) and hands that to PISM's `-ocean th`, a *local
+boundary-layer* scheme that needs the water *in contact with the ice base*. The correct code
+(`-sellevel,150/600`) is right there, disabled behind `if [ 0 -eq 1 ]`. This did **not** cause the
+collapse (FESOM's own melt was equally catastrophic) but it is wrong and should go.
 
 ## Repository layout
 
