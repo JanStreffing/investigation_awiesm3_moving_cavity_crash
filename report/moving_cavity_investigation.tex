@@ -43,6 +43,15 @@ a jigsaw ocean (Fig.~\ref{fig:jigsaw}): OIFS saw Weddell ice fraction \textbf{0.
 a mandatory weight validator that aborts the leg on ordering mismatch (\code{c21fe7c2}).
 
 \medskip\noindent
+\textbf{Bug III --- the OASIS coupling restart was compound-scrambled} (found 2026-07-14 by the
+movcav16 attempts themselves, \S\ref{sec:forward}): \code{remap\_oasis\_restart.py} gathered in nod2d
+space but its input and required output are \emph{runtime}-ordered, so OIFS's first coupling interval
+saw a jigsaw SST --- a one-hour global shock that nondeterministically detonated the convection scheme
+(overflow in \code{cubasen.F90} at hour 19 / hour 458 / never, on identical inputs). Fix: un-permute /
+re-permute around the gather via both meshes' \code{rpart.out} (\code{abe56ee2}); pool \code{rstos.nc}
+rebuilt (measured $0.15 \to 0.995$ correlation with the restart's own surface temperature).
+
+\medskip\noindent
 \textbf{Four earlier root-cause claims are falsified} and struck through below. Sections whose
 measurements were made on jigsaw-coupled runs are marked \textbf{TAINTED} and will be re-measured
 under movcav16.
@@ -323,28 +332,66 @@ Verification checklist for chunk-1 (each item targets one of this week's failure
 \item then chunk-3: the \emph{real} increment test, finally on clean evidence.
 \end{enumerate}
 
-\subsection{movcav16 launch log (2026-07-14)}
-Three attempts were needed to get movcav16 airborne; none of the failures indicts the two fixes.
+\subsection{movcav16 launch log (2026-07-14) --- and Bug III}
+Four attempts. Attempts 2 and 3 exposed a \textbf{third ordering bug}, sibling of Bug II.
 \begin{itemize}
 \item \textbf{Attempt 1} (job 26245041): healthy to day 120 (worst CFL$_z$ 2.41, EVP active, $\sim$17\,d/min) --
   killed by a launcher bug of ours (\code{env\_fesom.py} looked up \code{oce2ice\_method} under the setup name
   instead of \code{config['fesom']}; fixed in esm\_tools \code{d5a8039d}). The teardown of the crashed launcher
   cancelled the healthy compute job.
-\item \textbf{Attempt 2} (job 26245420): real model crash. OIFS floating overflow in the convection scheme
-  (\code{cubasen.F90:453}, rank 29) on 19 January; the watchdog then cancelled the job correctly.
-  FESOM was healthy. The work dir's \code{rmp\_*feom*} files are bit-identical to the corrected pool
-  weights, so the ordering fix \emph{was} in effect. Attempt 1 ran the same inputs past day 120, so the
-  overflow is \emph{not deterministic}: a marginal convection state that reproducibility noise (OpenMP
-  physics scheduling) flips. \code{BETAMFBC=-1} was already set (not the qmfixer overflow).
-  Noted for the suspect list should it reproduce: chunk-1 uses the native-pipeline
-  \code{ICMGGab45INIT\_feomdyn}, which hardens 74 Antarctic coastal cells from fractional ocean to
-  full land vs.\ movcav4's clean CORE3 file (intentional -- the cavity coastline; soil fields on those
-  cells are sane glacier-convention values). Forensics: \code{movcav16\_crash1\_forensics/}.
-\item \textbf{Attempt 3}: relaunched from the iterative master runscript
-  (\code{spinup\_couplePI\_core3.yaml}; launching the model1 sub-runscript directly fails with
-  \code{KeyError: model1}). \code{use\_venv: False} added to the sub-runscript so non-tty launches
-  cannot hang on the venv prompt.
+\item \textbf{Attempt 2} (job 26245420): OIFS floating overflow in the convection scheme
+  (\code{cubasen.F90:453}, rank 29) at hour 458 (19 January); the watchdog killed the job correctly.
+  FESOM healthy; work-dir \code{rmp\_*feom*} bit-identical to the corrected pool weights, so Bug II's fix
+  \emph{was} in effect. \code{BETAMFBC=-1} already set (not the qmfixer overflow).
+  Forensics: \code{movcav16\_crash1\_forensics/}.
+\item \textbf{Attempt 3} (job 26246140): same routine, \code{cubasen.F90:453/454}, but at \emph{hour 19--20}
+  and on several ranks at once (overflow + divide-by-zero, ranks 10/27). Same crash site, times spread
+  over hour 19 / hour 458 / never (attempt 1's 120 days) $\Rightarrow$ a \emph{startup shock} that
+  nondeterministically detonates marginal convection columns.
+\item \textbf{Bug III --- the OASIS coupling restart was compound-scrambled.} The chunk-1 pool
+  \code{rstos.nc} (OIFS's SST/ice for the first coupling interval, before FESOM's first real field
+  arrives) was built by \code{remap\_oasis\_restart.py}, whose \code{map\_nod} gather lives in nod2d
+  space --- but the harvested input is \emph{runtime}-ordered on the old mesh, and the runtime-ordered
+  weights need the output \emph{runtime}-ordered on the new mesh. Both permutes were missing: the
+  emitted field matched \emph{neither} ordering. Measured: pool \code{sst\_feom} correlated $+0.15$
+  with the restart's own level-1 temperature (and $-0.11$ with $|$lat$|$); the corrected transform
+  (un-permute via old \code{rpart.out} $\to$ gather $\to$ re-permute via new \code{rpart.out})
+  correlates $+0.995$ (and $-0.95$ with $|$lat$|$). So OIFS's first hour saw 305\,K water under polar
+  air --- a one-interval global jigsaw shock. Fix: esm\_tools \code{abe56ee2} (script + caller pass
+  both \code{rpart.out}); pool \code{rstos.nc} rebuilt from the harvested full-mesh original
+  (backup: \code{rstos\_scrambled\_bak.nc}); \code{rstas.nc} is A096-only, unaffected.
+  \emph{This closes the ``transient-only, deferred'' loose end --- the transient was not harmless.}
+\item \textbf{Attempt 4} (job 26246292): corrected \code{rstos.nc} verified in the work dir. Survived to
+  \emph{day 44} (longest of the crashing attempts --- consistent with Bug III's fix helping) then died in the
+  \emph{surface scheme}: \code{vsurf\_mod.F90:280}, \code{FOEEW(ZTSK)} overflow = a runaway skin
+  temperature, on a tile the OIFS source itself flags (``Tsk \ldots overshoots to very large values \ldots
+  for non-physical tile fractions''). FESOM healthy throughout (CFL$_z\le$1.8).
+\item \textbf{The remaining suspect: the native-pipeline ICMGG.} \code{fort.4} is byte-identical between
+  surviving movcav15 and crashing movcav16; WAM tables, plit, masks identical too; all mask cross-checks
+  (lsm $\leftrightarrow$ plit $\leftrightarrow$ OASIS mask $\leftrightarrow$ weight coverage) are clean; the
+  corrected weights deliver OIFS geographically-correct fields (max 0.24$^\circ$). What movcav16 does
+  \emph{first} is combine the native ICMGG (74 hardened Antarctic coastal cells) with \emph{physically
+  correct} polar coupled fields --- under movcav15's jigsaw, those cells never saw real polar values (ci
+  $\approx$ 0.04, ice tile effectively off). Every OIFS libsurf/convection crash ever observed
+  (voskin/vsurf/cubasen) is on a native-ICMGG run; movcav4/7 with the clean CORE3 file never crashed; and
+  the chunk-3 swap test already \emph{proved} the ICMGG mechanism there.
+\item \textbf{Attempt 5 (running): the chunk-1 swap test.} \code{ICMGG\_INIT} $\to$ clean
+  \code{ICMGGab45INIT\_CORE3} (verified in the work dir: 0 lsm cells differ from clean, 74 from native),
+  everything else unchanged. Known cost: 62 Antarctic coastal cells are OIFS-ocean but OASIS-masked (the
+  pool mask was built for the native lsm), so they keep their initial climatological SST/ci --- numerically
+  stable (this is how the chunk-3 swap survived), physically a compromise over the PISM-shelf difference
+  zone. Verdict logic: past day $\sim$50 starts separating, full year = ICMGG convicted for chunk-1; a
+  libsurf/convection crash instead clears the ICMGG $\to$ next run instrumented with OASIS EXPOUT to catch
+  the runaway cell in the act.
+\item Launch hygiene from attempts 2--3: launch from the iterative master
+  (\code{spinup\_couplePI\_core3.yaml}; the model1 sub-runscript alone dies with
+  \code{KeyError: model1}), and \code{use\_venv: False} so non-tty launches cannot hang on the venv
+  prompt.
 \end{itemize}
+If attempt 5 convicts the ICMGG, the durable fix is structural: the atmosphere-side surface description
+(ICMGG lsm/slt + A096 OASIS mask + feom weights + WAM tables) must change \emph{as a consistent set} or not
+at all --- today the WAM tables are still the old coastline (byte-identical to movcav4's) even where the
+lsm moved.
 
 \section{Bugs found and fixed along the way}
 
