@@ -471,14 +471,62 @@ send, so production awicm3 runs live with the same latent (if rarer) crash mode.
   file. Fix \code{7953585b}: synthesized fields staged per-variable in \code{COUPLE\_DIR} (the 2D loop
   points there when they exist) + \code{fesom2ice} now drops the \code{.coupling\_failed} sentinel.
   The completed run is preserved as \code{movcav16\_run1}.
-\item \textbf{Attempt 10 (running): the full-cycle rerun} on the fixed handover --- chunk-1 $\to$
-  DIRECT couple\_out $\to$ PISM leg (checklist item 5: floating-area change) $\to$ chunk-3 = the real
-  increment test (item 6).
+\item \textbf{Attempt 10: the cycle ran 5 of its 6 stages.} Chunk-1 completed again; the DIRECT
+  couple\_out delivered (after two more exhumations of never-run FESOM1.x-era code:
+  per-variable tmp files + variable-merge in the 2D loop, \code{74671c27}; and the 2D surface
+  goodgrid was never merged into \code{ocean\_file\_for\_ice} at all, \code{bb9d00c2} --- the
+  final file now carries temp/salt/Tsurf/Ssurf/fh/fw with correct units). The \textbf{PISM decade
+  ran on FESOM's own melt} (item 5: grounded ice $-0.10\%$, floating fringe $-21$ of 133 cells ---
+  nb.\ the initial PISM state has almost no shelves, so current cavities are minimal). The
+  \textbf{live mesh change worked}: 208810 $\to$ 211174 nodes, weights regenerated and
+  runtime-order-validated at $\le 0.024^\circ$, restarts remapped through the rpart sandwich.
+  Two more workflow bugs found and fixed here: the rstos size guard read the wrong dimension
+  (\code{61c8ed8a}), and a same-chunk \code{couple\_in} rerun promoted its own new submesh to
+  \code{previous\_submesh} --- old $=$ new $\Rightarrow$ zeros copied into newly-wet levels
+  $\Rightarrow$ the classic mstep-1 CFL$_z$ blowup, diagnosed from the blowup file and fixed
+  (\code{b9c1e370}).
 \item Launch hygiene from attempts 2--3: launch from the iterative master
   (\code{spinup\_couplePI\_core3.yaml}; the model1 sub-runscript alone dies with
   \code{KeyError: model1}), and \code{use\_venv: False} so non-tty launches cannot hang on the venv
   prompt.
 \end{itemize}
+
+\subsection{Stage 6 blocker, solved in principle: the wave model's frozen coastline}
+\label{sec:wam}
+Chunk-3 (1901 on the new mesh) dies \emph{deterministically} at its first physics step in
+\code{voskin\_mod.F90:282} --- the same signature as the historical movcav12/15 chunk-3 crash.
+The line squares \textbf{WAM's Stokes drift}; the overflow is garbage in \code{PUSTOKES} itself.
+
+\textbf{Mechanism} (each link verified): WAM has no runtime tiling --- its sea-point set is baked
+into \code{wam\_grid\_tables} at preprocessing time and has never been regenerated (the staged
+tables are byte-identical to movcav4's, i.e.\ the \emph{original} CORE3 coastline). A cell that is
+ocean per the regenerated lsm but land per WAM never receives wave data. The Stokes/Charnock
+fields (\code{YSD\_WS} group) are \emph{OIFS srf-restart-carried state}: on a \emph{warm} start
+after a coastline change, step-0 physics reads never-written storage at newly-ocean points
+\emph{before WAM's first call}. Cold starts are immune (zero-initialised arrays) --- which is why
+the historical ocp-pool runs with massive lsm changes never saw this (always experiment-initial,
+cold), why chunk-1 tolerates its 12 mismatch cells, and why the old clean-ICMGG swap ``fixed''
+chunk-3 (clean lsm $\subseteq$ WAM-ocean removes the exposed cells). Chunk-3 has \textbf{125}
+mismatch cells (113 newly opened; Fig.\ \code{wam\_lsm\_mismatch.png}).
+
+\textbf{The two-layer rule this generalises}: every member of the moving-coastline set has a
+\emph{static description} (regenerated per leg: ICMGG, plit, masks, weights --- but NOT WAM) and
+\emph{restart-carried state} (FESOM: handled properly by \code{remap\_restart}; OIFS: ad-hoc
+\code{updtim} reseeds for skin T/SST; Stokes was the unguarded member; newly-\emph{land} soil
+state is the untested sibling awaiting a grounding-advance leg).
+
+\textbf{Decision: make the wave points real (option A), not tolerated-absent (option B rejected).}
+Preferred variant: \emph{one-time maximal-ocean tables} --- build WAM's sea-point set from the
+FESOM max-mesh (every cell that could ever become ocean is WAM-sea, with real bathymetry incl.\
+sub-shelf), so the tables never change again, the binary wave restarts stay index-compatible
+across all future mesh changes, and newly-opened cells have live wave fields the moment the lsm
+opens them. The complete toolchain is \emph{already built} in the OIFS install:
+\code{create\_wam\_bathymetry\_ETOPO1} (ETOPO1 $\to$ \code{wam\_topo}) and \code{preproc}
+(\code{wam\_topo} $\to$ \code{wam\_grid\_tables} + \code{wam\_subgrid\_0/1/2} --- exactly the four
+staged files). Remaining work: obtain ETOPO1, extract the coupled grid configuration, apply the
+max-ocean edit from the max-mesh, run preproc, validate against the max-ocean lsm, and cold-start
+WAM once at the switch leg (the old binary restarts are invalid under the new sea-point indexing
+--- by policy, simply not staged that once).
 If attempt 5 convicts the ICMGG, the durable fix is structural: the atmosphere-side surface description
 (ICMGG lsm/slt + A096 OASIS mask + feom weights + WAM tables) must change \emph{as a consistent set} or not
 at all --- today the WAM tables are still the old coastline (byte-identical to movcav4's) even where the

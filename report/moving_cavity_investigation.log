@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  14 JUL 2026 20:45
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  15 JUL 2026 07:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -534,7 +534,7 @@ Overfull \hbox (9.60515pt too wide) in paragraph at lines 77--86
 cmsy/m/n/10.95 !$\T1/cmtt/m/n/10 shelfbtemp\T1/cmr/m/n/10.95 .
  []
 
-<../figures/spp/sst_scramble_global.png, id=137, 939.51pt x 794.97pt>
+<../figures/spp/sst_scramble_global.png, id=142, 939.51pt x 794.97pt>
 File: ../figures/spp/sst_scramble_global.png Graphic file (type png)
 <use ../figures/spp/sst_scramble_global.png>
 Package pdftex.def Info: ../figures/spp/sst_scramble_global.png  used on input 
@@ -599,14 +599,14 @@ Overfull \hbox (5.59538pt too wide) in paragraph at lines 196--208
  []
 
 [5]
-<../figures/pism_change/pism_change_planview.png, id=162, 1228.59pt x 534.798pt
+<../figures/pism_change/pism_change_planview.png, id=168, 1228.59pt x 534.798pt
 >
 File: ../figures/pism_change/pism_change_planview.png Graphic file (type png)
 <use ../figures/pism_change/pism_change_planview.png>
 Package pdftex.def Info: ../figures/pism_change/pism_change_planview.png  used 
 on input line 263.
 (pdftex.def)             Requested size: 472.31595pt x 205.6pt.
-<../figures/pism_change/pism_change_section.png, id=163, 975.33078pt x 448.074p
+<../figures/pism_change/pism_change_section.png, id=169, 975.33078pt x 448.074p
 t>
 File: ../figures/pism_change/pism_change_section.png Graphic file (type png)
 <use ../figures/pism_change/pism_change_section.png>
@@ -638,32 +638,32 @@ cmtt/m/n/10 ice_thermo_cpl.F90:180\T1/cmr/m/n/10.95 ).
  []
 
 [9]
-Overfull \hbox (19.07083pt too wide) in paragraph at lines 477--481
+Overfull \hbox (19.07083pt too wide) in paragraph at lines 488--492
 []\T1/cmr/m/n/10.95 Launch hy-giene from at-tempts 2--3: launch from the it-er-
 a-tive mas-ter (\T1/cmtt/m/n/10 spinup_couplePI_core3.yaml\T1/cmr/m/n/10.95 ;
  []
 
-[10]
-Overfull \hbox (47.17427pt too wide) in paragraph at lines 518--522
+[10] [11]
+Overfull \hbox (47.17427pt too wide) in paragraph at lines 566--570
 []\T1/cmr/bx/n/10.95 The nam-cou-ple \T1/cmtt/m/n/10 feom \T1/cmr/bx/n/10.95 di
 -men-sion had NEVER been patched, on any leg. \T1/cmtt/m/n/10 fix_namcouple_feo
 m_dim
  []
 
 
-Overfull \hbox (23.96672pt too wide) in paragraph at lines 533--536
+Overfull \hbox (23.96672pt too wide) in paragraph at lines 581--584
 \T1/cmr/bx/n/10.95 The pat-tern: \T1/cmr/m/n/10.95 the guards were right, and t
 he plumb-ing around them de-feated them. \T1/cmtt/m/n/10 remap_oasis_restart
  []
 
 
-Overfull \hbox (25.2597pt too wide) in paragraph at lines 541--544
+Overfull \hbox (25.2597pt too wide) in paragraph at lines 589--592
 \T1/cmr/m/n/10.95 mesh, 14 nodes, crashes in $\OMS/cmsy/m/n/10.95 ^^X$\T1/cmr/m
 /n/10.95 2min (vs. the 45-node cou-pled sys-tem). Re-quires the \T1/cmtt/m/n/10
  FESOM_COUPLED=OFF
  []
 
-[11] [12] (./moving_cavity_investigation.aux)
+[12] [13] (./moving_cavity_investigation.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-06>
@@ -674,13 +674,13 @@ LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `moving_cavity_investigation.out' has not cha
 nged.
-(rerunfilecheck)             Checksum: DD5B576C2E0A4ABCBBF420E2C52083BE;5532.
+(rerunfilecheck)             Checksum: CC642C2896A7F6C2927B20A3231B5C10;5975.
  ) 
 Here is how much of TeX's memory you used:
- 11263 strings out of 467538
- 171898 string characters out of 5410173
- 609096 words of memory out of 5000000
- 39957 multiletter control sequences out of 15000+600000
+ 11267 strings out of 467538
+ 171944 string characters out of 5410173
+ 609198 words of memory out of 5000000
+ 39959 multiletter control sequences out of 15000+600000
  649183 words of font info for 100 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  75i,9n,79p,549b,584s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -707,10 +707,10 @@ k-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm10
 nts/type1/public/cm-super/sfti1000.pfb></sw/spack-levante/texlive-live2025-uaw7
 o7/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></sw/spack-levante/texli
 ve-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb>
-Output written on moving_cavity_investigation.pdf (12 pages, 1127796 bytes).
+Output written on moving_cavity_investigation.pdf (13 pages, 1134300 bytes).
 PDF statistics:
- 311 PDF objects out of 1000 (max. 8388607)
- 249 compressed objects within 3 object streams
- 53 named destinations out of 1000 (max. 500000)
- 192 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 322 PDF objects out of 1000 (max. 8388607)
+ 259 compressed objects within 3 object streams
+ 55 named destinations out of 1000 (max. 500000)
+ 200 words of extra memory for PDF output out of 10000 (max. 10000000)
 
