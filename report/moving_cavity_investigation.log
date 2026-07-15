@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  15 JUL 2026 07:38
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  15 JUL 2026 14:26
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -643,27 +643,38 @@ Overfull \hbox (19.07083pt too wide) in paragraph at lines 488--492
 a-tive mas-ter (\T1/cmtt/m/n/10 spinup_couplePI_core3.yaml\T1/cmr/m/n/10.95 ;
  []
 
-[10] [11]
-Overfull \hbox (47.17427pt too wide) in paragraph at lines 566--570
+[10]
+<../figures/spp/wam_maxocean.png, id=208, 1005.15524pt x 500.46976pt>
+File: ../figures/spp/wam_maxocean.png Graphic file (type png)
+<use ../figures/spp/wam_maxocean.png>
+Package pdftex.def Info: ../figures/spp/wam_maxocean.png  used on input line 54
+5.
+(pdftex.def)             Requested size: 472.31595pt x 235.16736pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[11]
+Overfull \hbox (47.17427pt too wide) in paragraph at lines 589--593
 []\T1/cmr/bx/n/10.95 The nam-cou-ple \T1/cmtt/m/n/10 feom \T1/cmr/bx/n/10.95 di
 -men-sion had NEVER been patched, on any leg. \T1/cmtt/m/n/10 fix_namcouple_feo
 m_dim
  []
 
-
-Overfull \hbox (23.96672pt too wide) in paragraph at lines 581--584
+[12 <../figures/spp/wam_maxocean.png>]
+Overfull \hbox (23.96672pt too wide) in paragraph at lines 604--607
 \T1/cmr/bx/n/10.95 The pat-tern: \T1/cmr/m/n/10.95 the guards were right, and t
 he plumb-ing around them de-feated them. \T1/cmtt/m/n/10 remap_oasis_restart
  []
 
 
-Overfull \hbox (25.2597pt too wide) in paragraph at lines 589--592
+Overfull \hbox (25.2597pt too wide) in paragraph at lines 612--615
 \T1/cmr/m/n/10.95 mesh, 14 nodes, crashes in $\OMS/cmsy/m/n/10.95 ^^X$\T1/cmr/m
 /n/10.95 2min (vs. the 45-node cou-pled sys-tem). Re-quires the \T1/cmtt/m/n/10
  FESOM_COUPLED=OFF
  []
 
-[12] [13] (./moving_cavity_investigation.aux)
+[13] (./moving_cavity_investigation.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-06>
@@ -677,13 +688,13 @@ nged.
 (rerunfilecheck)             Checksum: CC642C2896A7F6C2927B20A3231B5C10;5975.
  ) 
 Here is how much of TeX's memory you used:
- 11267 strings out of 467538
- 171944 string characters out of 5410173
- 609198 words of memory out of 5000000
- 39959 multiletter control sequences out of 15000+600000
+ 11276 strings out of 467538
+ 172229 string characters out of 5410173
+ 609641 words of memory out of 5000000
+ 39967 multiletter control sequences out of 15000+600000
  649183 words of font info for 100 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,9n,79p,549b,584s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,9n,79p,612b,584s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/amsf
 onts/cm/cmbx10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/
 type1/public/amsfonts/cm/cmmi10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/
@@ -707,10 +718,10 @@ k-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm10
 nts/type1/public/cm-super/sfti1000.pfb></sw/spack-levante/texlive-live2025-uaw7
 o7/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></sw/spack-levante/texli
 ve-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb>
-Output written on moving_cavity_investigation.pdf (13 pages, 1134300 bytes).
+Output written on moving_cavity_investigation.pdf (13 pages, 1276109 bytes).
 PDF statistics:
- 322 PDF objects out of 1000 (max. 8388607)
- 259 compressed objects within 3 object streams
- 55 named destinations out of 1000 (max. 500000)
- 200 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 326 PDF objects out of 1000 (max. 8388607)
+ 261 compressed objects within 3 object streams
+ 56 named destinations out of 1000 (max. 500000)
+ 205 words of extra memory for PDF output out of 10000 (max. 10000000)
 

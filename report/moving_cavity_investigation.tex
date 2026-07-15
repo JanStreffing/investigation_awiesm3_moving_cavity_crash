@@ -523,10 +523,33 @@ across all future mesh changes, and newly-opened cells have live wave fields the
 opens them. The complete toolchain is \emph{already built} in the OIFS install:
 \code{create\_wam\_bathymetry\_ETOPO1} (ETOPO1 $\to$ \code{wam\_topo}) and \code{preproc}
 (\code{wam\_topo} $\to$ \code{wam\_grid\_tables} + \code{wam\_subgrid\_0/1/2} --- exactly the four
-staged files). Remaining work: obtain ETOPO1, extract the coupled grid configuration, apply the
-max-ocean edit from the max-mesh, run preproc, validate against the max-ocean lsm, and cold-start
-WAM once at the switch leg (the old binary restarts are invalid under the new sea-point indexing
---- by policy, simply not staged that once).
+staged files).
+
+\medskip\noindent\textbf{Progress (2026-07-15).} The coupled WAM grid was decoded from the binary
+\code{wam\_grid\_tables} (big-endian): a $1^\circ$ reduced grid, 24 directions $\times$ 36
+frequencies ($f_1=0.0345$\,Hz), spanning \emph{only} $90^\circ$N--$78^\circ$S --- the deep
+Ross/Filchner--Ronne embayments lie \emph{outside the wave model entirely}. Regenerated with
+\code{create\_wam\_bathymetry\_ETOPO1} on ETOPO1, extending the southern limit to
+$\mathbf{85^\circ}$\textbf{S}. The bathymetry (integer branch: negative $=$ sea depth, positive $=$
+land) was then \emph{max-ocean edited}: every cell the FESOM max-mesh covers with a water column ---
+open ocean \emph{or} sub-ice-shelf cavity --- is forced to sea, at its FESOM bottom depth, while
+ETOPO1's existing ocean is left untouched (we only ever add ocean). This opened \textbf{1277 cells}
+(29\,555 $\to$ 30\,832 wave sea points), \textbf{283 of them south of $55^\circ$S} --- the shelf and
+cavity band that produced the crash, now pre-registered as wave points so no future coastline
+retreat can expose an uninitialised one (Fig.~\ref{fig:wammax}). Remaining: build \code{procin},
+run \code{preproc}, validate against the max-ocean lsm, and cold-start WAM once at the switch leg
+(the old binary restarts are invalid under the new sea-point indexing --- by policy, simply not
+staged that once).
+
+\begin{figure}[h]\centering
+\includegraphics[width=\textwidth]{../figures/spp/wam_maxocean.png}
+\caption{Option A, one-time maximal-ocean WAM tables (extended to $85^\circ$S). Blue: wave sea
+points from ETOPO1. Red: cells opened land$\to$ocean because the FESOM max-mesh has a water column
+there (open or sub-shelf). The 283 Antarctic additions are exactly the shelf/cavity band a moving
+coastline walks through; pre-registering them as wave points is what makes the
+\code{voskin} step-0 crash structurally impossible on any future leg.}
+\label{fig:wammax}
+\end{figure}
 If attempt 5 convicts the ICMGG, the durable fix is structural: the atmosphere-side surface description
 (ICMGG lsm/slt + A096 OASIS mask + feom weights + WAM tables) must change \emph{as a consistent set} or not
 at all --- today the WAM tables are still the old coastline (byte-identical to movcav4's) even where the
