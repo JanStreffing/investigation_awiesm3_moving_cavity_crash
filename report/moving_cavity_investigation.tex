@@ -40,8 +40,8 @@ solves its own ice-tile skin implicitly each timestep, with slab conduction thro
 kilowatt flux events collapsed to zero.
 
 \medskip\noindent
-Remaining open items: the chunk-2 PISM input rejection, and the too-weak Southern-Hemisphere summer
-sea-ice melt-back relative to the 500-year v3.4 reference (\S\ref{sec:state}).
+Remaining open item: the too-weak Southern-Hemisphere summer sea-ice melt-back relative to the
+500-year v3.4 reference (\S\ref{sec:state}).
 \end{abstract}
 
 \tableofcontents
@@ -296,22 +296,6 @@ below the physical range; the solved skin cannot.}
   of 133 cells) and \textbf{the workflow hands over in both directions} (Bug V fixed; movcav29 ran
   awiesm3 $\to$ PISM $\to$ couple\_out $\to$ chunk-3 couple\_in unattended).
 \end{itemize}
-
-\subsection{Open item: chunk-2 PISM ocean forcing (diagnosed, fix pending)}
-The PISM leg dies at startup with \code{PISM ERROR: input vertical grid has to be strictly
-increasing}. Diagnosed fully: the rejected file is \code{latest\_ocean\_forcing\_file.nc}. The DIRECT
-(\code{oce2ice\_method=DIRECT}) synthesis pipeline is in fact \textbf{complete and healthy} ---
-the delivered file carries \code{shelfbtemp} [degC] and \code{shelfbmassflux} [kg\,m$^{-2}$s$^{-1}$]
-with sane melt magnitudes ($\sim$1.5\,m/yr mean), verified end-to-end (an earlier ``variables
-dropped in the merge'' reading was a truncated listing, retracted). The sole defect is the
-\textbf{coupler pairing}: the runscript couplers block invokes \code{-ocean th}, whose
-three-equation init reads the file's 3D \code{theta/salinity} companions and rejects FESOM's
-decreasing depth axis (0, $-5$, \ldots, $-6250$). The apparent precedent is void: movcav16's
-``working'' PISM chain ran the \textbf{Greenland} 337$\times$577 domain on the default
-OCEANTEMPSALT/th route; the Antarctic given-route executes for the first time. Fix (config-level):
-couplers block \code{ocean: th $\to$ given} so PISM consumes FESOM's own melt --- the Bug-I
-design intention --- plus optionally dropping the stray 3D fields for hygiene. Last workflow
-blocker before the full flip-flop.
 
 \subsection{Open item: the Southern-Hemisphere summer melt-back}
 \begin{figure}[h]\centering
