@@ -47,9 +47,39 @@ Remaining open item: the too-weak Southern-Hemisphere summer sea-ice melt-back r
 \tableofcontents
 
 %======================================================================
-\section{The five bugs}\label{sec:bugs}
+%======================================================================
+\section{The campaign, in the order it happened}\label{sec:bugs}
 
-\subsection{Bug I --- PISM was fed surface water as ice-base forcing}\label{sec:bug1}
+Each subsection carries the date it was worked. The bug numbering (I--V) is the order of
+\emph{discovery} and is kept as the canonical naming.
+
+\subsection{The restart seam and the cold-start control (2026-07-08--13)}
+The original FESOM cavity-margin blowup: a remapped warm restart mixes an evolved, balanced dynamic
+state (98\% of nodes, bit-exact) with patched values at changed nodes; the \emph{seam} between them
+is the instability. The decisive control:
+
+\begin{center}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Run & $\Delta t$ & Initial state & Outcome \\
+\midrule
+full-mesh control & 1200\,s & native spun-up restart & stable, worst CFLz 2.61 \\
+\textbf{PISM cavity, cold} & \textbf{1200\,s} & \textbf{cold start} & \textbf{stable, CFLz 3.44} \\
+PISM cavity, warm & 1200\,s & remapped restart & dies day 4.0 (CFLz 9.2) \\
+PISM cavity, warm & 60\,s & remapped restart & dies day 4.4 ($\eta_n$, 0 CFLz) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The ocean lives happily in PISM's cavity; the production answer became: run chunk-1 cold-started on
+the PISM cavity (artifacts pooled), and let \code{remap\_restart} carry only genuine per-leg
+increments. The first real increment test crashed on 17 fully-opened columns (ice removed entirely,
+16 levels at once) out of 1399 --- but its numbers are \textcolor{red}{TAINTED} (measured under
+Bugs I+II) and the finding that matters survived into the fixes below: absorbing 99\% of a geometry
+change is not a passing grade when the remaining 1\% is fatal.
+
+\subsection{Bug I --- PISM was fed surface water as ice-base forcing (2026-07-14)}\label{sec:bug1}
 
 \code{coupling\_ocean2pism} built PISM's \code{-ocean th} forcing as a mean over FESOM level
 \emph{indices} 1--20 = \textbf{0--410\,m including the summer surface} (the correct
@@ -74,7 +104,7 @@ machinery existed all along but silently fell back to \code{th} because its inpu
 bundle FESOM2 never wrote; \code{fesom2ice} now synthesizes it (plus three exhumations of never-run
 2D-path code: \code{3f07d7a2}, \code{74671c27}, \code{bb9d00c2}).
 
-\subsection{Bug II --- the exchange weights scrambled the coupled ocean}\label{sec:bug2}
+\subsection{Bug II --- the exchange weights scrambled the coupled ocean (2026-07-14)}\label{sec:bug2}
 
 \begin{figure}[h]\centering
 \includegraphics[width=\textwidth]{spp/sst_scramble_global.png}
@@ -94,7 +124,7 @@ runtime order (via \code{dist\_<nproc>/rpart.out}); \code{validate\_feom\_weight
 weight file to real latitudes and \textbf{aborts the leg} above $1^\circ$ median error (nod2d-ordered
 weights fail at 42--58$^\circ$, correct ones pass at $\le0.025^\circ$).
 
-\subsection{Bug III --- the OASIS coupling restart was compound-scrambled}\label{sec:bug3}
+\subsection{Bug III --- the OASIS coupling restart was compound-scrambled (2026-07-14)}\label{sec:bug3}
 
 \code{remap\_oasis\_restart.py} gathered in nod2d space, but its input and required output are both
 \emph{runtime}-ordered: the emitted \code{rstos.nc} matched \emph{neither} ordering (correlation of
@@ -105,7 +135,36 @@ detonated the convection scheme (identical inputs crashed at hour 19, hour 458, 
 \textbf{Fix (\code{abe56ee2}):} un-permute via the old mesh's \code{rpart.out} $\to$ gather $\to$
 re-permute via the new mesh's; correlation now $+0.995$. Pool \code{rstos.nc} rebuilt.
 
-\subsection{Bug IV --- the ice-surface-temperature coupling is architecturally unstable}
+%======================================================================
+\subsection{The wave model's frozen coastline (2026-07-15)}\label{sec:wam}
+
+Chunk-3 died deterministically at its first physics step in \code{voskin\_mod.F90:282} squaring
+WAM's Stokes drift. WAM has no runtime tiling: its sea-point set is baked into
+\code{wam\_grid\_tables} at preprocessing time and had never been regenerated. A cell that is ocean
+per the regenerated lsm but land per WAM never receives wave data; the Stokes/Charnock fields are
+srf-restart-carried, so a \emph{warm} start after a coastline change reads never-written storage
+(cold starts zero-initialize --- why chunk-1 tolerates its 12 mismatch cells and historical lsm
+changes never hit this). Chunk-3 had 125 mismatch cells. WAM itself was separately exonerated for
+the Bug-IV crash family (a WAM-off run crashed identically).
+
+\textbf{Fix: one-time maximal-ocean tables} (option A; tolerance patching rejected). WAM's sea-point
+set was rebuilt from ETOPO1 with the southern limit extended $78\to85^\circ$S, then \emph{max-ocean
+edited}: every cell the FESOM max-mesh can make wet --- open ocean or sub-shelf cavity --- is forced
+to sea at its FESOM bottom depth (only ever adding ocean). 1277 cells opened (29\,555 $\to$ 30\,832
+sea points), 283 of them south of $55^\circ$S: exactly the band a moving coastline walks through
+(Fig.~\ref{fig:wammax}). The tables never change again, wave restarts stay index-compatible across
+all future mesh changes, and WAM cold-starts once at the switch leg. Known cosmetic debt: the
+max-ocean edit did not update the obstruction coefficients.
+
+\begin{figure}[h]\centering
+\includegraphics[width=\textwidth]{spp/wam_maxocean.png}
+\caption{One-time maximal-ocean WAM tables (extended to $85^\circ$S). Blue: wave sea points from
+ETOPO1. Red: cells opened land$\to$ocean because the FESOM max-mesh has a water column there.
+Pre-registering them makes the \code{voskin} step-0 crash structurally impossible on any future leg.}
+\label{fig:wammax}
+\end{figure}
+
+\subsection{Bug IV --- the ice-surface-temperature coupling is architecturally unstable (2026-07-14$\to$16)}
 \label{sec:bug4}
 
 This is the mid-run OIFS crash family (\code{cubasen}/\code{vsurf}/\code{voskin} floating overflow,
@@ -164,7 +223,7 @@ FESOM ice and snow thickness. This removes the loop by construction while keepin
 about the actual ice state. Upstream note: mainline AWI-CM3 carries the same pinned-skin
 architecture and therefore the same latent (if rarer) crash mode.
 
-\subsection{Bug V --- iterative coupling never handed over to PISM}\label{sec:bug5}
+\subsection{Bug V --- iterative coupling never handed over to PISM (2026-07-16)}\label{sec:bug5}
 
 The awiesm3$\to$PISM model switch is resolved at SimulationSetup init by reading the
 \code{chunk\_date} file, whose path \code{esm\_runscripts/chunky\_parts.py} builds by \emph{raw
@@ -182,36 +241,7 @@ campaign (movcav27), and a full awiesm3$\to$PISM$\to$couple\_out$\to$chunk-3-cou
 (movcav29).
 
 %======================================================================
-\section{The wave model's frozen coastline (stage-6 blocker, solved)}\label{sec:wam}
-
-Chunk-3 died deterministically at its first physics step in \code{voskin\_mod.F90:282} squaring
-WAM's Stokes drift. WAM has no runtime tiling: its sea-point set is baked into
-\code{wam\_grid\_tables} at preprocessing time and had never been regenerated. A cell that is ocean
-per the regenerated lsm but land per WAM never receives wave data; the Stokes/Charnock fields are
-srf-restart-carried, so a \emph{warm} start after a coastline change reads never-written storage
-(cold starts zero-initialize --- why chunk-1 tolerates its 12 mismatch cells and historical lsm
-changes never hit this). Chunk-3 had 125 mismatch cells. WAM itself was separately exonerated for
-the Bug-IV crash family (a WAM-off run crashed identically).
-
-\textbf{Fix: one-time maximal-ocean tables} (option A; tolerance patching rejected). WAM's sea-point
-set was rebuilt from ETOPO1 with the southern limit extended $78\to85^\circ$S, then \emph{max-ocean
-edited}: every cell the FESOM max-mesh can make wet --- open ocean or sub-shelf cavity --- is forced
-to sea at its FESOM bottom depth (only ever adding ocean). 1277 cells opened (29\,555 $\to$ 30\,832
-sea points), 283 of them south of $55^\circ$S: exactly the band a moving coastline walks through
-(Fig.~\ref{fig:wammax}). The tables never change again, wave restarts stay index-compatible across
-all future mesh changes, and WAM cold-starts once at the switch leg. Known cosmetic debt: the
-max-ocean edit did not update the obstruction coefficients.
-
-\begin{figure}[h]\centering
-\includegraphics[width=\textwidth]{spp/wam_maxocean.png}
-\caption{One-time maximal-ocean WAM tables (extended to $85^\circ$S). Blue: wave sea points from
-ETOPO1. Red: cells opened land$\to$ocean because the FESOM max-mesh has a water column there.
-Pre-registering them makes the \code{voskin} step-0 crash structurally impossible on any future leg.}
-\label{fig:wammax}
-\end{figure}
-
-%======================================================================
-\section{The coupled-slab architecture}\label{sec:slab}
+\section{The coupled-slab architecture (2026-07-16/17)}\label{sec:slab}
 
 The new division of labour: \textbf{OIFS owns the ice surface temperature; FESOM owns the ice
 state.} OIFS's surface scheme solves the ice-tile skin implicitly within every atmosphere timestep
@@ -282,22 +312,25 @@ below the physical range; the solved skin cannot.}
 \end{figure}
 
 %======================================================================
-\section{State of the cycle and of the climate}\label{sec:state}
+\section{State of the cycle and of the climate (2026-07-17)}\label{sec:state}
 
 \subsection{What is proven}
 \begin{itemize}
-\item \textbf{Chunk-1 is quantitatively healthy} (movcav16-era checklist, all pass): January SST
-  physical, zero translocated cells; OIFS Weddell September ci 0.61/0.99 (was 0.04); both-hemisphere
-  sea-ice annual cycles; cavity melt 2.16\,m/yr mean (reference 2.2; jigsaw 28) and thermal driving
-  $+0.18$\,K (reference $\sim$0.2; jigsaw $+1.25$).
-\item \textbf{The live mesh change works}: 208\,810 $\to$ 211\,174 nodes, weights regenerated and
-  runtime-order-validated at $\le0.024^\circ$, restarts remapped through the rpart sandwich.
-\item \textbf{The PISM decade runs on FESOM's own melt} (grounded $-0.10$\%, floating fringe $-21$
-  of 133 cells) and \textbf{the workflow hands over in both directions} (Bug V fixed; movcav29 ran
-  awiesm3 $\to$ PISM $\to$ couple\_out $\to$ chunk-3 couple\_in unattended).
+\item \textbf{Chunk-1 is quantitatively healthy and, under the coupled slab, crash-free}: January
+  SST physical, zero translocated cells; OIFS Weddell September ci 0.61/0.99 (was 0.04);
+  both-hemisphere sea-ice annual cycles; per-basin cavity melt in the observed regimes
+  (\S below); kilowatt flux events at real ice tiles: zero.
+\item \textbf{The workflow hands over in both directions} (Bug V fixed): awiesm3 $\to$ PISM $\to$
+  couple\_out $\to$ chunk-3 couple\_in runs unattended.
+\item \textbf{The PISM decade runs on FESOM's own melt} (\code{-ocean given}, 2026-07-17): real
+  output, and a \emph{gentle} geometry response --- 290 fully-opened nodes vs 1399 in the Bug-I
+  era, mean $|\Delta\mathrm{draft}|$ 1.0\,m, submesh 208\,810 $\to$ 208\,438 nodes
+  (Fig.\ pism\_change\_mc33).
+\item \textbf{The live mesh change works}: weights regenerated and runtime-order-validated
+  ($\le0.024^\circ$), restarts remapped through the rpart sandwich, ICMGG/plit regenerated.
 \end{itemize}
 
-\subsection{Cavity basal melt against observations}
+\subsection{Cavity basal melt against observations (2026-07-17)}
 The chunk-1 year that forced the first clean PISM decade, split by sector and set against the
 satellite record (Rignot et al.\ 2013; Adusumilli et al.\ 2020):
 
@@ -361,32 +394,6 @@ since movcav29), and the coupled slab itself (the pinned-skin era's fictitious e
 spurious congelation-growth term). Whether these restore the reference's melt-back is the first
 climate question for the post-slab runs; meltponds were checked and are \emph{not} the SH lever (the
 \code{hsno>hs1} lockout makes old and corrected schemes identical there).
-
-\subsection{The restart-seam arc (historical, resolved by cold-start + clean ini)}
-The original FESOM cavity-margin blowup: a remapped warm restart mixes an evolved, balanced dynamic
-state (98\% of nodes, bit-exact) with patched values at changed nodes; the \emph{seam} between them
-is the instability. The decisive control:
-
-\begin{center}
-\begin{tabular}{@{}llll@{}}
-\toprule
-Run & $\Delta t$ & Initial state & Outcome \\
-\midrule
-full-mesh control & 1200\,s & native spun-up restart & stable, worst CFLz 2.61 \\
-\textbf{PISM cavity, cold} & \textbf{1200\,s} & \textbf{cold start} & \textbf{stable, CFLz 3.44} \\
-PISM cavity, warm & 1200\,s & remapped restart & dies day 4.0 (CFLz 9.2) \\
-PISM cavity, warm & 60\,s & remapped restart & dies day 4.4 ($\eta_n$, 0 CFLz) \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\noindent
-The ocean lives happily in PISM's cavity; the production answer became: run chunk-1 cold-started on
-the PISM cavity (artifacts pooled), and let \code{remap\_restart} carry only genuine per-leg
-increments. The first real increment test crashed on 17 fully-opened columns (ice removed entirely,
-16 levels at once) out of 1399 --- but its numbers are \textcolor{red}{TAINTED} (measured under
-Bugs I+II) and the finding that matters survived into the fixes above: absorbing 99\% of a geometry
-change is not a passing grade when the remaining 1\% is fatal.
 
 %======================================================================
 \section{Secondary bugs, fixed along the way}
