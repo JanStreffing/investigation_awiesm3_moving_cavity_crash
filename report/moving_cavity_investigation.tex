@@ -397,7 +397,7 @@ intervention: the drain vanished ($+0.0002$/step), day-1 fields healthy.
 \subsection*{Bug VII --- the drowned island}
 With Bug VI fixed the run survived longer but still exploded at the Peninsula tip, $\eta$
 climbing a steady $+0.11$\,m/day. The reason is geometric, not numeric
-(Fig.~\ref{fig:island}): the ice2fesom regrid remapped PISM's \emph{categorical} mask
+(Figs.~\ref{fig:island}, \ref{fig:islandanat}): the ice2fesom regrid remapped PISM's \emph{categorical} mask
 \textbf{bilinearly} --- a few-cell island surrounded by mask-4 ocean smears to
 $\approx$3.x, rounds to ocean, and is deleted from the submesh. PISM's own bed there is
 $+38$ to $+218$\,m above sea level: bedrock island, regardless of ice. (The island entered
@@ -409,6 +409,18 @@ above sea level is land.) The ocean then drives a runaway coastal jet where a co
 \textbf{Fix} (ice2fesom): remap the categorical mask nearest-neighbour; rebuild the mask=5
 outside-domain marker (which \code{remapnn} extrapolation would erase) from a bilinear
 domain indicator. Continuous fields stay bilinear.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{elephant_island_anatomy.png}
+\caption{Elephant Island anatomy. (a) PISM bed topography, ETOPO-style colors: a genuine
+bedrock island ($+4$ to $+297$\,m) on its shallow platform, Clarence's peak to the
+southeast. (b) The \emph{nascent} ice cap: bare at spinup, 0.1--0.4\,m grown over 20
+coupled years (DEBM accumulates here). (c) The PISM mask; the red circle is the single
+mask$=$0 (ice-free bedrock) cell that exposed the classifier hole. (d) The submesh renders
+the island identically after increments 1 and 2 --- the nearest-neighbour fix holds.}
+\label{fig:islandanat}
+\end{figure}
 
 \begin{figure}[H]
 \centering
