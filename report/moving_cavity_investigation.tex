@@ -28,26 +28,12 @@ mesh, with all three coastline-following members (FESOM cavity, OIFS land--sea m
 regenerated per leg.
 
 \medskip\noindent
-\textbf{Where we are.} Five real bugs have been found and fixed (\S\ref{sec:bugs}); the wave-model
-coastline is solved structurally (\S\ref{sec:wam}); the workflow performs genuine
-awiesm3$\to$PISM$\to$awiesm3 handovers (\S\ref{sec:bug5}); and the recurring OIFS crash family was
-traced past three partial fixes to its true root: \textbf{the ice--atmosphere surface-temperature
-coupling architecture itself is unstable in the marginal ice zone} (\S\ref{sec:bug4}). The atmosphere's
-ice-tile skin was hard-pinned to the remapped FESOM ice temperature (skin conductivity $10^{10}$),
-so kW-scale spurious fluxes circulated between the two models. The fix is architectural: OIFS now
-solves its own ice-tile skin implicitly each timestep, with slab conduction through the
-\emph{coupled} FESOM ice thickness (new exchange field) and snow --- the ``coupled slab''
-(\S\ref{sec:slab}) --- validated: the first slab run completed its year crash-free with the
-kilowatt flux events collapsed to zero.
-
-\medskip\noindent
-The increment test now \textbf{passes end-to-end}: two stacked bugs --- a layer-thickness
-mismatch that multiplicatively drains cavity tracers, and a bilinear mask remap that drowned
-Elephant Island --- were found, fixed and validated (\S\ref{sec:zerowater}); the full cycle
-awiesm3 $\to$ PISM $\to$ awiesm3-on-changed-mesh closed and a 10-year/100-year run is
-underway. Open items: the \emph{second} increment's Ross-front blowup
-(\S\ref{sec:zerowater}), and the too-weak Southern-Hemisphere summer sea-ice melt-back
-relative to the 500-year v3.4 reference (\S\ref{sec:state}).
+\textbf{Where we are.} Seven real bugs and one architectural redesign (the coupled slab)
+later, the cycle runs end-to-end --- awiesm3 year $\to$ PISM decade $\to$ awiesm3 year on
+the changed mesh --- and a 10-year/100-year production run is underway. The whole campaign
+is one chronological narrative in \S\ref{sec:bugs}; the current state, including the open
+Ross-front item of the second increment and the summer melt-back bias, is in
+\S\ref{sec:state}.
 \end{abstract}
 
 \tableofcontents
@@ -247,7 +233,7 @@ campaign (movcav27), and a full awiesm3$\to$PISM$\to$couple\_out$\to$chunk-3-cou
 (movcav29).
 
 %======================================================================
-\section{The coupled-slab architecture (2026-07-16/17)}\label{sec:slab}
+\subsection{The coupled-slab architecture (2026-07-16/17)}\label{sec:slab}
 
 The new division of labour: \textbf{OIFS owns the ice surface temperature; FESOM owns the ice
 state.} OIFS's surface scheme solves the ice-tile skin implicitly within every atmosphere timestep
@@ -318,7 +304,7 @@ below the physical range; the solved skin cannot.}
 \end{figure}
 
 %======================================================================
-\section{First fruits of the clean decade: cavity melt against observations (2026-07-17)}\label{sec:melt}
+\subsection{First fruits of the clean decade: cavity melt against observations (2026-07-17)}\label{sec:melt}
 The chunk-1 year that forced the first clean PISM decade, split by sector and set against the
 satellite record (Rignot et al.\ 2013; Adusumilli et al.\ 2020):
 
@@ -352,7 +338,7 @@ initial geometry carries reduced versions of the big shelves. For scale: the jig
 produced 28\,m/yr.
 
 
-\section{The increment test crashes, twice --- and passes (2026-07-17/18)}\label{sec:zerowater}
+\subsection{The increment test crashes, twice --- and passes (2026-07-17/18)}\label{sec:zerowater}
 
 The first chunk-3 leg --- awiesm3 on the PISM-changed 208\,438-node mesh, stage 6/6 --- absorbs
 the mesh change and runs for weeks of model time before FESOM dies of an SSH explosion
@@ -377,7 +363,7 @@ tracers lose the same fraction of their value every step.}
 \label{fig:zerowater}
 \end{figure}
 
-\subsection*{Bug VI --- the layer-thickness mismatch drain}
+\subsubsection*{Bug VI --- the layer-thickness mismatch drain}
 The remapped restart carries \code{hnode} inherited from the old mesh's zstar state (e.g.\
 9.964\,m where a formerly ice-free column scaled its layers with $\eta$). At runtime,
 cavity columns and their open-ocean edge ring (\code{ulevels\_nod2D\_max>1}) keep layer
@@ -394,7 +380,7 @@ the nominal-vs-restart gap grows with it. \textbf{Fix} (FESOM,
 excluded class back to the fixed nominal and rebuild the depth arrays. Validated by
 intervention: the drain vanished ($+0.0002$/step), day-1 fields healthy.
 
-\subsection*{Bug VII --- the drowned island}
+\subsubsection*{Bug VII --- the drowned island}
 With Bug VI fixed the run survived longer but still exploded at the Peninsula tip, $\eta$
 climbing a steady $+0.11$\,m/day. The reason is geometric, not numeric
 (Figs.~\ref{fig:island}, \ref{fig:islandanat}): the ice2fesom regrid remapped PISM's \emph{categorical} mask
@@ -442,7 +428,7 @@ hygiene pass --- reproduced the crash bitwise); and the vertical-advection top b
 \code{cap\_new\_cavity\_temp.py} is a red herring: the freezing cap runs as Fortran inside
 the remap binary.
 
-\subsection*{The increment test passes}
+\subsubsection*{The increment test passes}
 With both fixes, movcav33 chunk-3 completed the full year 1901 on the changed mesh
 (25\,min wall, no blowup; the Peninsula node's SSH wanders seasonally instead of pumping)
 and handed over to the chunk-4 PISM decade unattended --- \textbf{stage 6/6 closed}. The
@@ -451,7 +437,7 @@ the \emph{minimal} build (hnode fix only; the advection guards were reverted aft
 falsified). Fixes are committed: FESOM \code{awiesm3-implicit-ice-surftemp}, esm\_tools
 \code{development\_interactiv\_mesh\_awiesm3}.
 
-\subsection*{New open item: the second increment (Ross front)}
+\subsubsection*{New open item: the second increment (Ross front)}
 movcav34's chunk-5 (year 1902, after 20 PISM years) blew up at day 16 at the western Ross
 front, where the second increment opened cavity columns wholesale (ulev $13\to1$) amid a
 506-node ice advance --- the new coastline forms a pinched notch at the epicenter
