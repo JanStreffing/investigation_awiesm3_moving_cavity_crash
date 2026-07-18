@@ -29,11 +29,13 @@ regenerated per leg.
 
 \medskip\noindent
 \textbf{Where we are.} Seven real bugs and one architectural redesign (the coupled slab)
-later, the cycle runs end-to-end --- awiesm3 year $\to$ PISM decade $\to$ awiesm3 year on
-the changed mesh --- and a 10-year/100-year production run is underway. The whole campaign
-is one chronological narrative in \S\ref{sec:bugs}; the current state, including the open
-Ross-front item of the second increment and the summer melt-back bias, is in
-\S\ref{sec:state}.
+later, the cycle is proven end-to-end with real cavities --- awiesm3 year $\to$ PISM decade
+$\to$ awiesm3 year on the changed mesh, plus one further clean cycle. The 10-year production
+attempt then ran eleven more increments \emph{with the cavities accidentally amputated by an
+overreaching mesh-hygiene fix} (discovered at wrap-up, reverted; those legs are tainted).
+The campaign continues: the next problem is a cavity-preserving treatment of the fragile
+increment coastlines, then re-running the production increments with real cavities
+(\S\ref{sec:zerowater}, \S\ref{sec:state}).
 \end{abstract}
 
 \tableofcontents
@@ -437,23 +439,62 @@ the \emph{minimal} build (hnode fix only; the advection guards were reverted aft
 falsified). Fixes are committed: FESOM \code{awiesm3-implicit-ice-surftemp}, esm\_tools
 \code{development\_interactiv\_mesh\_awiesm3}.
 
-\subsubsection*{New open item: the second increment (Ross front)}
+\subsubsection*{The next problem: the second increment and the hygiene overreach (2026-07-18)}
 movcav34's chunk-5 (year 1902, after 20 PISM years) blew up at day 16 at the western Ross
 front, where the second increment opened cavity columns wholesale (ulev $13\to1$) amid a
-506-node ice advance --- the new coastline forms a pinched notch at the epicenter
-(Fig.~\ref{fig:ross2}). This is the next campaign front: candidate responses are a
-coastline-hygiene pass in the submesh generation (forbid single-node notches and pinches)
-and moderating PISM's per-decade geometry increments.
+506-node ice advance. The new coastline there was structurally rotten: 24 nodes within
+$1.5^{\circ}$ of the epicenter held by $\le$3 elements, including an 18-levels-under-ice
+cavity column held by exactly two triangles. A \emph{coastline-hygiene sweep} was added to
+the submesh tool (iteratively remove ice-domain nodes held by $\le$2 elements) and the chain
+then ran unattended through year 1911 and 120 PISM years --- eleven further increments
+without a FESOM blowup, ending only in a recurrence of the old OIFS \code{voskin} overflow
+at chunk 13.
+
+\textbf{The overreach.} At wrap-up the evolution diagnostics exposed the truth
+(Figs.~\ref{fig:evol}, \ref{fig:fris}): the hygiene sweep had \emph{cascaded through the
+narrow cavity bands} --- fringing shelves and cavity margins are exactly the few-element-wide
+structures the criterion eats rim-inward --- and every post-1902 submesh carries only
+14--111 cavity nodes instead of $\sim$2600. The node classifier was healthy (2223 shelf
+nodes flagged); the lake floodfill removed only 35 elements; the sweep itself did the
+damage. \textbf{The eleven ``stable'' legs ran with the ice-shelf cavities amputated ---
+stability by amputation, and every result from movcav34 after chunk 4 is
+\textcolor{red}{TAINTED}.} The sweep was reverted the same day (commit \code{ca0641b2}
+reverts \code{680daa55}).
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{ross_front_increment2.png}
-\caption{The second increment at the western Ross front (darker = cavity elements). Left:
-after increment 1 (ran a clean year as 1901). Right: after increment 2 --- the front
-reorganizes, and the 1902 blowup epicenter (star) sits in a newly pinched notch between
-advancing and retreating ice.}
-\label{fig:ross2}
+\includegraphics[width=\textwidth]{movcav34_evolution_timelines.png}
+\caption{The movcav34 production run, honest version. (a) Submesh and cavity-node counts per
+increment: the collapse from 2647 to 111 cavity nodes at the 1902 mesh is the hygiene
+amputation. (b) PISM volume and floating area over 120 years: the decline is real coupled
+melt through year 20, then continues under forcing computed from an essentially cavity-less
+ocean. (c) Cavity-mean and total melt per leg (log scale): the escalation beyond
+$\sim$1902 samples only the few surviving cavity slivers. Red shading = tainted.}
+\label{fig:evol}
 \end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{fris_top_side_chunks.png}
+\caption{FRIS across the thirteen chunk meshes. Top grid: cavity elements coloured by roof
+draft --- two real cavities (1900, 1901), then eleven empty frames with red node counts.
+Bottom: ice draft along $60^{\circ}$W for the one genuine increment (1900$\to$1901; the
+southern draft deepens by 50--100\,m), after which there is nothing left to draw.}
+\label{fig:fris}
+\end{figure}
+
+\textbf{The problem to solve next} (Figs.~\ref{fig:evol}, \ref{fig:fris} are its
+statement): make the mesh increments survivable \emph{without} destroying the cavities.
+What is genuinely proven and stays: the full cycle
+awiesm3\,$\to$\,PISM\,$\to$\,awiesm3-on-a-changed-mesh works end-to-end with real cavities
+(movcav33 chunk-3 + handover; movcav34 chunks 1--4 reproduce it on the minimal build). The
+work queue, in order: (i) a cavity-preserving fragile-sliver treatment --- removal must not
+disconnect or cascade through the few-element-wide cavity bands (guard on the shelf flag, a
+connectivity-preserving criterion, plus a safety valve that aborts the leg if the submesh
+cavity count drops far below the classifier's flag count); (ii) rewind movcav34 to chunk-5
+and re-run the increments with real cavities; (iii) the recurring OIFS \code{voskin}
+coastal overflow; (iv) the iterative-coupling loop ignores \code{final\_date}; (v) the
+escalating warm-bias melt that drives PISM's fast geometry increments in the first place.
 
 \section{State of the cycle and of the climate (2026-07-18)}\label{sec:state}
 
