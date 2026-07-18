@@ -13,7 +13,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-07-17 (0:30)}
+\date{Last updated: 2026-07-18}
 
 \begin{document}
 \maketitle
@@ -40,11 +40,13 @@ solves its own ice-tile skin implicitly each timestep, with slab conduction thro
 kilowatt flux events collapsed to zero.
 
 \medskip\noindent
-Remaining open items: the increment test itself --- the chunk-3 leg on the changed mesh dies
-after weeks of model time from \textbf{phantom zero-water ingestion at draft-changed cavity
-columns} (mechanism proven, fix candidates identified, \S\ref{sec:zerowater}) --- and the
-too-weak Southern-Hemisphere summer sea-ice melt-back relative to the 500-year v3.4 reference
-(\S\ref{sec:state}).
+The increment test now \textbf{passes end-to-end}: two stacked bugs --- a layer-thickness
+mismatch that multiplicatively drains cavity tracers, and a bilinear mask remap that drowned
+Elephant Island --- were found, fixed and validated (\S\ref{sec:zerowater}); the full cycle
+awiesm3 $\to$ PISM $\to$ awiesm3-on-changed-mesh closed and a 10-year/100-year run is
+underway. Open items: the \emph{second} increment's Ross-front blowup
+(\S\ref{sec:zerowater}), and the too-weak Southern-Hemisphere summer sea-ice melt-back
+relative to the 500-year v3.4 reference (\S\ref{sec:state}).
 \end{abstract}
 
 \tableofcontents
@@ -315,70 +317,108 @@ below the physical range; the solved skin cannot.}
 \end{figure}
 
 %======================================================================
-\section{The increment test crashes: phantom zero-water at changed cavity columns
-  (2026-07-17)}\label{sec:zerowater}
+\section{The increment test crashes, twice --- and passes (2026-07-17/18)}\label{sec:zerowater}
 
 The first chunk-3 leg --- awiesm3 on the PISM-changed 208\,438-node mesh, stage 6/6 --- absorbs
 the mesh change and runs for weeks of model time before FESOM dies of an SSH explosion
-($\eta$ jumping $\pm 40$\,m in one step at the Antarctic Peninsula tip; day 19--51 depending on
-MPI reduction order --- the state is metastable). The autopsy was made cheap by two facts: the
-leg costs 3--4 minutes of wall time, and a temporary XIOS file group with
-\code{sync\_freq="1d"} flushes daily 2-D/3-D fields to disk as they complete, so even a
-crashed run leaves full evidence (the default XIOS files sync only on close: 51 days of
-output, zero records).
+($\eta$ jumping $\pm 40$\,m in one step at the Antarctic Peninsula tip; day 19--51 depending
+on MPI reduction order --- the state is metastable). The autopsy was cheap for two reasons:
+the leg costs 3--4 minutes of wall time, and a temporary XIOS file group with
+\code{sync\_freq="1d"} flushes daily fields to disk as they complete, so even a crashed run
+leaves full evidence (default XIOS files sync only on close: 51 days of output, zero
+records). The hunt found \emph{two independent bugs}, stacked at the same place.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=\textwidth]{zero_water_george6.png}
-\caption{The chunk-3 killer, shown in one basin (George VI / Marguerite Bay; FESOM elements
-rendered individually, black outlines = the 73 elements whose cavity draft the mesh change
-touched). (a) What the mesh change did: $\pm$1--6 cavity levels along the George VI sound and
-the Marguerite Bay margin. (b) By day 3 the uppermost-wet-level salinity has dropped up to
-25\,psu \emph{exactly on the outlined elements} --- the injection is the changed-column set.
-(c) By day 46 the phantom freshwater has flooded the basin and is exporting along the coast.
-(d) The proof: $(S,T)$ at the ice-base level of four injector columns slides along the mixing
-lines (dashed) toward exactly $(0,0)$ --- T- and S-replacement fractions are identical, which
-only a $(T,S)=(0,0)$ end-member produces; trajectories pin at FESOM's $S=3$ clip with
-$T\!\to\!0$. The same pattern repeats at every fringing shelf around the continent
-(Getz, Victoria Land, Shackleton, West); basin-mean symptoms are the ring freshening and the
-coastal SSH pile-up with \emph{negative} surface freshwater flux --- the ``flood'' carries no
-water.}
+\caption{Bug VI seen in one basin (George VI / Marguerite Bay; black outlines = the 73
+elements whose cavity draft the mesh change touched). (a) The mesh change: $\pm$1--6 cavity
+levels. (b) By day 3 the uppermost-wet-level salinity has dropped up to 25\,psu \emph{exactly
+on the outlined elements}. (c) By day 46 the basin has flooded and exports along the coast.
+(d) The fingerprint: $(S,T)$ at the ice-base level slides along the mixing lines toward
+$(0,0)$ with \emph{identical} T- and S-replacement fractions --- not a flux (surface
+freshwater is $50\times$ too small and negative), but a \emph{multiplicative drain}: both
+tracers lose the same fraction of their value every step.}
 \label{fig:zerowater}
 \end{figure}
 
-\textbf{Mechanism.} Cavity columns have a pinned free surface ($\eta \equiv 0$, layer
-thicknesses frozen), so nothing relaxes a flow imbalance there. The remap leaves a small
-divergence at draft-changed columns that drives vertical velocity through the ice base
-(seeded at $10^{-4}$\,m\,s$^{-1}$, exactly the observed early stripping rate; it grows
-$100\times$ through a feedback --- stripping makes the column buoyant, buoyancy drives more
-$w$ --- visible as 78\,704 CFL$_z$ warnings in 51 days vs.\ 125 per \emph{year} in chunk-1,
-every hotspot within $0.1^\circ$ of a changed column). FESOM's vertical tracer machinery
-treats the top interface like a \emph{free surface}, where entering water carries zero tracer
-(correct for rain; \code{oce\_adv\_tra\_ver.F90}, top-layer coefficients) --- under an ice
-shelf the same treatment strips $T$ and $S$ toward $(0,0)$ for as long as $w$ persists.
-Chunk-1 is immune because balanced cavities have $w(\mathrm{base})\!\approx\!0$; the flaw is
-armed only by a mesh change.
+\subsection*{Bug VI --- the layer-thickness mismatch drain}
+The remapped restart carries \code{hnode} inherited from the old mesh's zstar state (e.g.\
+9.964\,m where a formerly ice-free column scaled its layers with $\eta$). At runtime,
+cavity columns and their open-ocean edge ring (\code{ulevels\_nod2D\_max>1}) keep layer
+thicknesses \emph{fixed at the mesh nominal} (10.000\,m) and are excluded from the per-step
+\code{hnode}$\leftrightarrow$\code{hnode\_new} sync --- so the mismatch is immortal. FESOM's
+tracer T$^{*}$ update applies
+$\mathrm{values}\cdot(\code{hnode}-\code{hnode\_new})/\code{hnode\_new}$ every step: a
+$-0.36\%$/step multiplicative drain on $T$ \emph{and} $S$. Per-operator probes at a Getz
+injector column measured $-0.1226$\,psu/step against a predicted
+$33.64\times0.0036=-0.1224$; an unchanged FRIS control column measured exactly zero. At
+free-surface nodes next to the cavity edge the drain even \emph{accelerates}: $\eta$ grows,
+the nominal-vs-restart gap grows with it. \textbf{Fix} (FESOM,
+\code{restart\_thickness\_ale}): after the restart read, force \code{hnode} at the whole
+excluded class back to the fixed nominal and rebuild the depth arrays. Validated by
+intervention: the drain vanished ($+0.0002$/step), day-1 fields healthy.
 
-\textbf{Ruled out by measurement} (each was a plausible suspect): surface freshwater fluxes
-(\code{fw} is $50\times$ too small at the injectors, and \emph{negative} over the ring);
-OIFS runoff/calving and the \code{ECE\_LANDICE} snow cap (mapper config identical between
-chunks, remap weight sums $\le 1$, ICMGG \code{sd} hygiene clean); the OASIS \code{feom} masks
-(identical, all-unmasked, both chunks); the remapped restart state ($T/S$/\code{hnode}
-consistent to the level, freezing cap ran: 1137 columns); the mesh files (zero elem/node
-level-range violations); the zero-filled dry restart levels themselves (padding them with
-nearest-wet values --- now a permanent remap pass --- reproduced the crash bitwise: the zero
-end-member is the boundary treatment, not the restart). The couple\_in warning about a missing
-\code{cap\_new\_cavity\_temp.py} is a red herring: the freezing cap runs as Fortran inside the
-remap binary; the warning refers to a Python duplicate that never existed.
+\subsection*{Bug VII --- the drowned island}
+With Bug VI fixed the run survived longer but still exploded at the Peninsula tip, $\eta$
+climbing a steady $+0.11$\,m/day. The reason is geometric, not numeric
+(Fig.~\ref{fig:island}): the PISM decade thinned Elephant Island's small ice cap, and the
+ice2fesom regrid remapped PISM's \emph{categorical} mask \textbf{bilinearly} --- a few-cell
+island surrounded by mask-4 ocean smears to $\approx$3.x, rounds to ocean, and is deleted
+from the submesh. PISM's own bed there is $+38$ to $+218$\,m above sea level: bedrock island,
+regardless of ice. The ocean then drives a runaway coastal jet where a coastline should be.
+\textbf{Fix} (ice2fesom): remap the categorical mask nearest-neighbour; rebuild the mask=5
+outside-domain marker (which \code{remapnn} extrapolation would erase) from a bilinear
+domain indicator. Continuous fields stay bilinear.
 
-\textbf{Fix candidates} (open): (i) remap-side --- start draft-changed cavity columns at rest
-(zero $u,v,w$ and the AB arrays at flagged columns) so the seed pump never forms and the
-columns adjust by gravity waves; one 4-minute test. (ii) FESOM-side, the deeper fix --- a
-cavity-aware top boundary in the vertical tracer advection: under \code{ulevels>1} the
-top-interface exchange must carry the local concentration (material interface), not zero.
-Needs care to keep FCT conservation intact.
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{elephant_island_drowned.png}
+\caption{Bug VII. Left: the chunk-1 mesh has Elephant Island (the hole at
+$55.4^{\circ}$W, $61.1^{\circ}$S) and the Clarence/Gibbs notch. Right: after the PISM decade
+the bilinear mask remap has rounded both islands to ocean --- the added nodes (red) fill
+them in, and the blowup epicenter (star) sits exactly on the drowned island.}
+\label{fig:island}
+\end{figure}
 
-\section{State of the cycle and of the climate (2026-07-17)}\label{sec:state}
+\textbf{Ruled out by measurement} (each was a plausible suspect): surface freshwater fluxes;
+OIFS runoff/calving and the \code{ECE\_LANDICE} snow cap; the OASIS \code{feom} masks; the
+remapped $T/S$ state (freezing cap ran: 1137 columns); mesh-file level-range consistency
+(zero violations); the zero-filled dry restart levels (padding them --- kept as a permanent
+hygiene pass --- reproduced the crash bitwise); and the vertical-advection top boundary
+(cavity guards in both the implicit and explicit schemes changed nothing --- see
+\S\ref{sec:falsified}). The couple\_in warning about a missing
+\code{cap\_new\_cavity\_temp.py} is a red herring: the freezing cap runs as Fortran inside
+the remap binary.
+
+\subsection*{The increment test passes}
+With both fixes, movcav33 chunk-3 completed the full year 1901 on the changed mesh
+(25\,min wall, no blowup; the Peninsula node's SSH wanders seasonally instead of pumping)
+and handed over to the chunk-4 PISM decade unattended --- \textbf{stage 6/6 closed}. The
+long run movcav34 (10 awiesm3 years / 100 PISM years) then repeated chunks 1--4 cleanly on
+the \emph{minimal} build (hnode fix only; the advection guards were reverted after being
+falsified). Fixes are committed: FESOM \code{awiesm3-implicit-ice-surftemp}, esm\_tools
+\code{development\_interactiv\_mesh\_awiesm3}.
+
+\subsection*{New open item: the second increment (Ross front)}
+movcav34's chunk-5 (year 1902, after 20 PISM years) blew up at day 16 at the western Ross
+front, where the second increment opened cavity columns wholesale (ulev $13\to1$) amid a
+506-node ice advance --- the new coastline forms a pinched notch at the epicenter
+(Fig.~\ref{fig:ross2}). This is the next campaign front: candidate responses are a
+coastline-hygiene pass in the submesh generation (forbid single-node notches and pinches)
+and moderating PISM's per-decade geometry increments.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{ross_front_increment2.png}
+\caption{The second increment at the western Ross front (darker = cavity elements). Left:
+after increment 1 (ran a clean year as 1901). Right: after increment 2 --- the front
+reorganizes, and the 1902 blowup epicenter (star) sits in a newly pinched notch between
+advancing and retreating ice.}
+\label{fig:ross2}
+\end{figure}
+
+\section{State of the cycle and of the climate (2026-07-18)}\label{sec:state}
 
 \subsection{What is proven}
 \begin{itemize}
@@ -394,6 +434,19 @@ Needs care to keep FCT conservation intact.
   (Fig.\ pism\_change\_mc33).
 \item \textbf{The live mesh change works}: weights regenerated and runtime-order-validated
   ($\le0.024^\circ$), restarts remapped through the rpart sandwich, ICMGG/plit regenerated.
+\item \textbf{The increment test passes end-to-end} (2026-07-17/18): chunk-3 runs its full
+  year on the changed mesh and hands to chunk-4 PISM unattended; movcav34 (10 awiesm3 years /
+  100 PISM years) repeats chunks 1--4 cleanly on the minimal committed build. The second
+  increment's Ross-front blowup (\S\ref{sec:zerowater}) is the current front.
+\item \dead{The chunk-3 dilution enters through the vertical-advection top boundary
+  (zero-tracer inflow ratchet / material-interface flux).} Cavity guards in both the implicit
+  (\code{adv\_tra\_vert\_impl}) and explicit (\code{upw1}, \code{qr4c}) schemes changed the
+  crash bitwise-nothing; the guards were reverted. The identical-fraction $(T,S)\to(0,0)$
+  signature belongs to the \emph{multiplicative} \code{hnode} mismatch drain (Bug VI).
+\item \dead{The dilution is unclosed column continuity: remnant $\nabla\!\cdot\!(u\,h)$ at
+  pinned-$\eta$ cavity columns drains tracer content at fixed volume.} The divergence and
+  ice-base $w$ are symptoms of the same \code{hnode} inconsistency, not an independent leak;
+  with the restart \code{hnode} reset the columns are quiet.
 \end{itemize}
 
 \subsection{Cavity basal melt against observations (2026-07-17)}
