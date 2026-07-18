@@ -318,6 +318,40 @@ below the physical range; the solved skin cannot.}
 \end{figure}
 
 %======================================================================
+\section{First fruits of the clean decade: cavity melt against observations (2026-07-17)}\label{sec:melt}
+The chunk-1 year that forced the first clean PISM decade, split by sector and set against the
+satellite record (Rignot et al.\ 2013; Adusumilli et al.\ 2020):
+
+\begin{center}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+sector & observed & \multicolumn{3}{c}{movcav33 chunk-1 (m\,w.e./yr)} \\
+       & (m\,ice/yr) & mean & median & nodes \\
+\midrule
+Filchner--Ronne          & 0.3--0.4        & 0.89 & \textbf{0.20} & 1085 \\
+Ross                     & $\sim$0.1       & 0.90 & \textbf{0.31} & 1075 \\
+Amundsen--Bellingshausen & 14--27 (PIG 16) & 7.8  & 6.4  & 229 \\
+Antarctic Peninsula      & 0.4--3.8        & 7.5  & 4.4  & 186 \\
+Wilkes (Totten sector)   & 4.7--9.1        & 8.3  & 6.4  & 296 \\
+Amery                    & 0.6--0.7        & 4.0  & 3.3  & 128 \\
+E.\ Weddell / Dronning Maud & 0.3--0.9     & 4.4  & 3.5  & 287 \\
+\midrule
+circum-Antarctic         & 0.8 $\pm$ 0.7   & 2.84 & 0.79 & 3286 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The cold/warm dichotomy that dominates the observations is reproduced: the cold-cavity giants sit
+at 0.2--0.3\,m/yr medians while the warm sectors run 4--8, and 13\% of the cavity area refreezes
+(marine ice, as observed under Ronne/Amery). Residual biases: the East Antarctic coastal sectors
+(Dronning Maud, Amery) run $\sim$5$\times$ warm, and the Amundsen runs $\sim$2$\times$ cold ---
+both worth revisiting once multi-year coupled statistics exist. Caveats: node statistics
+(unweighted), m\,w.e.\ vs the observations' m\,ice ($\times$0.92), one coupled year, and PISM's
+initial geometry carries reduced versions of the big shelves. For scale: the jigsaw-era coupling
+produced 28\,m/yr.
+
+
 \section{The increment test crashes, twice --- and passes (2026-07-17/18)}\label{sec:zerowater}
 
 The first chunk-3 leg --- awiesm3 on the PISM-changed 208\,438-node mesh, stage 6/6 --- absorbs
@@ -426,7 +460,7 @@ advancing and retreating ice.}
 \item \textbf{Chunk-1 is quantitatively healthy and, under the coupled slab, crash-free}: January
   SST physical, zero translocated cells; OIFS Weddell September ci 0.61/0.99 (was 0.04);
   both-hemisphere sea-ice annual cycles; per-basin cavity melt in the observed regimes
-  (\S below); kilowatt flux events at real ice tiles: zero.
+  (\S\ref{sec:melt}); kilowatt flux events at real ice tiles: zero.
 \item \textbf{The workflow hands over in both directions} (Bug V fixed): awiesm3 $\to$ PISM $\to$
   couple\_out $\to$ chunk-3 couple\_in runs unattended.
 \item \textbf{The PISM decade runs on FESOM's own melt} (\code{-ocean given}, 2026-07-17): real
@@ -449,39 +483,6 @@ advancing and retreating ice.}
   ice-base $w$ are symptoms of the same \code{hnode} inconsistency, not an independent leak;
   with the restart \code{hnode} reset the columns are quiet.
 \end{itemize}
-
-\subsection{Cavity basal melt against observations (2026-07-17)}
-The chunk-1 year that forced the first clean PISM decade, split by sector and set against the
-satellite record (Rignot et al.\ 2013; Adusumilli et al.\ 2020):
-
-\begin{center}
-\begin{tabular}{@{}lrrrr@{}}
-\toprule
-sector & observed & \multicolumn{3}{c}{movcav33 chunk-1 (m\,w.e./yr)} \\
-       & (m\,ice/yr) & mean & median & nodes \\
-\midrule
-Filchner--Ronne          & 0.3--0.4        & 0.89 & \textbf{0.20} & 1085 \\
-Ross                     & $\sim$0.1       & 0.90 & \textbf{0.31} & 1075 \\
-Amundsen--Bellingshausen & 14--27 (PIG 16) & 7.8  & 6.4  & 229 \\
-Antarctic Peninsula      & 0.4--3.8        & 7.5  & 4.4  & 186 \\
-Wilkes (Totten sector)   & 4.7--9.1        & 8.3  & 6.4  & 296 \\
-Amery                    & 0.6--0.7        & 4.0  & 3.3  & 128 \\
-E.\ Weddell / Dronning Maud & 0.3--0.9     & 4.4  & 3.5  & 287 \\
-\midrule
-circum-Antarctic         & 0.8 $\pm$ 0.7   & 2.84 & 0.79 & 3286 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\noindent
-The cold/warm dichotomy that dominates the observations is reproduced: the cold-cavity giants sit
-at 0.2--0.3\,m/yr medians while the warm sectors run 4--8, and 13\% of the cavity area refreezes
-(marine ice, as observed under Ronne/Amery). Residual biases: the East Antarctic coastal sectors
-(Dronning Maud, Amery) run $\sim$5$\times$ warm, and the Amundsen runs $\sim$2$\times$ cold ---
-both worth revisiting once multi-year coupled statistics exist. Caveats: node statistics
-(unweighted), m\,w.e.\ vs the observations' m\,ice ($\times$0.92), one coupled year, and PISM's
-initial geometry carries reduced versions of the big shelves. For scale: the jigsaw-era coupling
-produced 28\,m/yr.
 
 \subsection{Open item: the Southern-Hemisphere summer melt-back}
 \begin{figure}[H]\centering
