@@ -397,11 +397,15 @@ intervention: the drain vanished ($+0.0002$/step), day-1 fields healthy.
 \subsection*{Bug VII --- the drowned island}
 With Bug VI fixed the run survived longer but still exploded at the Peninsula tip, $\eta$
 climbing a steady $+0.11$\,m/day. The reason is geometric, not numeric
-(Fig.~\ref{fig:island}): the PISM decade thinned Elephant Island's small ice cap, and the
-ice2fesom regrid remapped PISM's \emph{categorical} mask \textbf{bilinearly} --- a few-cell
-island surrounded by mask-4 ocean smears to $\approx$3.x, rounds to ocean, and is deleted
-from the submesh. PISM's own bed there is $+38$ to $+218$\,m above sea level: bedrock island,
-regardless of ice. The ocean then drives a runaway coastal jet where a coastline should be.
+(Fig.~\ref{fig:island}): the ice2fesom regrid remapped PISM's \emph{categorical} mask
+\textbf{bilinearly} --- a few-cell island surrounded by mask-4 ocean smears to
+$\approx$3.x, rounds to ocean, and is deleted from the submesh. PISM's own bed there is
+$+38$ to $+218$\,m above sea level: bedrock island, regardless of ice. (The island entered
+the campaign \emph{bare} --- the spinup state carries 0.0\,m of ice on all ten cells; a
+thin 0.1--0.4\,m cap has been \emph{growing} during the coupled decades. A second,
+independent deletion path was found while examining it: PISM encodes ice-free bedrock as
+mask$=$0, which the node classifier silently defaulted to ocean; fixed --- bare bedrock
+above sea level is land.) The ocean then drives a runaway coastal jet where a coastline should be.
 \textbf{Fix} (ice2fesom): remap the categorical mask nearest-neighbour; rebuild the mask=5
 outside-domain marker (which \code{remapnn} extrapolation would erase) from a bilinear
 domain indicator. Continuous fields stay bilinear.
