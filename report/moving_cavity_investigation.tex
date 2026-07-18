@@ -1,6 +1,7 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[margin=2.2cm]{geometry}
 \usepackage{amsmath,amssymb,booktabs,longtable,xcolor,hyperref,graphicx}
+\usepackage{float}
 \usepackage[T1]{fontenc}
 \usepackage[normalem]{ulem}
 \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
@@ -93,7 +94,7 @@ from a healthy ocean, melted at $\sim$30\,m/yr, and shed \textbf{24\% of its flo
 decade} --- every mesh-change leg then had to absorb a catastrophic geometry increment. FESOM's own
 cavity melt in the same runs was sane (2.2\,m/yr mean, 0.72 median).
 
-\begin{figure}[h]\centering
+\begin{figure}[H]\centering
 \includegraphics[width=\textwidth]{pism_change/pism_change_planview.png}\\
 \includegraphics[width=0.92\textwidth]{pism_change/pism_change_section.png}
 \caption{What Bug I did to PISM in one 10-year leg under surface-water forcing: 1399 nodes lose
@@ -111,7 +112,7 @@ bundle FESOM2 never wrote; \code{fesom2ice} now synthesizes it (plus three exhum
 
 \subsection{Bug II --- the exchange weights scrambled the coupled ocean (2026-07-14)}\label{sec:bug2}
 
-\begin{figure}[h]\centering
+\begin{figure}[H]\centering
 \includegraphics[width=\textwidth]{spp/sst_scramble_global.png}
 \caption{\textbf{The picture that settles it.} January SST as OIFS holds it. Top: pool weights ---
 textbook. Bottom: offline-engine weights --- a \emph{tile-translocated jigsaw}: tropical blocks at
@@ -161,7 +162,7 @@ sea points), 283 of them south of $55^\circ$S: exactly the band a moving coastli
 all future mesh changes, and WAM cold-starts once at the switch leg. Known cosmetic debt: the
 max-ocean edit did not update the obstruction coefficients.
 
-\begin{figure}[h]\centering
+\begin{figure}[H]\centering
 \includegraphics[width=\textwidth]{spp/wam_maxocean.png}
 \caption{One-time maximal-ocean WAM tables (extended to $85^\circ$S). Blue: wave sea points from
 ETOPO1. Red: cells opened land$\to$ocean because the FESOM max-mesh has a water column there.
@@ -308,7 +309,7 @@ ice fraction $\sim10^{-7}$, a \code{ZMASK} threshold cosmetic); event tile skins
 receives at its coldest nodes are $-63\ldots-80$\,W/m$^2$ (textbook polar values, was
 $-10$\,kW), and FESIM's internal temperature tracks its anchor to $<0.1$\,K.
 
-\begin{figure}[h]\centering
+\begin{figure}[H]\centering
 \includegraphics[width=0.9\textwidth]{seaice/senddbg_collapse.png}
 \caption{The kilowatt engine, before and after. Left: $>$1\,kW/m$^2$ events at the OIFS send per
 chunk-1 run. Right: the ice-tile skin temperature at those events --- pinned-skin runs sit 60--80\,K
@@ -328,7 +329,7 @@ the leg costs 3--4 minutes of wall time, and a temporary XIOS file group with
 leaves full evidence (default XIOS files sync only on close: 51 days of output, zero
 records). The hunt found \emph{two independent bugs}, stacked at the same place.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{zero_water_george6.png}
 \caption{Bug VI seen in one basin (George VI / Marguerite Bay; black outlines = the 73
@@ -371,7 +372,7 @@ regardless of ice. The ocean then drives a runaway coastal jet where a coastline
 outside-domain marker (which \code{remapnn} extrapolation would erase) from a bilinear
 domain indicator. Continuous fields stay bilinear.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{elephant_island_drowned.png}
 \caption{Bug VII. Left: the chunk-1 mesh has Elephant Island (the hole at
@@ -408,7 +409,7 @@ front, where the second increment opened cavity columns wholesale (ulev $13\to1$
 coastline-hygiene pass in the submesh generation (forbid single-node notches and pinches)
 and moderating PISM's per-decade geometry increments.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{ross_front_increment2.png}
 \caption{The second increment at the western Ross front (darker = cavity elements). Left:
@@ -483,7 +484,7 @@ initial geometry carries reduced versions of the big shelves. For scale: the jig
 produced 28\,m/yr.
 
 \subsection{Open item: the Southern-Hemisphere summer melt-back}
-\begin{figure}[h]\centering
+\begin{figure}[H]\centering
 \includegraphics[width=\textwidth]{seaice/snow_ice_mc25_vs_ref.png}
 \caption{Year-1 sea ice and snow: implicit-solve run (blue) vs the movcav16-era state (orange) vs
 the 500-year-stable v3.4 reference (black dashed). Our runs track each other --- the crash fixes did
@@ -494,7 +495,7 @@ coast; the reference is nearly bare.}
 \label{fig:seaiceref}
 \end{figure}
 
-\begin{figure}[h]\centering
+\begin{figure}[H]\centering
 \includegraphics[width=\textwidth]{seaice/snow_extent_movcav.png}
 \caption{The extent of the coastal pile-up in the (pre-fix) movcav runs: annual-max and December
 snow depth, and the seasonal cycle. The thick snow is a band hugging the ice-shelf front (eastern
