@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  15 JUL 2026 14:26
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  20 JUL 2026 00:17
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -378,49 +378,57 @@ Package graphics Info: Driver file: pdftex.def on input line 106.
 \Gin@req@height=\dimen184
 \Gin@req@width=\dimen185
 )
+(/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/latex/float/float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count319
+\float@exts=\toks25
+\float@box=\box60
+\@float@everytoks=\toks26
+\@floatcapt=\box61
+)
 (/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/latex/base/fontenc.st
 y
 Package: fontenc 2025/07/18 v2.1d Standard LaTeX package
 )
 (/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/generic/ulem/ulem.sty
-\UL@box=\box60
-\UL@hyphenbox=\box61
+\UL@box=\box62
+\UL@hyphenbox=\box63
 \UL@skip=\skip59
-\UL@hook=\toks25
+\UL@hook=\toks27
 \UL@height=\dimen186
-\UL@pe=\count319
+\UL@pe=\count320
 \UL@pixel=\dimen187
-\ULC@box=\box62
+\ULC@box=\box64
 Package: ulem 2019/11/18
 \ULdepth=\dimen188
 )
-Package hyperref Info: Option `colorlinks' set `true' on input line 6.
+Package hyperref Info: Option `colorlinks' set `true' on input line 7.
 
 (/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/latex/l3backend/l3bac
 kend-pdftex.def
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count320
+\l__color_backend_stack_int=\count321
 ) (./moving_cavity_investigation.aux)
 \openout1 = `moving_cavity_investigation.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -460,17 +468,17 @@ LaTeX Font Info:    ... okay on input line 18.
 (/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/context/base/mkii/sup
 p-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count321
+\scratchcounter=\count322
 \scratchdimen=\dimen189
-\scratchbox=\box63
-\nofMPsegments=\count322
-\nofMParguments=\count323
-\everyMPshowfont=\toks26
-\MPscratchCnt=\count324
+\scratchbox=\box65
+\nofMPsegments=\count323
+\nofMParguments=\count324
+\everyMPshowfont=\toks28
+\MPscratchCnt=\count325
 \MPscratchDim=\dimen190
-\MPnumerator=\count325
-\makeMPintoPDFobject=\count326
-\everyMPtoPDFconversion=\toks27
+\MPnumerator=\count326
+\makeMPintoPDFobject=\count327
+\everyMPtoPDFconversion=\toks29
 )
 (/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/latex/epstopdf-pkg/ep
 stopdf-base.sty
@@ -492,26 +500,29 @@ topdf-sys.cfg
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring ON on input line 18.
+Package hyperref Info: Link coloring ON on input line 19.
  (./moving_cavity_investigation.out)
 (./moving_cavity_investigation.out)
 \@outlinefile=\write3
 \openout3 = `moving_cavity_investigation.out'.
 
-LaTeX Font Info:    Trying to load font information for U+msa on input line 20.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 21.
 
 
 (/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/latex/amsfonts/umsa.f
 d
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 20.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 21.
 
 
 (/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/tex/latex/amsfonts/umsb.f
 d
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) (./moving_cavity_investigation.toc [1
+)
+LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 43.
+ (./moving_cavity_investigation.toc [1
 
 {/sw/spack-levante/texlive-live2025-uaw7o7/texmf-var/fonts/map/pdftex/updmap/pd
 ftex.map}{/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/enc/dvips/
@@ -519,209 +530,354 @@ cm-super/cm-super-t1.enc}])
 \tf@toc=\write4
 \openout4 = `moving_cavity_investigation.toc'.
 
-
-
-LaTeX Warning: Reference `fig:pism' on page 2 undefined on input line 74.
-
-LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10.95> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 78.
-LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 78.
-
-Overfull \hbox (9.60515pt too wide) in paragraph at lines 77--86
-\T1/cmr/m/n/10.95 ``pos-i-tive if ice is freez-ing on''), \T1/cmtt/m/n/10 sst\T
-1/cmr/m/n/10.95 (level 1 = ice base un-der the virtual-column convention)$\OMS/
-cmsy/m/n/10.95 !$\T1/cmtt/m/n/10 shelfbtemp\T1/cmr/m/n/10.95 .
- []
-
-<../figures/spp/sst_scramble_global.png, id=142, 939.51pt x 794.97pt>
-File: ../figures/spp/sst_scramble_global.png Graphic file (type png)
-<use ../figures/spp/sst_scramble_global.png>
-Package pdftex.def Info: ../figures/spp/sst_scramble_global.png  used on input 
-line 90.
-(pdftex.def)             Requested size: 472.31595pt x 399.6432pt.
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[2]
-Overfull \hbox (40.3108pt too wide) in paragraph at lines 114--123
-\T1/cmr/bx/n/10.95 Fix (\T1/cmtt/m/n/10 c21fe7c2\T1/cmr/bx/n/10.95 , op-tion B1
- --- in the cou-pling layer, ocp-tool un-touched): \T1/cmtt/m/n/10 permute_feom
-_to_runtime.py
- []
-
-
-Overfull \hbox (18.74188pt too wide) in paragraph at lines 114--123
-\T1/cmr/m/n/10.95 re-orders \T1/cmtt/m/n/10 feom.* \T1/cmr/m/n/10.95 in grids/m
-asks/areas to run-time or-der (from the sub-mesh's own \T1/cmtt/m/n/10 dist_<np
-roc>/rpart.out\T1/cmr/m/n/10.95 ,
- []
-
-[3 <../figures/spp/sst_scramble_global.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 171--171
-[]|\T1/cmr/m/n/10.95 CORE2 forc-ing shock
- []
-
-
-Underfull \hbox (badness 6625) in paragraph at lines 175--176
-[]|\T1/cmr/bx/n/10.95 ruled out \T1/cmr/m/n/10.95 (bit-
- []
-
-
-Underfull \hbox (badness 1728) in paragraph at lines 176--177
-[]|\T1/cmr/m/n/10.95 five in-de-pen-dent fill strate-gies (donor,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 179--179
-[]|\T1/cmr/m/n/10.95 Pathological thin wa-ter
- []
-
-
-Underfull \hbox (badness 3148) in paragraph at lines 179--180
-[]|\T1/cmr/m/n/10.95 submesh min wet col-umn $\OT1/cmr/m/n/10.95 30$ \T1/cmr/m/
-n/10.95 m vs.
- []
-
-
-Underfull \hbox (badness 3449) in paragraph at lines 180--181
-[]|\T1/cmr/bx/n/10.95 ruled out \T1/cmr/m/n/10.95 (sub-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 181--182
-[]|\T1/cmtt/m/n/10 cavity_flux_ramp_days \T1/cmr/m/n/10.95 im-ple-mented;
- []
-
-ignored error: Infinite glue shrinkage found in box being split [4]
-Overfull \hbox (5.59538pt too wide) in paragraph at lines 196--208
- [] 
- []
-
-[5]
-<../figures/pism_change/pism_change_planview.png, id=168, 1228.59pt x 534.798pt
+<../figures/pism_change/pism_change_planview.png, id=136, 1228.59pt x 534.798pt
 >
 File: ../figures/pism_change/pism_change_planview.png Graphic file (type png)
 <use ../figures/pism_change/pism_change_planview.png>
 Package pdftex.def Info: ../figures/pism_change/pism_change_planview.png  used 
-on input line 263.
+on input line 95.
 (pdftex.def)             Requested size: 472.31595pt x 205.6pt.
-<../figures/pism_change/pism_change_section.png, id=169, 975.33078pt x 448.074p
+<../figures/pism_change/pism_change_section.png, id=138, 975.33078pt x 448.074p
 t>
 File: ../figures/pism_change/pism_change_section.png Graphic file (type png)
 <use ../figures/pism_change/pism_change_section.png>
 Package pdftex.def Info: ../figures/pism_change/pism_change_section.png  used o
-n input line 264.
+n input line 96.
 (pdftex.def)             Requested size: 434.5298pt x 199.62817pt.
- [6 <../figures/pism_change/pism_change_planview.png> <../figures/pism_change/p
-ism_change_section.png>] [7]
-Overfull \hbox (0.45874pt too wide) in paragraph at lines 342--347
-[]\T1/cmr/bx/n/10.95 Attempt 2 \T1/cmr/m/n/10.95 (job 26245420): OIFS float-ing
- over-flow in the con-vec-tion scheme (\T1/cmtt/m/n/10 cubasen.F90:453\T1/cmr/m
-/n/10.95 ,
- []
+ [2]
+LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10.95> not available
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 103.
+<../figures/spp/sst_scramble_global.png, id=147, 939.51pt x 794.97pt>
+File: ../figures/spp/sst_scramble_global.png Graphic file (type png)
+<use ../figures/spp/sst_scramble_global.png>
+Package pdftex.def Info: ../figures/spp/sst_scramble_global.png  used on input 
+line 113.
+(pdftex.def)             Requested size: 472.31595pt x 399.6432pt.
 
-[8{/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/enc/dvips/cm-supe
-r/cm-super-ts1.enc}]
-Overfull \hbox (63.26878pt too wide) in paragraph at lines 394--400
-[]\T1/cmr/bx/n/10.95 Attempt 7: the EX-POUT probe that caught Bug IV. \T1/cmr/m
-/n/10.95 Ev-ery o2a ex-change (\T1/cmtt/m/n/10 sst/sie/snt/ist/sia/u/v\T1/cmr/m
-/n/10.95 )
- []
-
-
-Overfull \hbox (55.63936pt too wide) in paragraph at lines 412--414
-[]\T1/cmr/m/n/10.95 FESOM sends \T1/cmr/m/it/10.95 raw \T1/cmtt/m/n/10 ist\T1/c
-mr/m/n/10.95 ; ice-\T1/cmr/m/it/10.95 free \T1/cmr/m/n/10.95 nodes send the sea
--wa-ter freez-ing point ($\OMS/cmsy/m/n/10.95 ^^Y$\T1/cmr/m/n/10.95 271K) (\T1/
-cmtt/m/n/10 ice_thermo_cpl.F90:180\T1/cmr/m/n/10.95 ). 
- []
-
-[9]
-Overfull \hbox (19.07083pt too wide) in paragraph at lines 488--492
-[]\T1/cmr/m/n/10.95 Launch hy-giene from at-tempts 2--3: launch from the it-er-
-a-tive mas-ter (\T1/cmtt/m/n/10 spinup_couplePI_core3.yaml\T1/cmr/m/n/10.95 ;
- []
-
-[10]
-<../figures/spp/wam_maxocean.png, id=208, 1005.15524pt x 500.46976pt>
+[3
+pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.119 
+       <../figures/pism_change/pism_change_planview.png> <../figures/pism_chang
+e/pism_change_section.png>] [4
+pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.137 
+       <../figures/spp/sst_scramble_global.png>]
+<../figures/spp/wam_maxocean.png, id=163, 1005.15524pt x 500.46976pt>
 File: ../figures/spp/wam_maxocean.png Graphic file (type png)
 <use ../figures/spp/wam_maxocean.png>
-Package pdftex.def Info: ../figures/spp/wam_maxocean.png  used on input line 54
-5.
+Package pdftex.def Info: ../figures/spp/wam_maxocean.png  used on input line 16
+3.
 (pdftex.def)             Requested size: 472.31595pt x 235.16736pt.
 
 
-LaTeX Warning: `h' float specifier changed to `ht'.
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 170.
 
-[11]
-Overfull \hbox (47.17427pt too wide) in paragraph at lines 589--593
-[]\T1/cmr/bx/n/10.95 The nam-cou-ple \T1/cmtt/m/n/10 feom \T1/cmr/bx/n/10.95 di
--men-sion had NEVER been patched, on any leg. \T1/cmtt/m/n/10 fix_namcouple_feo
-m_dim
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\to' on input line 170.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 170.
+
+[5
+pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.177 \paragraph
+                {Layer 1: MIZ aliasing of the sent temperature.} FESOM sent ...
+ <../figures/spp/wam_maxocean.png>]
+Overfull \hbox (1.57486pt too wide) in paragraph at lines 200--204
+[]\T1/cmr/m/n/10.95 The re-ceived flux at cold FE-SOM nodes is \T1/cmr/bx/n/10.
+95 un-phys-i-cal and anti-braking\T1/cmr/m/n/10.95 : mean $\OMS/cmsy/m/n/10.95 
+^^@\OT1/cmr/m/n/10.95 15\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 8$\T1/cmr/m/n/1
+0.95 kW/m$[]$
  []
 
-[12 <../figures/spp/wam_maxocean.png>]
-Overfull \hbox (23.96672pt too wide) in paragraph at lines 604--607
-\T1/cmr/bx/n/10.95 The pat-tern: \T1/cmr/m/n/10.95 the guards were right, and t
-he plumb-ing around them de-feated them. \T1/cmtt/m/n/10 remap_oasis_restart
+
+Overfull \hbox (22.90422pt too wide) in paragraph at lines 209--214
+[]\T1/cmr/m/n/10.95 The rea-son the skin can sit 80K be-low the air: \T1/cmtt/m
+/n/10 vlamsk_mod.F90\T1/cmr/m/n/10.95 , sea-ice tile, with \T1/cmtt/m/n/10 LNEM
+OSICOUP=.true.
  []
 
 
-Overfull \hbox (25.2597pt too wide) in paragraph at lines 612--615
-\T1/cmr/m/n/10.95 mesh, 14 nodes, crashes in $\OMS/cmsy/m/n/10.95 ^^X$\T1/cmr/m
-/n/10.95 2min (vs. the 45-node cou-pled sys-tem). Re-quires the \T1/cmtt/m/n/10
- FESOM_COUPLED=OFF
+Overfull \hbox (0.31607pt too wide) in paragraph at lines 231--239
+\T1/cmr/m/n/10.95 whose path \T1/cmtt/m/n/10 esm_runscripts/chunky_parts.py \T1
+/cmr/m/n/10.95 builds by \T1/cmr/m/it/10.95 raw string con-cate-na-tion of \T1/
+cmtt/m/it/10 general.base_dir
  []
 
-[13] (./moving_cavity_investigation.aux)
+[6{/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/enc/dvips/cm-supe
+r/cm-super-ts1.enc}]
+Overfull \hbox (60.89682pt too wide) in paragraph at lines 240--245
+\T1/cmr/m/n/10.95 gen-uine awiesm3$\OMS/cmsy/m/n/10.95 !$\T1/cmr/m/n/10.95 PISM
+ han-dover of the cam-paign (mov-cav27), and a full awiesm3$\OMS/cmsy/m/n/10.95
+ !$\T1/cmr/m/n/10.95 PISM$\OMS/cmsy/m/n/10.95 !$\T1/cmr/m/n/10.95 couple_out$\O
+MS/cmsy/m/n/10.95 !$\T1/cmr/m/n/10.95 chunk-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 285--287
+[]\T1/cmr/m/n/10.95 FESOM's albedo drives OIFS ra-di-a-tion
+ []
+
+[7]
+<../figures/seaice/senddbg_collapse.png, id=190, 711.8595pt x 257.0747pt>
+File: ../figures/seaice/senddbg_collapse.png Graphic file (type png)
+<use ../figures/seaice/senddbg_collapse.png>
+Package pdftex.def Info: ../figures/seaice/senddbg_collapse.png  used on input 
+line 310.
+(pdftex.def)             Requested size: 425.08147pt x 153.51247pt.
+ [8]
+<zero_water_george6.png, id=197, 903.375pt x 794.97pt>
+File: zero_water_george6.png Graphic file (type png)
+<use zero_water_george6.png>
+Package pdftex.def Info: zero_water_george6.png  used on input line 365.
+(pdftex.def)             Requested size: 472.31595pt x 415.643pt.
+ [9
+pdfTeX warning (ext4): destination with the same identifier (name{figure.4}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.376 
+       <../figures/seaice/senddbg_collapse.png>] [10
+pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.394 \subsubsection
+                    *{Bug VII --- the drowned island} <./zero_water_george6.png
+>]
+<elephant_island_anatomy.png, id=212, 939.51pt x 650.43pt>
+File: elephant_island_anatomy.png Graphic file (type png)
+<use elephant_island_anatomy.png>
+Package pdftex.def Info: elephant_island_anatomy.png  used on input line 412.
+(pdftex.def)             Requested size: 472.31595pt x 326.9808pt.
+<elephant_island_drowned.png, id=213, 1011.78pt x 505.89pt>
+File: elephant_island_drowned.png Graphic file (type png)
+<use elephant_island_drowned.png>
+Package pdftex.def Info: elephant_island_drowned.png  used on input line 424.
+(pdftex.def)             Requested size: 472.31595pt x 236.16272pt.
+ [11
+pdfTeX warning (ext4): destination with the same identifier (name{figure.6}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.431 
+       <./elephant_island_anatomy.png>] [12
+pdfTeX warning (ext4): destination with the same identifier (name{figure.7}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.472 
+       <./elephant_island_drowned.png>]
+<movcav34_evolution_timelines.png, id=234, 794.97pt x 722.7pt>
+File: movcav34_evolution_timelines.png Graphic file (type png)
+<use movcav34_evolution_timelines.png>
+Package pdftex.def Info: movcav34_evolution_timelines.png  used on input line 4
+75.
+(pdftex.def)             Requested size: 472.31595pt x 429.38878pt.
+<fris_top_side_chunks.png, id=235, 1084.05pt x 939.51pt>
+File: fris_top_side_chunks.png Graphic file (type png)
+<use fris_top_side_chunks.png>
+Package pdftex.def Info: fris_top_side_chunks.png  used on input line 487.
+(pdftex.def)             Requested size: 472.31595pt x 409.343pt.
+ [13
+pdfTeX warning (ext4): destination with the same identifier (name{figure.8}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.494 
+       <./movcav34_evolution_timelines.png>] [14
+pdfTeX warning (ext4): destination with the same identifier (name{figure.9}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.517 
+       <./fris_top_side_chunks.png>]
+Overfull \hbox (15.16258pt too wide) in paragraph at lines 548--553
+\T1/cmr/m/n/10.95 averaged against an ob-served circum-Antarctic $\OMS/cmsy/m/n
+/10.95 ^^X$\T1/cmr/m/n/10.95 0.8m/yr, and \T1/cmr/m/it/10.95 es-ca-lates \T1/cm
+r/m/n/10.95 (0.9$\OMS/cmsy/m/n/10.95 !$\T1/cmr/m/n/10.95 5.5m/yr over 1900$\OMS
+/cmsy/m/n/10.95 !$\T1/cmr/m/n/10.95 1901
+ []
+
+<melt_diagnosis.png, id=250, 1040.18959pt x 384.77545pt>
+File: melt_diagnosis.png Graphic file (type png)
+<use melt_diagnosis.png>
+Package pdftex.def Info: melt_diagnosis.png  used on input line 556.
+(pdftex.def)             Requested size: 472.31595pt x 174.71495pt.
+[15] [16
+pdfTeX warning (ext4): destination with the same identifier (name{figure.10}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.606 
+       <./melt_diagnosis.png>]
+Overfull \hbox (9.83734pt too wide) in paragraph at lines 615--619
+\T1/cmr/m/n/10.95 To test the ``fast cur-rents'' hy-pothe-ses cheaply, a \T1/cm
+r/m/it/10.95 stan-dalone \T1/cmr/m/n/10.95 FE-SOM har-ness (\T1/cmtt/m/n/10 bui
+ld_sa\T1/cmr/m/n/10.95 , sub-mesh_1901,
+ []
+
+<standalone_bifurcation.png, id=264, 650.43pt x 375.804pt>
+File: standalone_bifurcation.png Graphic file (type png)
+<use standalone_bifurcation.png>
+Package pdftex.def Info: standalone_bifurcation.png  used on input line 621.
+(pdftex.def)             Requested size: 472.31595pt x 272.90106pt.
+[17
+pdfTeX warning (ext4): destination with the same identifier (name{figure.11}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.646 \textbf{Footprint.}
+                          Matching submesh\_1901 to the initial submesh by c...
+ <./standalone_bifurcation.png>]
+LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 661.
+<hnode_seam.png, id=272, 650.43pt x 390.258pt>
+File: hnode_seam.png Graphic file (type png)
+<use hnode_seam.png>
+Package pdftex.def Info: hnode_seam.png  used on input line 674.
+(pdftex.def)             Requested size: 387.30254pt x 232.388pt.
+ [18
+pdfTeX warning (ext4): destination with the same identifier (name{figure.12}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.698 
+       <./hnode_seam.png>]
+<../figures/seaice/snow_ice_mc25_vs_ref.png, id=288, 1112.44179pt x 722.18379pt
+>
+File: ../figures/seaice/snow_ice_mc25_vs_ref.png Graphic file (type png)
+<use ../figures/seaice/snow_ice_mc25_vs_ref.png>
+Package pdftex.def Info: ../figures/seaice/snow_ice_mc25_vs_ref.png  used on in
+put line 743.
+(pdftex.def)             Requested size: 472.31595pt x 306.621pt.
+ [19]
+<../figures/seaice/snow_extent_movcav.png, id=294, 1076.823pt x 725.28107pt>
+File: ../figures/seaice/snow_extent_movcav.png Graphic file (type png)
+<use ../figures/seaice/snow_extent_movcav.png>
+Package pdftex.def Info: ../figures/seaice/snow_extent_movcav.png  used on inpu
+t line 754.
+(pdftex.def)             Requested size: 472.31595pt x 318.11757pt.
+ [20
+pdfTeX warning (ext4): destination with the same identifier (name{figure.13}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.761 
+       <../figures/seaice/snow_ice_mc25_vs_ref.png>]
+Underfull \hbox (badness 6316) in paragraph at lines 781--782
+[]|\T1/cmr/m/n/10.95 Remap ex-trap-o-lated un-bound-edly
+ []
+
+
+Underfull \hbox (badness 6876) in paragraph at lines 785--786
+[]|\T1/cmr/m/n/10.95 First mesh-change leg read the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 785--786
+\T1/cmr/m/n/10.95 mother mesh as cavity-free
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 785--786
+\T1/cmr/m/n/10.95 (\T1/cmtt/m/n/10 cavity_nlvls.out \T1/cmr/m/n/10.95 miss-ing 
+from
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 788--789
+[]|\T1/cmr/m/n/10.95 Same-chunk \T1/cmtt/m/n/10 couple_in \T1/cmr/m/n/10.95 re-
+run
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 788--789
+\T1/cmr/m/n/10.95 pro-moted its own sub-mesh to
+ []
+
+
+Underfull \hbox (badness 2401) in paragraph at lines 788--789
+\T1/cmtt/m/n/10 previous_submesh \T1/cmr/m/n/10.95 (old $\OT1/cmr/m/n/10.95 =$ 
+\T1/cmr/m/n/10.95 new $\OMS/cmsy/m/n/10.95 )$
+ []
+
+
+Underfull \hbox (badness 2460) in paragraph at lines 801--801
+[]|\T1/cmr/m/n/10.95 ocp-tool flipped a coast-line cell's
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 802--803
+[]|\T1/cmr/m/n/10.95 ocp-tool
+ []
+
+ignored error: Infinite glue shrinkage found in box being split [21
+pdfTeX warning (ext4): destination with the same identifier (name{figure.14}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.804 \end{longtable}
+                      <../figures/seaice/snow_extent_movcav.png>] [22] [23]
+[24] (./moving_cavity_investigation.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-06>
  ***********
-
-
-LaTeX Warning: There were undefined references.
-
 Package rerunfilecheck Info: File `moving_cavity_investigation.out' has not cha
 nged.
-(rerunfilecheck)             Checksum: CC642C2896A7F6C2927B20A3231B5C10;5975.
+(rerunfilecheck)             Checksum: C9533C586E82C7426E1D782A6106124F;7563.
  ) 
 Here is how much of TeX's memory you used:
- 11276 strings out of 467538
- 172229 string characters out of 5410173
- 609641 words of memory out of 5000000
- 39967 multiletter control sequences out of 15000+600000
- 649183 words of font info for 100 fonts, out of 8000000 for 9000
+ 11482 strings out of 467538
+ 176867 string characters out of 5410173
+ 619154 words of memory out of 5000000
+ 40133 multiletter control sequences out of 15000+600000
+ 651128 words of font info for 102 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,9n,79p,612b,584s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,10n,79p,975b,584s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/amsf
-onts/cm/cmbx10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/
+onts/cm/cmex10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/
 type1/public/amsfonts/cm/cmmi10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/
 texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></sw/spack-levante/texlive-
 live2025-uaw7o7/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></sw/spack-
 levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.
 pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/am
 sfonts/cm/cmsy10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/font
-s/type1/public/amsfonts/cm/cmsy7.pfb></sw/spack-levante/texlive-live2025-uaw7o7
-/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></sw/spack-levante/texlive
--live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></sw/spack
--levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx109
-5.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/
-cm-super/sfbx1200.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fon
-ts/type1/public/cm-super/sfbx1440.pfb></sw/spack-levante/texlive-live2025-uaw7o
-7/texmf-dist/fonts/type1/public/cm-super/sfbx1728.pfb></sw/spack-levante/texliv
-e-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></sw/spac
-k-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm10
-95.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public
-/cm-super/sfrm1200.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fo
-nts/type1/public/cm-super/sfti1000.pfb></sw/spack-levante/texlive-live2025-uaw7
-o7/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></sw/spack-levante/texli
-ve-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb>
-Output written on moving_cavity_investigation.pdf (13 pages, 1276109 bytes).
+s/type1/public/amsfonts/cm/cmsy8.pfb></sw/spack-levante/texlive-live2025-uaw7o7
+/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb></sw/spack-levante/t
+exlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbi1095.pfb></sw
+/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/s
+fbx1000.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/p
+ublic/cm-super/sfbx1095.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-di
+st/fonts/type1/public/cm-super/sfbx1200.pfb></sw/spack-levante/texlive-live2025
+-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></sw/spack-levante/
+texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx1728.pfb></s
+w/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/
+sfit1000.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/
+public/cm-super/sfrm1000.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-d
+ist/fonts/type1/public/cm-super/sfrm1095.pfb></sw/spack-levante/texlive-live202
+5-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></sw/spack-levante
+/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfti1000.pfb></
+sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super
+/sfti1095.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1
+/public/cm-super/sftt1000.pfb>
+Output written on moving_cavity_investigation.pdf (24 pages, 4307991 bytes).
 PDF statistics:
- 326 PDF objects out of 1000 (max. 8388607)
- 261 compressed objects within 3 object streams
- 56 named destinations out of 1000 (max. 500000)
- 205 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 459 PDF objects out of 1000 (max. 8388607)
+ 356 compressed objects within 4 object streams
+ 90 named destinations out of 1000 (max. 500000)
+ 252 words of extra memory for PDF output out of 10000 (max. 10000000)
 

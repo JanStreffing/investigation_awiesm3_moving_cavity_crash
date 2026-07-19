@@ -14,7 +14,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-07-18 (evening)}
+\date{Last updated: 2026-07-19 (evening)}
 
 \begin{document}
 \maketitle
@@ -35,9 +35,16 @@ attempt then ran eleven more increments \emph{with the cavities accidentally amp
 overreaching mesh-hygiene fix} (discovered at wrap-up, reverted; those legs are tainted).
 The campaign continues, and the diagnosis has turned to physics: the Ross-front blowup is
 increment magnitude, not coastline fragility, and the increments are large because the
-PI-control cavity melt runs $\sim7\times$ observations. That melt is traced not to the melt
-scheme or the ocean temperature but to cavity currents $\sim6\times$ too fast; the plan is a
-separate, tunable ice-base drag coefficient (\S\ref{sec:hygiene}, \S\ref{sec:melt2}).
+PI-control cavity melt runs $\sim7\times$ observations. That melt is traced to cavity
+currents $\sim6\times$ too fast --- and a standalone dissection (\S\ref{sec:standalone})
+then shows those fast currents are \emph{injected by the mesh increment}: the geometry and
+the water are both fine (a cold start on the changed mesh settles to the healthy
+$\sim$2.6\,cm/s), but the \emph{remapped restart is internally inconsistent with the new
+mesh} --- and the inconsistent field is pinned down to \textbf{\code{hnode}} (the ALE layer
+thickness) at the changed columns: the remap's own ALE-rescale step compresses it using a
+stale \code{eta}, seeding a barotropic spin-up. A clean nominal \code{hnode} restores the
+healthy $\sim$2.6\,cm/s in isolation; the remap fix is a small edit to \code{remap\_hnode}
+(\S\ref{sec:standalone}).
 \end{abstract}
 
 \tableofcontents
@@ -597,7 +604,99 @@ reanalysis) --- but it would not cure this run: the thermal forcing here is alre
 near-realistic, so correcting $T/S$ addresses a problem we mostly do not have. The excess is
 in the \emph{circulation}, upstream of both the melt formula and the water it is fed.
 
-\section{State of the cycle and of the climate (2026-07-18)}\label{sec:state}
+\emph{Superseded (2026-07-19):} the ``too-fast currents'' diagnosis holds, but the proposed
+cure --- a tunable ice-base drag \code{C\_d\_cavity} --- does not: the standalone dissection
+below shows the fast currents are \emph{injected by the increment}, not an under-damped
+equilibrium (chunk-1 and both year-long cold-start equilibria run $\sim$2.6\,cm/s at the
+stock drag). See \S\ref{sec:standalone}; the drag plan is moved to Falsified.
+
+\subsection{The spin-up is the remapped restart, not the water --- a standalone dissection (2026-07-19)}\label{sec:standalone}
+
+To test the ``fast currents'' hypotheses cheaply, a \emph{standalone} FESOM harness
+(\code{build\_sa}, submesh\_1901, 20-day runs, $\sim$2\,min each) with a cavity
+median-column-speed metric. It reproduces the disease and then dissects it
+(Fig.~\ref{fig:bifurcation}).
+
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{standalone_bifurcation.png}
+\caption{Standalone cavity median speed vs.\ day. The runs bifurcate cleanly by \emph{what
+mesh geometry} they use, not by the water or the dynamics carried. \textbf{Healthy
+($\sim$2--5\,cm/s):} chunk-1 restart on the unchanged mesh (control), the same restart
+remapped onto its \emph{own} mesh (self-remap, exonerating the remap machinery), and a
+cold start from rest on the changed submesh\_1901. \textbf{Diseased (climb to
+$\sim$17--19\,cm/s):} the raw remapped restart --- \emph{and} every attempted fix of the
+carried state on that mesh: cavity density smoothed, cavity refilled with ambient
+open-ocean water, geostrophic velocity imposed, velocity zeroed, velocity$+$SSH$+$hbar
+zeroed. All fast, all indistinguishable. The excess is density-independent and not fixable
+in any single carried field.}
+\label{fig:bifurcation}
+\end{figure}
+
+\textbf{The elimination.} (i) The harness is faithful --- unchanged geometry stays slow,
+through the remap or not. (ii) The cavity \emph{water mass is irrelevant}: chunk-1 water,
+harmonically smoothed water and a fresh ambient reservoir all spin up identically ---
+baroclinic/density is not the driver. (iii) The \emph{geometry is fine}: a cold start on
+submesh\_1901 from rest settles to $\sim$2.6\,cm/s (1-year run, peaked $\sim$month~3 then
+relaxed) --- a healthy equilibrium lives on the new mesh. (iv) It is not the individually
+carried velocity, SSH or hbar (zeroing each $\to$ still fast) and \code{hnode} is already
+nominal. \textbf{Conclusion:} the injector is the \emph{remapped restart being internally
+inconsistent with the new mesh}; the geometry \emph{change} is only the trigger that exposes
+it, not the cause.
+
+\textbf{Footprint.} Matching submesh\_1901 to the initial submesh by coordinate: of 2627
+cavity columns, \textbf{1602 changed vertical structure but the remap flags only 410}. The
+classifier flags only columns that \emph{gain} wet levels (need fill: ice base shallower or
+seabed deeper); the \textbf{1183 columns whose ice base got \emph{deeper}} (thicker ice
+above $\to$ moved ice-loading/pressure boundary) are carried untouched. A density-independent,
+geometry-linked lead --- not yet a proven cause.
+
+\textbf{Learning the target (in flight).} Two 1-year cold starts with \emph{identical}
+climatology and forcing, differing only in the mesh (1900 vs 1901), give two directly
+comparable equilibria. Their difference $\Delta_{\mathrm{equil}}$ at the changed nodes is the
+\emph{pure} ocean equilibrium response to the ice-draft change --- the first-principles
+target a one-shot remap rule must reproduce (the old restart $\approx$ the 1900-mesh
+equilibrium; the modification should push it to the 1901-mesh equilibrium, derived, not
+copied).
+
+\subsection{The seam field is \code{hnode} (2026-07-20)}\label{sec:hnode}
+
+The equilibria then localised the seam to a single field. Building a rest state (velocity,
+SSH, AB, hbar all zero) with the \emph{equilibrium} density and stepping it still spun up
+(median 19\,cm/s) --- so density is finally, unconfoundedly dead. That rest state differs
+from the healthy cold start in exactly one carried field: \code{hnode}, the ALE layer
+thickness. Swapping the remap's \code{hnode} for the equilibrium's (the \emph{only} file
+that changes, by $\le0.73$\,m) flips the cavity from 18.6 to 4.5\,cm/s, reproduced to two
+digits (Fig.~\ref{fig:hnode}). The differences sit \emph{entirely} at the changed columns
+(zero elsewhere), a couple of levels below the moved ice base --- which is why every
+density/velocity/SSH test walked past it.
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.82\textwidth]{hnode_seam.png}
+\caption{One field, one flip. Identical rest state and equilibrium density; \emph{only}
+\code{hnode} differs, by $\le0.73$\,m at the changed columns. The remap's chunk-1-rescaled
+\code{hnode} (red) spins the cavity to $\sim$19\,cm/s; the equilibrium \code{hnode} (green)
+and a \emph{clean nominal} \code{hnode} (blue, the fix) both hold the healthy
+$\sim$4.5\,cm/s. A sub-metre ALE-thickness inconsistency at the changed columns is
+deterministically decisive.}
+\label{fig:hnode}
+\end{figure}
+
+\textbf{Mechanism.} \code{remap\_hnode} rescales every changed column so
+$\sum h = (z_{\mathrm{bar}}(ul)-z_{\mathrm{bar}}(nl)) + \eta_{\mathrm{new}}$, using the
+\emph{remapped chunk-1} $\eta$. At changed columns that $\eta$ is stale --- starkest at
+cavity$\to$open (``closed'') nodes, where it is the under-ice depressed value
+($\approx-1.6$\,m) applied to a now-open column --- so the rescale \emph{compresses}
+\code{hnode} (e.g.\ $10.0\to9.19$\,m). That inconsistent thickness is exactly the ``standing
+$dh/dt$ source at $t{=}0$'' the rescale was added to prevent; it seeds the barotropic
+spin-up. The rescale does the opposite of its intent because it trusts the carried $\eta$.
+
+\textbf{Fix (validated in isolation, code edit pending).} Give changed columns a clean,
+self-consistent \code{hnode} --- nominal $z_{\mathrm{bar}}$ thicknesses consistent with the
+SSH written --- instead of the stale-$\eta$ rescale. Nominal \code{hnode} holds
+$\sim$4.5\,cm/s (Fig.~\ref{fig:hnode}, blue). A small edit to \code{remap\_hnode}; end-to-end
+remap + coupled validation is the next step.
+
+\section{State of the cycle and of the climate (2026-07-20)}\label{sec:state}
 
 \subsection{What is proven}
 \begin{itemize}
@@ -619,8 +718,15 @@ in the \emph{circulation}, upstream of both the melt formula and the water it is
   increment's Ross-front blowup (\S\ref{sec:zerowater}) is the current front.
 \item \textbf{The high, rising cavity melt is diagnosed} (\S\ref{sec:melt2}): near-realistic
   thermal forcing ($+0.14$\,K) through a standard, validated melt scheme ($r=0.91$), driven by
-  cavity currents $\sim6\times$ too fast (median 13\,cm/s). Fix planned: a separate tunable
-  ice-base drag \code{C\_d\_cavity}. Open.
+  cavity currents $\sim6\times$ too fast (median 13\,cm/s).
+\item \textbf{Those fast currents are injected by the mesh increment, not the physics}
+  (\S\ref{sec:standalone}--\ref{sec:hnode}, 2026-07-19/20): density-independent (chunk-1 /
+  smoothed / ambient / \emph{equilibrium} water all identical), geometry-independent (cold
+  start on the changed mesh is healthy $\sim$2.6\,cm/s). Root pinned to a single field:
+  \textbf{the remapped \code{hnode}} at the changed columns, compressed by \code{remap\_hnode}'s
+  ALE-rescale using the stale chunk-1 $\eta$. A clean nominal \code{hnode} restores
+  $\sim$4.5\,cm/s in isolation (Fig.~\ref{fig:hnode}). \textbf{Open:} apply the small
+  \code{remap\_hnode} edit, then validate end-to-end (remap $\to$ standalone $\to$ coupled leg).
 \item \dead{The chunk-3 dilution enters through the vertical-advection top boundary
   (zero-tracer inflow ratchet / material-interface flux).} Cavity guards in both the implicit
   (\code{adv\_tra\_vert\_impl}) and explicit (\code{upw1}, \code{qr4c}) schemes changed the
@@ -730,6 +836,16 @@ a correct refusal followed by an unconditional continue is worse than no guard a
   three-equation scheme gives $\sim$40\,m/yr/K locally, so the measured 39 is correct. The
   melt formula is standard and reproduces the model's melt ($r=0.91$); the excess is in the
   cavity \emph{currents} (\S\ref{sec:melt2}).
+\item \dead{The fast cavity currents are an under-damped equilibrium, cured by a tunable
+  ice-base drag \code{C\_d\_cavity}.} At the stock drag, chunk-1 and \emph{both} year-long
+  cold-start equilibria run at the healthy $\sim$2.6\,cm/s; the fast currents are injected by
+  the mesh increment, not a drag deficit (\S\ref{sec:standalone}).
+\item \dead{The increment's geometry change injects the spin-up.} A cold start from rest on the
+  changed mesh settles to $\sim$2.6\,cm/s --- the new mesh is fine; the carried \emph{remapped
+  restart} is what is inconsistent with it (\S\ref{sec:standalone}).
+\item \dead{The barotropic margin force $F_x$ (eta$+$sea-ice) drives the spin-up.} The slow
+  control carries the same $F_x$ distribution (p90 $\sim7\times10^{-4}$) as the fast runs; the
+  step-1 force does not discriminate slow from fast (\S\ref{sec:standalone}).
 \end{enumerate}
 
 %======================================================================
