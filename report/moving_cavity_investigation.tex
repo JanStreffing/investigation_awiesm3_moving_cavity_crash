@@ -14,7 +14,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-07-18}
+\date{Last updated: 2026-07-18 (evening)}
 
 \begin{document}
 \maketitle
@@ -33,9 +33,11 @@ later, the cycle is proven end-to-end with real cavities --- awiesm3 year $\to$ 
 $\to$ awiesm3 year on the changed mesh, plus one further clean cycle. The 10-year production
 attempt then ran eleven more increments \emph{with the cavities accidentally amputated by an
 overreaching mesh-hygiene fix} (discovered at wrap-up, reverted; those legs are tainted).
-The campaign continues: the next problem is a cavity-preserving treatment of the fragile
-increment coastlines, then re-running the production increments with real cavities
-(\S\ref{sec:zerowater}, \S\ref{sec:state}).
+The campaign continues, and the diagnosis has turned to physics: the Ross-front blowup is
+increment magnitude, not coastline fragility, and the increments are large because the
+PI-control cavity melt runs $\sim7\times$ observations. That melt is traced not to the melt
+scheme or the ocean temperature but to cavity currents $\sim6\times$ too fast; the plan is a
+separate, tunable ice-base drag coefficient (\S\ref{sec:hygiene}, \S\ref{sec:melt2}).
 \end{abstract}
 
 \tableofcontents
@@ -495,6 +497,105 @@ cavity count drops far below the classifier's flag count); (ii) rewind movcav34 
 and re-run the increments with real cavities; (iii) the recurring OIFS \code{voskin}
 coastal overflow; (iv) the iterative-coupling loop ignores \code{final\_date}; (v) the
 escalating warm-bias melt that drives PISM's fast geometry increments in the first place.
+Items (i) and (v) are worked below.
+
+\subsection{The coastline is not the problem --- the increment is (2026-07-18)}\label{sec:hygiene}
+
+The Ross-front blowup looked like a fragile coastline (24 nodes held by $\le3$ elements
+within $1.5^\circ$ of the epicentre, including an 18-level cavity sliver on two triangles),
+so the first response was a hygiene sweep removing ice-domain nodes held by $\le2$ elements.
+It ran the chain to year 1911 --- but by \emph{amputating the cavities} (Bug ``VIII'',
+above). An offline harness on the saved 1902 flag files then settled the question by
+building submesh variants without submitting jobs:
+
+\begin{itemize}
+\item \textbf{Fragility is normal, not pathological.} The meshes that ran clean full years
+  carry the \emph{same} fragile census as the crashed one: pool 3470 nodes with $\le2$
+  elements (429 in cavities), submesh\_1901 3448 (378), versus 1902's 3444. A control that
+  kills the hypothesis: if $\le2$-element slivers were fatal, 1901 would have died too.
+\item \textbf{The increment is the violence.} Measured as per-node cavity-roof change against
+  the previous submesh: increment 1 (pool$\to$1901) max $|\Delta\mathrm{draft}|$ 451\,m,
+  mean 0.96\,m; increment 2 (1901$\to$1902) max \textbf{1196\,m}, mean \textbf{8.7\,m}
+  --- $9\times$ the mean, opening 13 vertical levels at the epicentre in one decade beside a
+  506-node grounding advance. This is downstream of item (v): the warm-bias melt escalates
+  (cavity-mean 0.9$\to$5.5$\to$24\,m/yr), so each decade's geometry step is larger than the
+  last.
+\end{itemize}
+
+\textbf{Fixes committed.} (a) A \emph{cavity-amputation abort guard}: if the reduced submesh
+retains $<50\%$ of the classifier's flagged cavity nodes, the leg fails loudly instead of
+running a formally-valid but cavity-less ocean (the tripwire that would have caught Bug VIII
+in one couple\_in instead of eleven tainted chunks). (b) The PISM mask-value \code{0}
+(\code{MASK\_ICE\_FREE\_BEDROCK}) is now classified \emph{land}: a second, independent
+island-deletion path (bare bedrock defaulting to ocean) that would have re-drowned Elephant
+Island once its nascent cap finishes melting. \textbf{Rejected:} a per-increment cavity-roof
+\emph{rate limiter} (clamp the roof to within 75\,m of the previous leg). It worked offline
+(retained 2221 cavity nodes vs 1864 unclamped) but was \emph{rejected on physics grounds}:
+it makes the ocean's cavity geometry deliberately lag the ice sheet's, a coupler-imposed
+inconsistency between components. The increment must be tamed at its source (the melt, next)
+or by numerical treatment of the post-increment transient --- not by distorting the coupled
+geometry.
+
+\subsection{Why the cavity melt is high and rising, and how to slow it (2026-07-18)}\label{sec:melt2}
+
+Item (v), the disease under the increments: the PI-control cavity melt runs at
+$\sim$5.5\,m/yr area-averaged against an observed circum-Antarctic $\sim$0.8\,m/yr, and
+\emph{escalates} (0.9$\to$5.5\,m/yr over 1900$\to$1901 on real cavities). Diagnosed from
+the monthly \code{temp}/\code{salt}/\code{fw}/\code{unod}/\code{vnod} output
+(Fig.~\ref{fig:melt}); the cause is not where the first pass guessed.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{melt_diagnosis.png}
+\caption{Why cavity melt is high and rising. (a) Cavity ice-base current speed (1901): median
+13\,cm/s, mean 18, $61\%$ of nodes above 10\,cm/s --- fast, concentrated at the
+Amundsen/Bellingshausen shelves and the Ross/Filchner ice fronts (observed cavity interiors
+are a few cm/s). (b) The melt \emph{formula} is standard and correct: fed FESOM's actual
+currents and thermal forcing, the three-equation scheme reproduces the model's own melt
+(predicted vs actual $r=0.91$). (c) Both drivers climb together --- thermal forcing (median
+$+0.13\to+0.37$\,K, warm-water intrusion) and current speed --- so the melt compounds.}
+\label{fig:melt}
+\end{figure}
+
+\textbf{The chain, measured.} Thermal forcing $T-T_f$ at the ice-base level is
+\emph{near-realistic} (area-weighted $+0.14$\,K; median $+0.13$ in 1900 rising to $+0.37$ in
+1902). The Holland \& Jenkins three-equation scheme in \code{cavity\_param.F90} is standard
+(drag $a_k=2.5\times10^{-3}$, $\gamma_T\approx10^{-4}$\,m/s), and fed the model's own currents
+and thermal forcing it \emph{reproduces the melt} ($r=0.91$, 18 vs 16\,m/yr): the formula is
+not miscalibrated. By elimination --- melt $7\times$ too high, formula validated, temperature
+realistic --- the excess lives in the \textbf{cavity currents}: median 13\,cm/s where
+$\sim$2\,cm/s would give the observed melt, i.e.\ $\sim6\times$ too fast. Because the
+exchange velocity is $\gamma_T\propto|U|$, that fast circulation is exactly what inflates the
+melt; and as the shelves thin the currents speed up further --- the escalation.
+
+\textbf{How to slow it without killing the climate response.} The design constraint is to
+dissipate \emph{momentum} with a flow-dependent operator, never to cap the diagnostic
+(velocity, $\gamma_T$, or melt) --- a quadratic drag still lets the current find a slower
+equilibrium that shifts with forcing, whereas a cap freezes the response. The ice base is
+\emph{not} free-slip: \code{cavity\_momentum\_fluxes} already applies quadratic drag
+$-\rho\,C_d|U|U$ at \code{nzmin}, correctly ordered (cavity elements skip the atmospheric-
+stress overwrite, then receive the drag). But it borrows the \emph{seabed} coefficient
+$C_d=2.5\times10^{-3}$ with the developer's own flag in the source (``\emph{need to check the
+sensitivity to the drag coefficient}''). The plan: split it into a separate, tunable
+\code{C\_d\_cavity} (default $=C_d$) and raise it --- physically justified, since ice-shelf
+bases are hydraulically rougher than a flat seabed (basal crevasses, terraces, keels), and
+dedicated cavity models treat ice-base drag as a distinct tunable $\gtrsim$ seabed. Being
+quadratic it preserves the velocity's climate sensitivity. Complementary flow-dependent
+levers if drag alone is insufficient: a vertical-viscosity floor in the cavity boundary
+layer, or Smagorinsky horizontal viscosity in cavities. \emph{Not} to be done: raising the
+global $C_d$ (over-brakes the open-ocean bottom boundary layer everywhere). Validation
+target: melt toward $\sim$0.8\,m/yr \emph{while preserving} the spatial melt--forcing pattern
+($r=0.81$) and the warm-Amundsen/cold-FRIS contrast --- brake the amplitude, not the
+geography. Caveat: part of the $2.5\to13$\,cm/s jump over 1900$\to$1901 is plausibly spin-up
+plus the increment shock, so retune against a settled multi-year state, not a transient.
+
+\textbf{On bias correction} (a design question raised alongside): observation-anomaly
+(``delta'') ocean forcing is standard for stand-alone ice-sheet runs, and even
+cavity-resolving projections bias-correct their \emph{atmospheric} forcing (Naughten et
+al.\ 2018 force FESOM with CMIP anomalies on an ERA-Interim climatology, control on
+reanalysis) --- but it would not cure this run: the thermal forcing here is already
+near-realistic, so correcting $T/S$ addresses a problem we mostly do not have. The excess is
+in the \emph{circulation}, upstream of both the melt formula and the water it is fed.
 
 \section{State of the cycle and of the climate (2026-07-18)}\label{sec:state}
 
@@ -516,6 +617,10 @@ escalating warm-bias melt that drives PISM's fast geometry increments in the fir
   year on the changed mesh and hands to chunk-4 PISM unattended; movcav34 (10 awiesm3 years /
   100 PISM years) repeats chunks 1--4 cleanly on the minimal committed build. The second
   increment's Ross-front blowup (\S\ref{sec:zerowater}) is the current front.
+\item \textbf{The high, rising cavity melt is diagnosed} (\S\ref{sec:melt2}): near-realistic
+  thermal forcing ($+0.14$\,K) through a standard, validated melt scheme ($r=0.91$), driven by
+  cavity currents $\sim6\times$ too fast (median 13\,cm/s). Fix planned: a separate tunable
+  ice-base drag \code{C\_d\_cavity}. Open.
 \item \dead{The chunk-3 dilution enters through the vertical-advection top boundary
   (zero-tracer inflow ratchet / material-interface flux).} Cavity guards in both the implicit
   (\code{adv\_tra\_vert\_impl}) and explicit (\code{upw1}, \code{qr4c}) schemes changed the
@@ -616,6 +721,15 @@ a correct refusal followed by an unconditional continue is worse than no guard a
 \item \dead{The insulation/snow pile-up is the crash root.} It raises the loop gain (and is a real
   climate bias, \S\ref{sec:state}), but the kW events occur on \emph{thin} ice at 49$^\circ$N; the
   clean-ini run crashed identically.
+\item \dead{Fragile $\le2$-element coastal slivers cause the Ross-front blowup.} A control
+  census killed it: the meshes that ran clean full years carry the same $\sim$3450-node
+  fragile count as the crashed one. The cause is increment magnitude, not coastline
+  fragility (\S\ref{sec:hygiene}).
+\item \dead{The cavity melt gain is $\sim10\times$ too steep (39 vs 1--4\,m/yr/K).} The
+  1--4 figure is an integrated-shelf number, not the local exchange sensitivity; the standard
+  three-equation scheme gives $\sim$40\,m/yr/K locally, so the measured 39 is correct. The
+  melt formula is standard and reproduces the model's melt ($r=0.91$); the excess is in the
+  cavity \emph{currents} (\S\ref{sec:melt2}).
 \end{enumerate}
 
 %======================================================================
