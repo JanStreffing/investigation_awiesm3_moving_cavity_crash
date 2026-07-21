@@ -40,11 +40,16 @@ currents $\sim6\times$ too fast --- and a standalone dissection (\S\ref{sec:stan
 then shows those fast currents are \emph{injected by the mesh increment}: the geometry and
 the water are both fine (a cold start on the changed mesh settles to the healthy
 $\sim$2.6\,cm/s), but the \emph{remapped restart is internally inconsistent with the new
-mesh} --- and the inconsistent field is pinned down to \textbf{\code{hnode}} (the ALE layer
-thickness) at the changed columns: the remap's own ALE-rescale step compresses it using a
-stale \code{eta}, seeding a barotropic spin-up. A clean nominal \code{hnode} restores the
-healthy $\sim$2.6\,cm/s in isolation; the remap fix is a small edit to \code{remap\_hnode}
-(\S\ref{sec:standalone}).
+mesh} through \textbf{\code{hnode}} (the ALE layer thickness): the remap's ALE-rescale step
+compresses the changed-column \code{hnode} using a stale \code{eta}, seeding a barotropic
+spin-up. Fixing that (nominal \code{hnode} at the changed columns) is a small
+\code{remap\_hnode} edit and \emph{halves} the over-speed (17$\to$10\,cm/s in isolation), but
+does not fully restore health: reaching $\sim$4\,cm/s needs nominal \code{hnode} over the
+\emph{whole} ocean, which points not at the cavity fill but at the \textbf{vertical-coordinate
+seam} --- zstar (stretched layers) outside vs.\ the rigid-lid cavity (nominal layers) inside.
+\code{linfs} (fixed layers everywhere) removes it: the raw remap under \code{linfs} does not
+spin up (decays to $\sim$1.7\,cm/s, no \code{hnode} surgery) --- the clean complete fix, if a
+linearised free surface is acceptable model-wide (\S\ref{sec:standalone}, \S\ref{sec:hnode}).
 \end{abstract}
 
 \tableofcontents
@@ -666,18 +671,20 @@ SSH, AB, hbar all zero) with the \emph{equilibrium} density and stepping it stil
 from the healthy cold start in exactly one carried field: \code{hnode}, the ALE layer
 thickness. Swapping the remap's \code{hnode} for the equilibrium's (the \emph{only} file
 that changes, by $\le0.73$\,m) flips the cavity from 18.6 to 4.5\,cm/s, reproduced to two
-digits (Fig.~\ref{fig:hnode}). The differences sit \emph{entirely} at the changed columns
-(zero elsewhere), a couple of levels below the moved ice base --- which is why every
-density/velocity/SSH test walked past it.
+digits (Fig.~\ref{fig:hnode}). The changed-column differences sit a couple of levels below
+the moved ice base --- which is why every density/velocity/SSH test walked past it.
+(\emph{Initially} read as ``differences entirely at the changed columns''; the correction
+below shows the swap also moved the open-ocean \code{hnode}, which carries most of the effect.)
 
 \begin{figure}[H]\centering
 \includegraphics[width=0.82\textwidth]{hnode_seam.png}
 \caption{One field, one flip. Identical rest state and equilibrium density; \emph{only}
 \code{hnode} differs, by $\le0.73$\,m at the changed columns. The remap's chunk-1-rescaled
 \code{hnode} (red) spins the cavity to $\sim$19\,cm/s; the equilibrium \code{hnode} (green)
-and a \emph{clean nominal} \code{hnode} (blue, the fix) both hold the healthy
-$\sim$4.5\,cm/s. A sub-metre ALE-thickness inconsistency at the changed columns is
-deterministically decisive.}
+and a \emph{clean nominal} \code{hnode} \emph{applied everywhere} (blue) both hold the
+healthy $\sim$4.5\,cm/s. \emph{Caveat (added below):} this swap also changes the
+\emph{open-ocean} \code{hnode}, not only the changed columns --- so it overstates what a
+changed-column-only fix achieves (that reaches only $\sim$10\,cm/s).}
 \label{fig:hnode}
 \end{figure}
 
@@ -690,11 +697,30 @@ cavity$\to$open (``closed'') nodes, where it is the under-ice depressed value
 $dh/dt$ source at $t{=}0$'' the rescale was added to prevent; it seeds the barotropic
 spin-up. The rescale does the opposite of its intent because it trusts the carried $\eta$.
 
-\textbf{Fix (validated in isolation, code edit pending).} Give changed columns a clean,
-self-consistent \code{hnode} --- nominal $z_{\mathrm{bar}}$ thicknesses consistent with the
-SSH written --- instead of the stale-$\eta$ rescale. Nominal \code{hnode} holds
-$\sim$4.5\,cm/s (Fig.~\ref{fig:hnode}, blue). A small edit to \code{remap\_hnode}; end-to-end
-remap + coupled validation is the next step.
+\textbf{Fix, and the correction (2026-07-20 late).} The \code{remap\_hnode} edit --- nominal
+$z_{\mathrm{bar}}$ thicknesses at the geometry-changed columns (including the ice-base-deepened
+ones the classifier calls ``unchanged'') instead of the stale-$\eta$ rescale --- was
+implemented and regenerated end-to-end. In the standalone harness it \emph{halves} the
+over-speed, $17\to10.3$\,cm/s: a real, physically-clean improvement, but \emph{not} a full
+restoration. Reaching $\sim$4\,cm/s requires nominal \code{hnode} over the \emph{whole} ocean:
+the fully-fixed and the target restarts turn out \emph{identical in the cavity} and differ only
+in the \emph{open-ocean} \code{hnode}, and a cavity+ice-front-halo nominalisation does not help
+(11\,cm/s) --- only nominalising everywhere does. So the earlier ``one field, one flip'' was
+\emph{confounded}: the clean swap carried the open-ocean \code{hnode} too, not just the changed
+columns. The residual is not the cavity fill but the \textbf{vertical-coordinate seam} at the
+ice front --- zstar stretches the open-ocean layers by the free surface
+($h_k = h_k^{\mathrm{nom}}(D+\eta)/D$) while the rigid-lid cavity keeps them nominal; the
+remapped, zstar-stretched open-ocean \code{hnode} is what pushes the cavity from 4 to 10. This
+reframes ``nominal everywhere'' not as a global-reset artifact but as precisely what
+\textbf{\code{linfs}} (fixed layers, $\eta$ a top-boundary diagnostic) does by construction ---
+removing the seam without any \code{hnode} surgery. \textbf{Confirmed}: the raw remap
+(chunk-1 \code{hnode}, no surgery --- the exact restart that spins to 17\,cm/s under zstar) run
+with \code{which\_ale='linfs'} does \emph{not} spin up; it decays to $\sim$1.7\,cm/s median /
+2.5 mean and holds. So the seam, not the cavity fill, was the mechanism, and \code{linfs} is
+the clean complete fix. Status: changed-column \code{remap\_hnode} fix implemented
+(uncommitted, gives 10.3 --- now superseded by \code{linfs}); the open question is whether
+\code{linfs} is acceptable model-wide for the coupled AWI-ESM3 open-ocean climate (a
+linearised free surface with mass-conservation trade-offs vs.\ zstar).
 
 \section{State of the cycle and of the climate (2026-07-20)}\label{sec:state}
 
@@ -722,11 +748,15 @@ remap + coupled validation is the next step.
 \item \textbf{Those fast currents are injected by the mesh increment, not the physics}
   (\S\ref{sec:standalone}--\ref{sec:hnode}, 2026-07-19/20): density-independent (chunk-1 /
   smoothed / ambient / \emph{equilibrium} water all identical), geometry-independent (cold
-  start on the changed mesh is healthy $\sim$2.6\,cm/s). Root pinned to a single field:
-  \textbf{the remapped \code{hnode}} at the changed columns, compressed by \code{remap\_hnode}'s
-  ALE-rescale using the stale chunk-1 $\eta$. A clean nominal \code{hnode} restores
-  $\sim$4.5\,cm/s in isolation (Fig.~\ref{fig:hnode}). \textbf{Open:} apply the small
-  \code{remap\_hnode} edit, then validate end-to-end (remap $\to$ standalone $\to$ coupled leg).
+  start on the changed mesh is healthy $\sim$2.6\,cm/s). Tied to \textbf{the remapped
+  \code{hnode}} (ALE layer thickness): \code{remap\_hnode}'s ALE-rescale compresses the
+  changed columns using the stale chunk-1 $\eta$. The \code{remap\_hnode} edit (nominal at
+  changed columns) is implemented and \emph{halves} the over-speed ($17\to10$\,cm/s), but does
+  not fully restore health --- the residual is the \textbf{zstar/rigid-lid coordinate seam}
+  (stretched open-ocean layers vs.\ nominal cavity layers). \textbf{\code{linfs} removes it
+  cleanly}: the raw remap (no \code{hnode} surgery) under \code{linfs} does not spin up
+  ($\sim$1.7\,cm/s). \textbf{Open:} a fresh coupled movcav run on \code{linfs} from chunk-1 to
+  confirm end-to-end and check the open-ocean climate; strip the PGFDBG probe first.
 \item \dead{The chunk-3 dilution enters through the vertical-advection top boundary
   (zero-tracer inflow ratchet / material-interface flux).} Cavity guards in both the implicit
   (\code{adv\_tra\_vert\_impl}) and explicit (\code{upw1}, \code{qr4c}) schemes changed the
