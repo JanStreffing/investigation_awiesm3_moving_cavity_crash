@@ -50,6 +50,12 @@ seam} --- zstar (stretched layers) outside vs.\ the rigid-lid cavity (nominal la
 \code{linfs} (fixed layers everywhere) removes it: the raw remap under \code{linfs} does not
 spin up (decays to $\sim$1.7\,cm/s, no \code{hnode} surgery) --- the clean complete fix, if a
 linearised free surface is acceptable model-wide (\S\ref{sec:standalone}, \S\ref{sec:hnode}).
+This is confirmed in the coupled chain, and then closed: with \code{linfs} plus a fill fix for a
+separate artifact (newly-iced columns inheriting warm open-ocean water, cured by seeding
+open$\to$cavity columns from the nearest existing cavity), the \code{movcav37} run carries the full
+decade 1900--1909 --- \textbf{ten coupled years, nine mesh increments, cavity current held at
+1--2\,cm/s throughout, no spin-up and no blowup}, cavity preserved, melt in the observed range
+(\S\ref{sec:linfs-coupled}, \S\ref{sec:movcav37}).
 \end{abstract}
 
 \tableofcontents
@@ -721,6 +727,101 @@ the clean complete fix. Status: changed-column \code{remap\_hnode} fix implement
 (uncommitted, gives 10.3 --- now superseded by \code{linfs}); the open question is whether
 \code{linfs} is acceptable model-wide for the coupled AWI-ESM3 open-ocean climate (a
 linearised free surface with mass-conservation trade-offs vs.\ zstar).
+
+\subsection{\code{linfs} in the coupled chain, and the open-cavity fill (2026-07-21)}\label{sec:linfs-coupled}
+
+The standalone finding was then taken into the real iterative coupling: a fresh run
+(\code{movcavlinfs}) with \code{which\_ale='linfs'} from chunk~1, everything else identical,
+1200\,s timestep. It validates the seam story end-to-end (Fig.~\ref{fig:linfs-evo}). Four
+mesh increments (1900--1903) hand over with \emph{no} cavity spin-up and \emph{no} CFL
+blowup; the cavity node count is \emph{preserved} ($\sim$2668, vs the zstar run's collapse
+$2647\to111$), the per-increment mesh change \emph{shrinks} as the ice-ocean system settles
+($402\to187$ nodes added), and cavity melt is stable and realistic --- $\sim$0.22\,m\,w.e.\,yr$^{-1}$
+cavity-mean, $\sim$1344\,Gt\,yr$^{-1}$ total (Rignot $\sim$1325), with none of the
+$0.9\to5.5$\,m\,yr$^{-1}$ escalation seen under zstar. The vertical-coordinate seam was the
+mechanism; \code{linfs} removes it in the coupled system too.
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.92\textwidth]{movcavlinfs_evolution_timelines.png}
+\caption{\code{movcavlinfs} coupled evolution under \code{linfs} (compare Fig.~8 / \code{movcav34}
+zstar). (a) The moving mesh: node and cavity-node counts per increment, with nodes added/removed;
+the increment shrinks and the cavity is preserved. (b) PISM ice volume and floating area. (c)
+FESOM cavity-mean and total melt --- stable in the observed circum-Antarctic range, no escalation.}
+\label{fig:linfs-evo}
+\end{figure}
+
+\textbf{The 1904 stop was a fill artifact, not the seam.} Chunk~5 (1904) tripped FESOM's fixed
+temperature sanity reject (``\code{temperature becomes NaN or <-5.0}'') at step~1 on a cavity
+node, $T=-5.35$. Not CFL, not spin-up. Two nested causes. (i) The remap carries each newly-iced
+node's \emph{own open-ocean} column into the new cavity, so where the ice front advances over
+warm water the ice base inherits it --- up to $+6.6$\,\textdegree{}C of thermal driving at the
+new roof (Fig.~\ref{fig:newlyiced}a, red). (ii) A boundary-layer cap
+(\code{cap\_new\_cavity\_temp}) that clipped those columns to the local freezing point
+\emph{over-cooled} the deep part: at $\sim$4500\,m the pressure-depressed
+$T_f = 0.0901 - 0.0575\,S - 7.61{\times}10^{-4}\,z \approx -5.35$\,\textdegree{}C, dragging real
+$\sim-0.5$\,\textdegree{}C deep water below FESOM's $-5$ floor (Fig.~\ref{fig:newlyiced}a, blue).
+
+\textbf{Fix: seed newly-iced columns from the nearest existing cavity} (user proposal). Instead
+of carrying a node's open-ocean column (then capping it), each open$\to$cavity column is seeded
+from the nearest column that is cavity in \emph{both} meshes, depth-matched. This gives cold,
+cavity-appropriate ice-shelf water, regionally correct by nearest-neighbour (Amundsen-warm /
+FRIS-cold preserved), with the deep column left real --- no cap needed. In the 1904 increment it
+seeds 204 recipients from 2326 donors and cuts ice-base warm columns ($>0$\,\textdegree{}C) from
+$61\to9$ and peak thermal driving from $+6.6\to+0.8$\,\textdegree{}C (Fig.~\ref{fig:newlyiced}, green
+profile / right map); the residual nine are genuine warm East-Antarctic-coast cavities ($\le+0.8$).
+A freezing-point floor (clamped to $-4.9$) is retained only as a last-resort backstop. No cap, no
+crash, deep water preserved.
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.98\textwidth]{newly_iced_warmwater.png}
+\caption{The open-cavity fill fix. (a) A newly-iced column: carrying its open-ocean water (red)
+puts $+6.6$\,\textdegree{}C at the ice base; the freezing cap (blue) over-cools the deep column;
+seeding from the nearest existing cavity (green) gives a real cold ice-shelf-water profile with the
+deep column intact. (b) Ice-base thermal driving $T-T_f$ over the 182 open$\to$cavity columns after
+cavity-seeding --- almost all near freezing; the nine circled ($>0$\,\textdegree{}C) are physical
+warm-cavity donors.}
+\label{fig:newlyiced}
+\end{figure}
+
+\subsection{Case closed: the full \code{movcav37} cycle (2026-07-22)}\label{sec:movcav37}
+
+With both fixes in place --- \code{linfs} (coordinate seam) and cavity-donor seeding
+(open-cavity fill) --- a fresh run \code{movcav37} was launched from chunk~1 and carried the
+complete decade 1900--1909: \textbf{ten coupled years, nine mesh increments, no spin-up, no
+blowup} (it passes 1904, where \code{movcavlinfs} had stopped). This closes the spin-up
+investigation.
+
+The decisive metric is the cavity current itself (Fig.~\ref{fig:mc37speed}). The area-weighted
+cavity median column-mean speed holds \textbf{1.1--2.1\,cm/s across all ten years} (p90
+$\le5.2$), never leaving the healthy band --- against the 13--17\,cm/s the \emph{same} remapped
+restart reached at every increment under zstar. The barotropic spin-up that this whole report
+chased is, by construction, gone: it was the vertical-coordinate seam, and \code{linfs} removes it.
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.9\textwidth]{movcav37_cavity_speed.png}
+\caption{The spin-up, closed. \code{movcav37} cavity median (and p90) column-mean current speed
+per year; dotted verticals are the nine mesh increments. The current stays in the healthy band
+(chunk-1 native $\sim$2.6\,cm/s) at \emph{every} increment --- the 13--17\,cm/s diseased spin-up
+under zstar (red band) never appears.}
+\label{fig:mc37speed}
+\end{figure}
+
+The coupled system is also \emph{settling}, not diverging (Fig.~\ref{fig:mc37evo}). The cavity is
+preserved (3355$\to$2318 nodes, a gentle thinning, not the zstar collapse to 111), the
+per-increment mesh change shrinks ($405\to\sim$60 nodes), PISM volume and floating area decline
+smoothly with no shocks at the increments, and cavity melt stays inside the observed
+circum-Antarctic range (0.23$\to$0.82\,m\,w.e.\,yr$^{-1}$, 1329$\to$1685\,Gt\,yr$^{-1}$) --- no
+trace of zstar's escalation to 5.5\,m\,yr$^{-1}$. The one feature to watch on a longer run is the
+mild \emph{upward} melt trend; the flat 1--2\,cm/s currents identify it as thermodynamic/geometric
+(shelves thinning, cavity warming slightly), not a dynamic spin-up, and it remains within observations.
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.95\textwidth]{movcav37_evolution_timelines.png}
+\caption{\code{movcav37} coupled evolution (compare Fig.~\ref{fig:linfs-evo} / \code{movcavlinfs},
+now the full decade). (a) Moving mesh: cavity preserved, increments shrink. (b) PISM volume and
+floating area, smooth. (c) FESOM cavity melt, in the observed range, no escalation.}
+\label{fig:mc37evo}
+\end{figure}
 
 \section{State of the cycle and of the climate (2026-07-20)}\label{sec:state}
 

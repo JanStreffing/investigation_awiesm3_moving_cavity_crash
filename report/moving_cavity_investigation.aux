@@ -1,12 +1,26 @@
 \relax 
 \providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
 \@writefile{toc}{\contentsline {section}{\numberline {1}The campaign, in the order it happened}{2}{section.1}\protected@file@percent }
 \newlabel{sec:bugs}{{1}{2}{The campaign, in the order it happened}{section.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.1}The restart seam and the cold-start control (2026-07-08--13)}{2}{subsection.1.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Bug I --- PISM was fed surface water as ice-base forcing (2026-07-14)}{2}{subsection.1.2}\protected@file@percent }
-\newlabel{sec:bug1}{{1.2}{2}{Bug I --- PISM was fed surface water as ice-base forcing (2026-07-14)}{subsection.1.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Bug I --- PISM was fed surface water as ice-base forcing (2026-07-14)}{3}{subsection.1.2}\protected@file@percent }
+\newlabel{sec:bug1}{{1.2}{3}{Bug I --- PISM was fed surface water as ice-base forcing (2026-07-14)}{subsection.1.2}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces What Bug I did to PISM in one 10-year leg under surface-water forcing: 1399 nodes lose their ice entirely (magenta ring around the whole margin), the Ross front retreats $\approx $440\,km (section: ice base $-200\ldots  -280$\,m $\to $ open ocean across four degrees of latitude).}}{3}{figure.1}\protected@file@percent }
 \newlabel{fig:pism}{{1}{3}{What Bug I did to PISM in one 10-year leg under surface-water forcing: 1399 nodes lose their ice entirely (magenta ring around the whole margin), the Ross front retreats $\approx $440\,km (section: ice base $-200\ldots -280$\,m $\to $ open ocean across four degrees of latitude)}{figure.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Bug II --- the exchange weights scrambled the coupled ocean (2026-07-14)}{4}{subsection.1.3}\protected@file@percent }
@@ -61,21 +75,33 @@
 \newlabel{sec:hnode}{{1.14}{18}{The seam field is \code {hnode} (2026-07-20)}{subsection.1.14}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces One field, one flip. Identical rest state and equilibrium density; \emph  {only} \texttt  {\small  hnode} differs, by $\le 0.73$\,m at the changed columns. The remap's chunk-1-rescaled \texttt  {\small  hnode} (red) spins the cavity to $\sim $19\,cm/s; the equilibrium \texttt  {\small  hnode} (green) and a \emph  {clean nominal} \texttt  {\small  hnode} \emph  {applied everywhere} (blue) both hold the healthy $\sim $4.5\,cm/s. \emph  {Caveat (added below):} this swap also changes the \emph  {open-ocean} \texttt  {\small  hnode}, not only the changed columns --- so it overstates what a changed-column-only fix achieves (that reaches only $\sim $10\,cm/s).}}{18}{figure.12}\protected@file@percent }
 \newlabel{fig:hnode}{{12}{18}{One field, one flip. Identical rest state and equilibrium density; \emph {only} \code {hnode} differs, by $\le 0.73$\,m at the changed columns. The remap's chunk-1-rescaled \code {hnode} (red) spins the cavity to $\sim $19\,cm/s; the equilibrium \code {hnode} (green) and a \emph {clean nominal} \code {hnode} \emph {applied everywhere} (blue) both hold the healthy $\sim $4.5\,cm/s. \emph {Caveat (added below):} this swap also changes the \emph {open-ocean} \code {hnode}, not only the changed columns --- so it overstates what a changed-column-only fix achieves (that reaches only $\sim $10\,cm/s)}{figure.12}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {2}State of the cycle and of the climate (2026-07-20)}{19}{section.2}\protected@file@percent }
-\newlabel{sec:state}{{2}{19}{State of the cycle and of the climate (2026-07-20)}{section.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}What is proven}{19}{subsection.2.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Open item: the Southern-Hemisphere summer melt-back}{20}{subsection.2.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Year-1 sea ice and snow: implicit-solve run (blue) vs the movcav16-era state (orange) vs the 500-year-stable v3.4 reference (black dashed). Our runs track each other --- the crash fixes did not degrade climate --- but the reference collapses its SH ice almost completely each summer while ours retains $\sim $7k nodes, and its winter pack carries 0.03--0.08\,m of snow against our 0.2--0.3\,m. Bottom maps (same scale): December snow depth --- our thick band hugs the Antarctic coast; the reference is nearly bare.}}{20}{figure.13}\protected@file@percent }
-\newlabel{fig:seaiceref}{{13}{20}{Year-1 sea ice and snow: implicit-solve run (blue) vs the movcav16-era state (orange) vs the 500-year-stable v3.4 reference (black dashed). Our runs track each other --- the crash fixes did not degrade climate --- but the reference collapses its SH ice almost completely each summer while ours retains $\sim $7k nodes, and its winter pack carries 0.03--0.08\,m of snow against our 0.2--0.3\,m. Bottom maps (same scale): December snow depth --- our thick band hugs the Antarctic coast; the reference is nearly bare}{figure.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.15}\texttt  {\small  linfs} in the coupled chain, and the open-cavity fill (2026-07-21)}{19}{subsection.1.15}\protected@file@percent }
+\newlabel{sec:linfs-coupled}{{1.15}{19}{\code {linfs} in the coupled chain, and the open-cavity fill (2026-07-21)}{subsection.1.15}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces \texttt  {\small  movcavlinfs} coupled evolution under \texttt  {\small  linfs} (compare Fig.\nobreakspace  {}8 / \texttt  {\small  movcav34} zstar). (a) The moving mesh: node and cavity-node counts per increment, with nodes added/removed; the increment shrinks and the cavity is preserved. (b) PISM ice volume and floating area. (c) FESOM cavity-mean and total melt --- stable in the observed circum-Antarctic range, no escalation.}}{20}{figure.13}\protected@file@percent }
+\newlabel{fig:linfs-evo}{{13}{20}{\code {movcavlinfs} coupled evolution under \code {linfs} (compare Fig.~8 / \code {movcav34} zstar). (a) The moving mesh: node and cavity-node counts per increment, with nodes added/removed; the increment shrinks and the cavity is preserved. (b) PISM ice volume and floating area. (c) FESOM cavity-mean and total melt --- stable in the observed circum-Antarctic range, no escalation}{figure.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces The open-cavity fill fix. (a) A newly-iced column: carrying its open-ocean water (red) puts $+6.6$\,\textdegree {}C at the ice base; the freezing cap (blue) over-cools the deep column; seeding from the nearest existing cavity (green) gives a real cold ice-shelf-water profile with the deep column intact. (b) Ice-base thermal driving $T-T_f$ over the 182 open$\to $cavity columns after cavity-seeding --- almost all near freezing; the nine circled ($>0$\,\textdegree {}C) are physical warm-cavity donors.}}{21}{figure.14}\protected@file@percent }
+\newlabel{fig:newlyiced}{{14}{21}{The open-cavity fill fix. (a) A newly-iced column: carrying its open-ocean water (red) puts $+6.6$\,\textdegree {}C at the ice base; the freezing cap (blue) over-cools the deep column; seeding from the nearest existing cavity (green) gives a real cold ice-shelf-water profile with the deep column intact. (b) Ice-base thermal driving $T-T_f$ over the 182 open$\to $cavity columns after cavity-seeding --- almost all near freezing; the nine circled ($>0$\,\textdegree {}C) are physical warm-cavity donors}{figure.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.16}Case closed: the full \texttt  {\small  movcav37} cycle (2026-07-22)}{21}{subsection.1.16}\protected@file@percent }
+\newlabel{sec:movcav37}{{1.16}{21}{Case closed: the full \code {movcav37} cycle (2026-07-22)}{subsection.1.16}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces The spin-up, closed. \texttt  {\small  movcav37} cavity median (and p90) column-mean current speed per year; dotted verticals are the nine mesh increments. The current stays in the healthy band (chunk-1 native $\sim $2.6\,cm/s) at \emph  {every} increment --- the 13--17\,cm/s diseased spin-up under zstar (red band) never appears.}}{22}{figure.15}\protected@file@percent }
+\newlabel{fig:mc37speed}{{15}{22}{The spin-up, closed. \code {movcav37} cavity median (and p90) column-mean current speed per year; dotted verticals are the nine mesh increments. The current stays in the healthy band (chunk-1 native $\sim $2.6\,cm/s) at \emph {every} increment --- the 13--17\,cm/s diseased spin-up under zstar (red band) never appears}{figure.15}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces \texttt  {\small  movcav37} coupled evolution (compare Fig.\nobreakspace  {}\ref  {fig:linfs-evo} / \texttt  {\small  movcavlinfs}, now the full decade). (a) Moving mesh: cavity preserved, increments shrink. (b) PISM volume and floating area, smooth. (c) FESOM cavity melt, in the observed range, no escalation.}}{23}{figure.16}\protected@file@percent }
+\newlabel{fig:mc37evo}{{16}{23}{\code {movcav37} coupled evolution (compare Fig.~\ref {fig:linfs-evo} / \code {movcavlinfs}, now the full decade). (a) Moving mesh: cavity preserved, increments shrink. (b) PISM volume and floating area, smooth. (c) FESOM cavity melt, in the observed range, no escalation}{figure.16}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}State of the cycle and of the climate (2026-07-20)}{23}{section.2}\protected@file@percent }
+\newlabel{sec:state}{{2}{23}{State of the cycle and of the climate (2026-07-20)}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}What is proven}{23}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Open item: the Southern-Hemisphere summer melt-back}{25}{subsection.2.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces Year-1 sea ice and snow: implicit-solve run (blue) vs the movcav16-era state (orange) vs the 500-year-stable v3.4 reference (black dashed). Our runs track each other --- the crash fixes did not degrade climate --- but the reference collapses its SH ice almost completely each summer while ours retains $\sim $7k nodes, and its winter pack carries 0.03--0.08\,m of snow against our 0.2--0.3\,m. Bottom maps (same scale): December snow depth --- our thick band hugs the Antarctic coast; the reference is nearly bare.}}{25}{figure.17}\protected@file@percent }
+\newlabel{fig:seaiceref}{{17}{25}{Year-1 sea ice and snow: implicit-solve run (blue) vs the movcav16-era state (orange) vs the 500-year-stable v3.4 reference (black dashed). Our runs track each other --- the crash fixes did not degrade climate --- but the reference collapses its SH ice almost completely each summer while ours retains $\sim $7k nodes, and its winter pack carries 0.03--0.08\,m of snow against our 0.2--0.3\,m. Bottom maps (same scale): December snow depth --- our thick band hugs the Antarctic coast; the reference is nearly bare}{figure.17}{}}
 \gdef \LT@i {\LT@entry 
     {1}{182.407pt}\LT@entry 
     {1}{199.78836pt}\LT@entry 
     {1}{68.59596pt}}
-\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces The extent of the coastal pile-up in the (pre-fix) movcav runs: annual-max and December snow depth, and the seasonal cycle. The thick snow is a band hugging the ice-shelf front (eastern Weddell/Fimbul, Amundsen), bounded at 2--2.6\,m by an autumn melt-back. Later runs that lost this melt-back drifted monotonically to 3.5\,m --- the insulation that raised Bug IV's loop gain.}}{21}{figure.14}\protected@file@percent }
-\newlabel{fig:snowband}{{14}{21}{The extent of the coastal pile-up in the (pre-fix) movcav runs: annual-max and December snow depth, and the seasonal cycle. The thick snow is a band hugging the ice-shelf front (eastern Weddell/Fimbul, Amundsen), bounded at 2--2.6\,m by an autumn melt-back. Later runs that lost this melt-back drifted monotonically to 3.5\,m --- the insulation that raised Bug IV's loop gain}{figure.14}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Secondary bugs, fixed along the way}{21}{section.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}Falsified claims (kept, struck through)}{22}{section.4}\protected@file@percent }
-\newlabel{sec:falsified}{{4}{22}{Falsified claims (kept, struck through)}{section.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Method notes}{23}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Assets}{23}{section.6}\protected@file@percent }
-\gdef \@abspage@last{24}
+\@writefile{lof}{\contentsline {figure}{\numberline {18}{\ignorespaces The extent of the coastal pile-up in the (pre-fix) movcav runs: annual-max and December snow depth, and the seasonal cycle. The thick snow is a band hugging the ice-shelf front (eastern Weddell/Fimbul, Amundsen), bounded at 2--2.6\,m by an autumn melt-back. Later runs that lost this melt-back drifted monotonically to 3.5\,m --- the insulation that raised Bug IV's loop gain.}}{26}{figure.18}\protected@file@percent }
+\newlabel{fig:snowband}{{18}{26}{The extent of the coastal pile-up in the (pre-fix) movcav runs: annual-max and December snow depth, and the seasonal cycle. The thick snow is a band hugging the ice-shelf front (eastern Weddell/Fimbul, Amundsen), bounded at 2--2.6\,m by an autumn melt-back. Later runs that lost this melt-back drifted monotonically to 3.5\,m --- the insulation that raised Bug IV's loop gain}{figure.18}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Secondary bugs, fixed along the way}{26}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Falsified claims (kept, struck through)}{27}{section.4}\protected@file@percent }
+\newlabel{sec:falsified}{{4}{27}{Falsified claims (kept, struck through)}{section.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Method notes}{28}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Assets}{28}{section.6}\protected@file@percent }
+\gdef \@abspage@last{29}
