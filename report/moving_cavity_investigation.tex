@@ -14,7 +14,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-07-19 (evening)}
+\date{Last updated: 2026-07-27}
 
 \begin{document}
 \maketitle
@@ -55,7 +55,12 @@ separate artifact (newly-iced columns inheriting warm open-ocean water, cured by
 open$\to$cavity columns from the nearest existing cavity), the \code{movcav37} run carries the full
 decade 1900--1909 --- \textbf{ten coupled years, nine mesh increments, cavity current held at
 1--2\,cm/s throughout, no spin-up and no blowup}, cavity preserved, melt in the observed range
-(\S\ref{sec:linfs-coupled}, \S\ref{sec:movcav37}).
+(\S\ref{sec:linfs-coupled}, \S\ref{sec:movcav37}). Rolling the coupled slab out to the fixed-mesh
+siblings then caught a months-old silent bug --- \code{develop}/\code{develop-cc} never set the OIFS
+\code{NAMMCC} switches, so the coupled ice thickness was discarded and their Arctic went ice-free
+every summer; fixed in config, the 10-year sea-ice climate validates against an independent CMIP7
+spin-up (\S\ref{sec:nammcc}). The mesh-increment crash family (\code{voskin:282}, Antarctic) is now
+inventoried and instrumented, reproduction pending (\S\ref{sec:voskin-inventory}).
 \end{abstract}
 
 \tableofcontents
@@ -174,7 +179,9 @@ max-ocean edit did not update the obstruction coefficients.
 \includegraphics[width=\textwidth]{spp/wam_maxocean.png}
 \caption{One-time maximal-ocean WAM tables (extended to $85^\circ$S). Blue: wave sea points from
 ETOPO1. Red: cells opened land$\to$ocean because the FESOM max-mesh has a water column there.
-Pre-registering them makes the \code{voskin} step-0 crash structurally impossible on any future leg.}
+Pre-registering them closes the WAM-Stokes route into \code{voskin:282}. (It does \emph{not} close
+the line entirely: \code{voskin:282} later recurred through a different, in-step route ---
+\S\ref{sec:voskin-inventory}.)}
 \label{fig:wammax}
 \end{figure}
 
@@ -823,7 +830,193 @@ floating area, smooth. (c) FESOM cavity melt, in the observed range, no escalati
 \label{fig:mc37evo}
 \end{figure}
 
-\section{State of the cycle and of the climate (2026-07-20)}\label{sec:state}
+\subsection{Sea ice and snow in \code{movcav37}: melt-back restored; the Ross lagoon (2026-07-22)}\label{sec:mc37seaice}
+
+The open item of \S\ref{sec:seaicemelt} --- the SH summer melt-back and the coastal snow pile-up ---
+is answered by \code{movcav37}. Diagnosed properly (sea ice lives on \emph{open-ocean} surface
+nodes; cavity nodes carry spurious values and must be excluded), the thickness fields sit in the
+observed range in both hemispheres (Figs.~\ref{fig:mc37seaice-ts},~\ref{fig:mc37seaice-maps}).
+
+\begin{itemize}
+\item \textbf{SH summer melt-back is restored.} The winter (Sep) pack is a coherent 0.4--1.0\,m ring
+  (thicker in the Weddell/Ross gyres); by summer (Feb) it retreats almost completely to thin
+  Weddell/coastal remnants --- the strong seasonal melt-back the reference had and the earlier movcav
+  runs lacked. Hemispheric mean thickness $\sim$0.6\,m (obs ASPeCt/ICESat 0.5--1.0\,m).
+\item \textbf{The coastal snow pile-up is gone.} SH snow is $<$0.15\,m over the pack with a coastal
+  rim $\sim$0.25--0.35\,m, within the observed 0.1--0.4\,m --- not the 2--3.5\,m band of the pre-fix
+  runs. (The \code{linfs} + clean chunk-1 ice init + coupled slab combination did restore the
+  melt-back; this closes the \S\ref{sec:seaicemelt} question.)
+\item \textbf{NH is realistic}: 2--4\,m ice against the CAA/Greenland thinning to the marginal seas
+  (obs $\sim$1.5--3\,m), snow 0.15--0.35\,m in winter (Warren $\sim$0.2--0.4\,m).
+\end{itemize}
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.98\textwidth]{seaice/movcav37_seaice_snow_thickness_ts.png}
+\caption{\code{movcav37} sea-ice and snow thickness vs observations, monthly 1900--1909, hemispheric
+mean (total volume / total ice-area over ice-covered open ocean, $a_\mathrm{ice}>0.15$). Green bands =
+observed ranges. Cavity nodes and the Ross lagoon (open ocean south of 80$^\circ$S) are excluded here
+and shown only in the maps. SH ice summer spikes are survivor bias (only thick coastal ice remains at
+the Feb minimum).}
+\label{fig:mc37seaice-ts}
+\end{figure}
+
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{seaice/movcav37_seaice_snow_seasonal.png}
+\caption{\code{movcav37} seasonal (end-of-winter / end-of-summer) sea-ice and snow thickness, 5-year
+climatology 1905--1909, on the native grid (standard polar view, 0$^\circ$ meridian at bottom; grey =
+present-day coastline). SH top, NH bottom; ice (left pair), snow (right pair). SH ice melts back to
+near-nothing by February; SH snow is a thin coastal rim. The two dots off the Ross coast are the
+\emph{Ross lagoon} artifact (below).}
+\label{fig:mc37seaice-maps}
+\end{figure}
+
+\textbf{New open item --- the Ross lagoon.} The one unphysical thickness signal left is a small
+($\sim$18-node) patch at the back of the Ross Ice Shelf (lon\,$\approx$\,180$^\circ$,
+lat\,$\approx$\,$-83^\circ$) where PISM, over the run, thinned the shelf and retreated the grounding
+line until the classifier flipped those nodes from \emph{cavity}/\emph{grounded} to \emph{open ocean}
+(verified node-by-node: \code{cavity(ul=12--16)} or land in 1900 $\to$ \code{ul=1} by 1909). FESOM then
+traps thick ($\sim$10\,m), convergent, non-melting sea ice in the near-enclosed deep embayment --- the
+dots in Fig.~\ref{fig:mc37seaice-maps}. It is a PISM-geometry artifact (likely over-thinning the back
+of the Ross, fed by excess FESOM cavity melt there), not a sea-ice-model problem; it is excluded from
+the aggregates above. Fix candidates: guard the classifier against ungrounding interior nodes far
+behind the shelf front, or address the excess back-of-Ross melt.
+
+\subsection{The coupled-slab switch was off for \code{develop}/\code{develop-cc}; the sea-ice climate validated on a clean decade (2026-07-23$\to$27)}\label{sec:nammcc}
+
+Rolling the coupled-slab work out from \code{develop-is} to the sibling setups \code{develop} and
+\code{develop-cc} exposed a silent, months-old configuration bug. The coupled slab is
+\emph{hardwired in the FESOM build} (\S\ref{sec:slab}: \code{ice\_thermo\_cpl.F90} sets
+$Q_\mathrm{atmice}=-a2ihf$, so the atmosphere owns the ice-surface temperature and its slab
+conduction must be fed the coupled ice thickness). OIFS is told to match through
+\code{NAMMCC}: \code{LNEMOLIMTHK=.true.} (use the coupled thickness in the surface solve) and
+\code{LNEMOLIMTEMP=.false.} (do not overwrite the ice skin from the ocean model each hour). The
+OIFS defaults (\code{sumcc.F90}) leave \emph{both} \code{.false.}. Only \code{develop-is} set
+\code{NAMMCC} --- and only because its \emph{runscript} did, by hand. So \code{develop} and
+\code{develop-cc} silently ran with \code{LNEMOLIMTHK=.false.}: the \code{sit\_feom}$\to$%
+\code{A\_Ice\_thickness} field added by the whole coupled-slab rollout was delivered over OASIS
+and then \emph{discarded}, and the atmosphere conducted through a default slab thickness.
+
+The signature was unmistakable once a clean 10-year \code{develop} run (\code{si10y}, TCO95--CORE3,
+1990 GHG, fixed full mesh, no cavity) was diagnosed: with the switch off, the Arctic went
+\emph{completely ice-free every June--October} and the winter pack carried half its proper volume
+(NH March volume $5.3$; \S\ref{sec:state}). Setting the three \code{NAMMCC} switches turned that
+into a physical sea-ice climate at the first attempt (Fig.~\ref{fig:si10y-maps}): NH March volume
+$5.3\to27.4\times10^3$\,km$^3$ (obs $\sim$28--30), NH September extent $0.0\to5.6\times10^6$\,km$^2$,
+SH February extent $0.0\to1.7$. The fix now lives in the setup config, not the runscripts
+(\code{awiesm3.yaml}, commit \code{0aca2487}), applied to all three \code{develop*} versions;
+tags keep the stock defaults because their component versions predate \code{sit\_feom}.
+
+\emph{This does not taint the \code{movcav} results.} The \code{develop-is} runscripts set
+\code{NAMMCC} by hand throughout, so every \code{movcav} run in this report (\S\ref{sec:slab}
+onward) already had \code{LNEMOLIMTHK=.true.}. The bug lived only in the fixed-mesh siblings.
+
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{seaice/si10y_maps.png}
+\caption{\code{develop} sea-ice thickness after the \code{NAMMCC} coupled-slab fix, native CORE3
+grid, 5-yr mean of spin-up years 6--10, zoomed to the polar caps. Columns: control (fixed
+\code{develop}), the tuning experiment (\S\ref{sec:state}), and an independent 500-year CMIP7
+pre-industrial spin-up (a270270) at the same spin-up age. Rows: NH March (max), NH September (min),
+SH September (max), SH February (min); element counts with $a_\mathrm{ice}>0.15$ annotated. The NH
+September row --- blank (``NO ICE'') before the fix --- now carries a coherent central Arctic pack
+\emph{exceeding} the reference (27.7k vs 21.1k elements). The large-scale fields match the reference
+spin-up hemisphere-by-hemisphere; the coupled-slab config is correct.}
+\label{fig:si10y-maps}
+\end{figure}
+
+Quantitatively, against 1990s observations and the a270270 pre-industrial spin-up sampled at the
+\emph{same} spin-up age (years 6--10 of each), last-5-year means:
+
+\begin{center}\small
+\begin{tabular}{@{}lccl@{}}
+\toprule
+metric & \code{develop}+fix (1990) & a270270 (PI) & obs \\
+\midrule
+NH March extent [$10^6$\,km$^2$]     & 16.1 & 15.4 & $\sim$15.5 (NSIDC 1990s) \\
+NH September extent [$10^6$\,km$^2$] &  5.6 &  4.7 & $\sim$7.0 \\
+NH March volume [$10^3$\,km$^3$]     & 27.1 & 23.1 & $\sim$28--30 (PIOMAS) \\
+NH March mean thickness [m]          & 1.8  & 1.6  & $\sim$2.3--2.6 \\
+SH September extent [$10^6$\,km$^2$] & 21.4 & 20.3 & $\sim$18.5 (NSIDC) \\
+SH February extent [$10^6$\,km$^2$]  &  1.7 &  0.0 & $\sim$3.0 \\
+SH September mean thickness [m]      & 0.7  & 0.6  & $\sim$0.9--1.2 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The fixed run is closer to observations than the reference on every row (Fig.~\ref{fig:si10y-vs-ref}).
+Two residual biases remain, both ordinary sea-ice tuning territory and neither addressed by the
+\code{whichEVP}/melt-pond tuning that was tried (it moved nothing): \textbf{NH ice is $\sim$20--25\%
+too thin} (thin pack, under-done September minimum), and \textbf{the SH seasonal cycle is too
+extreme} (over-grows in winter, over-melts in summer). A single-point thickness runaway
+($\sim$52\,m at year 10) is present \emph{identically in the reference} (which reaches 855\,m by its
+year 500): a shared FESOM point-convergence artifact, not introduced by the coupling.
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.92\textwidth]{seaice/si10y_vs_ref.png}
+\caption{\code{develop}+fix (blue) vs a270270's CMIP7 pre-industrial spin-up (orange), first 10
+years of each. (a,b) NH/SH seasonal extent, band = year-range; green markers = observed. (c) NH
+March volume; (d) single-point max thickness --- the unbounded drift is present in \emph{both} runs
+(shared model artifact). Large-scale sea ice matches the reference; where the two differ, the fixed
+run sits closer to observations.}
+\label{fig:si10y-vs-ref}
+\end{figure}
+
+A throughput trap surfaced while setting these runs up, worth recording because no short test
+catches it: with \code{oasis3mct.lresume=false} the coupling restart is rebuilt every exchange and
+the step rate decays $\sim$100$\times$ over a run ($0.28\to11.4$\,s/step); \code{lresume=true} (from
+a matching restart set carrying \code{sit\_feom}) holds it flat at $\sim$0.10\,s/step. See Method
+notes.
+
+\subsection{The \code{voskin:282} overflow, inventoried across the campaign and instrumented (2026-07-24)}\label{sec:voskin-inventory}
+
+The WAM fix (\S\ref{sec:wam}) closed one route into \code{voskin\_mod.F90:282}, but the line kept
+killing later legs. Sweeping every \code{error (72)} floating overflow in the \code{develop-is}
+history gives eleven crashes, all on OIFS ranks and only ever at the rank extremes (OpenIFS
+decomposes north$\to$south, so the extremes are the poles --- never the mid-latitude ranks):
+
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+run(s) & chunk & hemisphere & crash site \\
+\midrule
+movcav18/24/26/28/30/31 & 1 (1900) & both poles & \code{cubasen:453}, \code{vsurf\_mod:280} \\
+movcav19                & 5 (1904) & Arctic     & \code{cubasen:453} \\
+movcav33                & 2 (1901) & Antarctic  & \code{callpar:678} \\
+movcav34                & 13 (1912)& Antarctic  & \code{voskin\_mod:282} \\
+movcav39                & 2 (1901) & Antarctic  & \code{voskin\_mod:282} \\
+par03                   & 2 (1901) & Antarctic  & \code{voskin\_mod:282} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Two families separate cleanly by chunk. \textbf{Chunk~1} crashes (\code{cubasen}/\code{vsurf}, both
+poles) are the pinned-skin sea-ice-thermodynamics instability, Bug~IV --- gone under the coupled
+slab. \textbf{Chunk~$\ge2$} crashes (\code{voskin}/\code{callpar}, \emph{Antarctic only}) are the
+mesh-increment family, and they persist.
+
+\code{voskin:282} is the \emph{detector, not the cause}. The build is single precision
+(\code{libsurf.SP.so}, max $\sim$$3.4\times10^{38}$); line 282 is the Langmuir number
+$Z_\mathrm{LA}=[\rho_a/\rho_w\cdot Z_\mathrm{UST}^2 / \max(u_\mathrm{St}^2{+}v_\mathrm{St}^2,10^{-8})]^{1/4}$,
+whose argument is $\sim$$1.2\times10^5\cdot Z_\mathrm{UST}^2$ --- it overflows only once the friction
+velocity $Z_\mathrm{UST}$ already exceeds $\sim$$5\times10^{12}$. Upstream (lines 193--204)
+$Z_\mathrm{UST}$ is built from the surface stress \code{PUSTR/PVSTR} and a buoyancy amplifier
+$Z_\mathrm{WST2}/Z_\mathrm{DU2}$ that divides by the skin temperature \code{PTSKM1M}; it is floored
+by \code{ZEPUST} but \emph{never capped}. For par03 the crashing leg's inputs were all checked and
+clean: the seven A096 fields of \code{rstos.nc} (including \code{A\_CurX/Y}, which set the
+wind-relative-to-current stress) all physical, the regenerated ICMGG \code{skt}/\code{sst}/\code{ci}
+physical, and the \code{A\_SST} coastline sanitizer (\S\ref{sec:bug3} lineage, commit
+\code{e5d4796c}) \emph{ran} on that leg yet the crash still occurred. So the bad value is
+\emph{generated inside the first timestep}, which is why file inspection has not found it.
+
+Two diagnostic probes were added to \code{voskin\_mod.F90} (dump the column inputs when
+$Z_\mathrm{UST}>10$ or non-finite, and when the buoyancy $Z_\mathrm{BUO}$ blows up or
+\code{PTSKM1M}$<100$\,K), OIFS rebuilt (\code{develop-is}; \code{VOSKIN-DIAG} strings verified in
+\code{libsurf.SP.so}). The instrumented reproduction --- par03 chunk~2 crashes $\sim$60\,s in ---
+is \textbf{ready but not yet run} (it mutates the par03 experiment). Its output will separate the
+two candidate routes: huge \code{PUSTR/PVSTR} (stress arrived broken from the turbulence scheme)
+vs.\ a collapsed \code{PTSKM1M}/large fluxes (the buoyancy amplifier). \emph{This is the current
+open front for the mesh-increment crash family.}
+
+\section{State of the cycle and of the climate (2026-07-27)}\label{sec:state}
 
 \subsection{What is proven}
 \begin{itemize}
@@ -867,9 +1060,24 @@ floating area, smooth. (c) FESOM cavity melt, in the observed range, no escalati
   pinned-$\eta$ cavity columns drains tracer content at fixed volume.} The divergence and
   ice-base $w$ are symptoms of the same \code{hnode} inconsistency, not an independent leak;
   with the restart \code{hnode} reset the columns are quiet.
+\item \textbf{The coupled-slab configuration is now correct on all \code{develop*} setups and the
+  sea-ice climate validates} (\S\ref{sec:nammcc}, 2026-07-27): the OIFS \code{NAMMCC} switches
+  (\code{LNEMOLIMTHK=.true.}, \code{LNEMOLIMTEMP=.false.}) are set in \code{awiesm3.yaml}
+  (\code{0aca2487}); a 10-year \code{develop} run matches an independent CMIP7 spin-up
+  hemisphere-by-hemisphere (NH March volume 27, obs $\sim$28--30), with residual biases NH-thin
+  ($\sim$20\%) and SH-cycle-too-extreme. The \code{movcav} runs were never affected (their
+  runscripts set \code{NAMMCC} by hand).
+\item \textbf{Open --- the mesh-increment crash family} (\code{voskin:282}, Antarctic, chunk~$\ge2$;
+  \S\ref{sec:voskin-inventory}): every restart/ICMGG input checked clean, so the overflow is
+  generated in-step; OIFS instrumented, reproduction pending.
+\item \textbf{Open --- the single-point thickness runaway}: a $\sim$52\,m (by year 10) point in the
+  \code{develop} sea-ice run, present \emph{identically} in the reference CMIP7 spin-up (855\,m by
+  year 500); a shared FESOM point-convergence artifact, not coupling-specific.
 \end{itemize}
 
-\subsection{Open item: the Southern-Hemisphere summer melt-back}
+\subsection{Open item: the Southern-Hemisphere summer melt-back}\label{sec:seaicemelt}
+\emph{Resolved in \code{movcav37} --- see \S\ref{sec:mc37seaice}. The historical framing that
+identified the problem is kept below.}
 \begin{figure}[H]\centering
 \includegraphics[width=\textwidth]{seaice/snow_ice_mc25_vs_ref.png}
 \caption{Year-1 sea ice and snow: implicit-solve run (blue) vs the movcav16-era state (orange) vs
@@ -994,7 +1202,19 @@ a correct refusal followed by an unconditional continue is worse than no guard a
   logging (ICEDBG) proved the flux was corrupt; send-side decomposition (SENDDBG) named the term
   and the tile state in its first twelve lines. The two probes cost one rebuild each.
 \item \textbf{Beware silent fallbacks} (Bug V's \code{isfile()} miss; the \code{-ocean given}
-  silent fallback to \code{th}). A fallback on a nonexistent path should say so.
+  silent fallback to \code{th}). A fallback on a nonexistent path should say so. The
+  \code{NAMMCC} bug (\S\ref{sec:nammcc}) is the same shape: OIFS silently ran on default switches
+  and discarded a coupled field for months, visible only in the sea-ice climate.
+\item \textbf{\code{oasis3mct.lresume=false} silently destroys throughput.} With it false the
+  coupling restart is rebuilt every exchange and the step rate decays $\sim$100$\times$ over a run
+  ($0.28\to11.4$\,s/step) --- no single-leg or one-month test is long enough to see it. Use
+  \code{lresume=true} from a restart set that carries the current coupled fields (the shared pool
+  \code{rst*} predate \code{sit\_feom} and cannot be used with \code{lresume=true} until
+  regenerated).
+\item \textbf{In a coupled run FESOM is not forcing-driven.} \code{namelist.forcing}'s JRA55-do
+  paths are vestigial (standalone only); the ocean surface fluxes come from OIFS through OASIS, so
+  the climate is set by the OIFS GHG year (\code{NCMIPFIXYR}: 1990 for \code{develop} here, 1850
+  for the a270270 reference), not by the forcing files.
 \end{enumerate}
 
 %======================================================================
