@@ -1016,6 +1016,67 @@ two candidate routes: huge \code{PUSTR/PVSTR} (stress arrived broken from the tu
 vs.\ a collapsed \code{PTSKM1M}/large fluxes (the buoyancy amplifier). \emph{This is the current
 open front for the mesh-increment crash family.}
 
+\subsection{Two more crash faces: a mid-year FESOM flux blow-up and a leg-start numerical explosion (2026-07-30)}\label{sec:2026-07-30}
+
+The \code{voskin:282} front (\S\ref{sec:voskin-inventory}) is OIFS-side and fires on step~1. Two
+\emph{new} crash faces surfaced this week, both on the \emph{FESOM} side, and neither is
+\code{voskin:282}.
+
+\textbf{(i) A mid-year FESOM flux blow-up.} A colleague's 17-cycle concurrent run
+(\code{repro\_movcav45}) died in FESOM's own \code{check\_blowup}, not OIFS: cycle~19 (1918),
+\code{mstep}~14458 (mid-year, $\sim$day~201), at an \emph{Arctic} node (lat~$+83.5^\circ$,
+lon~$-53^\circ$). \code{temp} hit $227^\circ$C, driven by a garbage surface heat flux
+\code{hflux}$=-4.0\times10^{6}$\,W/m$^2$ ($\sim$$10^4\times$ any physical air--sea flux) at an
+ice-edge node where sea ice vanished in a single step (\code{m\_ice} $1.27\to0$). Only the surface
+layer blew up (every layer below normal, $-1.4\ldots-0.4^\circ$C) and CFL stayed $<1$ throughout, so
+this is a \emph{surface-flux injection}, not an interior/velocity instability. The submesh the coupler
+built for that leg was \emph{clean} --- cavity front stable at $\sim$704\,km every year (1910--13),
+matching PISM's $\sim$690\,km --- so the PISM$\to$FESOM geometry conversion
+(\code{mesh\_flags.py}\,+\,\code{fesom\_submesh.x}) is \emph{correct}; the bad flux is delivered by the
+atmosphere/OASIS, not made by a mesh error. Distinct from \code{voskin:282} (OIFS overflow, Antarctic,
+step~1); this is FESOM, Arctic, mid-year. The run's output was monthly / yearly-split with
+\code{NLOGPRT=1} and \code{EXPORTED} (not \code{EXPOUT}), so nothing flushed before the crash and the
+delivered flux at that step could not be recovered from disk --- which set up the instrumented rerun.
+
+\textbf{The instrumented crash-hunt build (\code{fgdbg02}).} To catch the flux \emph{at ingest}: a
+\code{[FLUXGUARD]} added to \code{check\_blowup} (\code{write\_step\_info.F90}) that, every step, prints
+\code{mstep, node, lon/lat, qso/qsi/qsr, a\_ice/m\_ice} for any node whose ingested
+\code{oce\_flx\_h}/\code{ice\_flx\_h} exceeds $5000$\,W/m$^2$ or is NaN; a \emph{daily, daily-split}
+diagnostic stream of the atmosphere$\to$ocean/ice flux components (\code{qsi/qso/qsr} plus the full
+\code{fh} decomposition \code{fh\_sen/fh\_lat/fh\_radtot/fh\_swr/fh\_lwr/fh\_lwrout} and \code{uwice/vwice})
+with \code{split\_freq=1d} so each day lands on disk before a mid-year blow-up (the previous config's
+monthly, yearly-split output is exactly why nothing survived); and FESOM \code{omp\_num\_threads=1} for
+bit-reproducibility, so a single crashing leg can later be re-run deterministically. Run for 100~yr
+because the blow-up timing is random.
+
+\textbf{(ii) A leg-start numerical explosion --- a \emph{third}, distinct face.} \code{fgdbg02} blew up
+at cycle~7 (1906), but at \code{mstep}~\textbf{1} --- the very first timestep of the leg --- at an
+\emph{Antarctic ice-shelf} node (lat~$-72.9^\circ$, lon~$-100^\circ$, Amundsen Sea). \code{temp} went
+$2.8\to-3.7\times10^{243}$ in one step (a full numerical explosion, top~$\sim$17 levels, not a physical
+$227^\circ$C overshoot); \code{hflux}$=-90.5$\,W/m$^2$ (\emph{normal}), \code{hnode}/\code{Kv}/\code{W}/
+\code{CFL\_z} all normal, and \code{[FLUXGUARD]} stayed \textbf{silent}. The one field that exploded is
+the SSH-solver right-hand-side: \code{ssh\_rhs}$=7.1\times10^{6}$ (from $-208$ the previous step). So
+this is the \emph{external-mode (SSH) equation} (\code{compute\_ssh\_rhs\_ale}, \code{oce\_ale.F90})
+blowing up at an ice-shelf node on step~1. Crucially, this run is already on the safe free-surface
+scheme --- \code{which\_ale='linfs'} (\code{step\_per\_day=72}, i.e.\ a 1200\,s step), the scheme
+\S\ref{sec:linfs-coupled} showed \emph{preserves} the cavity where \code{zstar} collapses it. So face
+(iii) is \textbf{not} the \code{zstar} seam collapse and \code{linfs} does not cure it: the couple-in /
+cavity update is handing FESOM a transport--geometry mismatch that detonates the SSH solve on step~1,
+independently of the ALE choice --- \emph{not} advection, \emph{not} \code{hnode} (that seam,
+\S\ref{sec:hnode}, was fixed; \code{hnode} is clean here), and \emph{not} the ALE-mode issue of
+\S\ref{sec:linfs-coupled}. This is a genuinely new face: an SSH-RHS explosion seeded at the open-cavity
+couple-in under \code{linfs}. The daily stream captured nothing
+(crash before day~1 closed) and the guard correctly stayed silent, validating the instrumentation while
+telling us this crash is not flux-driven.
+
+\textbf{Three faces now, to keep separate.} (i) \code{voskin:282}: OIFS single-precision overflow,
+chunk~$\ge2$, Antarctic, step~1. (ii) mid-year FESOM flux blow-up: Arctic, ice-edge, a garbage
+OASIS-delivered heat flux. (iii) leg-start FESOM SSH-RHS explosion: Antarctic ice-shelf, \emph{normal}
+flux, \code{mstep}~1, \code{ssh\_rhs}$=7.1\times10^{6}$ under \code{linfs}. Faces (i) and (iii) share
+step-1 timing and the Antarctic cavity region and may be the same underlying couple-in seeding; (ii) is
+a separate atmosphere-side flux corruption. The \code{omp=1} build makes face~(iii) bit-reproducible on
+one leg --- the cheapest next target.
+
 \section{State of the cycle and of the climate (2026-07-27)}\label{sec:state}
 
 \subsection{What is proven}
