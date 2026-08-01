@@ -14,7 +14,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-07-27}
+\date{Last updated: 2026-07-31}
 
 \begin{document}
 \maketitle
@@ -28,7 +28,7 @@ mesh, with all three coastline-following members (FESOM cavity, OIFS land--sea m
 regenerated per leg.
 
 \medskip\noindent
-\textbf{Where we are.} Seven real bugs and one architectural redesign (the coupled slab)
+\textbf{Where we are.} Eight real bugs and one architectural redesign (the coupled slab)
 later, the cycle is proven end-to-end with real cavities --- awiesm3 year $\to$ PISM decade
 $\to$ awiesm3 year on the changed mesh, plus one further clean cycle. The 10-year production
 attempt then ran eleven more increments \emph{with the cavities accidentally amputated by an
@@ -60,7 +60,12 @@ siblings then caught a months-old silent bug --- \code{develop}/\code{develop-cc
 \code{NAMMCC} switches, so the coupled ice thickness was discarded and their Arctic went ice-free
 every summer; fixed in config, the 10-year sea-ice climate validates against an independent CMIP7
 spin-up (\S\ref{sec:nammcc}). The mesh-increment crash family (\code{voskin:282}, Antarctic) is now
-inventoried and instrumented, reproduction pending (\S\ref{sec:voskin-inventory}).
+inventoried and instrumented, reproduction pending (\S\ref{sec:voskin-inventory}). Of the two further
+crash faces that instrumentation exposed, the leg-start one is \textbf{solved}: not the SSH solve it
+looked like, but \textbf{Bug VIII} --- \code{fer\_solve\_Gamma} publishing an unassigned automatic-array
+element into the GM streamfunction wherever a node's surrounding elements invert its solve range, giving
+a $10^{251}$ bolus velocity that detonates the tracer solve. A cavity front on steep bathymetry is what
+creates that node geometry, which is why a decade of FESOM never hit it (\S\ref{sec:bug8}).
 \end{abstract}
 
 \tableofcontents
@@ -1054,20 +1059,20 @@ at cycle~7 (1906), but at \code{mstep}~\textbf{1} --- the very first timestep of
 \emph{Antarctic ice-shelf} node (lat~$-72.9^\circ$, lon~$-100^\circ$, Amundsen Sea). \code{temp} went
 $2.8\to-3.7\times10^{243}$ in one step (a full numerical explosion, top~$\sim$17 levels, not a physical
 $227^\circ$C overshoot); \code{hflux}$=-90.5$\,W/m$^2$ (\emph{normal}), \code{hnode}/\code{Kv}/\code{W}/
-\code{CFL\_z} all normal, and \code{[FLUXGUARD]} stayed \textbf{silent}. The one field that exploded is
-the SSH-solver right-hand-side: \code{ssh\_rhs}$=7.1\times10^{6}$ (from $-208$ the previous step). So
-this is the \emph{external-mode (SSH) equation} (\code{compute\_ssh\_rhs\_ale}, \code{oce\_ale.F90})
-blowing up at an ice-shelf node on step~1. Crucially, this run is already on the safe free-surface
-scheme --- \code{which\_ale='linfs'} (\code{step\_per\_day=72}, i.e.\ a 1200\,s step), the scheme
-\S\ref{sec:linfs-coupled} showed \emph{preserves} the cavity where \code{zstar} collapses it. So face
-(iii) is \textbf{not} the \code{zstar} seam collapse and \code{linfs} does not cure it: the couple-in /
-cavity update is handing FESOM a transport--geometry mismatch that detonates the SSH solve on step~1,
-independently of the ALE choice --- \emph{not} advection, \emph{not} \code{hnode} (that seam,
-\S\ref{sec:hnode}, was fixed; \code{hnode} is clean here), and \emph{not} the ALE-mode issue of
-\S\ref{sec:linfs-coupled}. This is a genuinely new face: an SSH-RHS explosion seeded at the open-cavity
-couple-in under \code{linfs}. The daily stream captured nothing
-(crash before day~1 closed) and the guard correctly stayed silent, validating the instrumentation while
-telling us this crash is not flux-driven.
+\code{CFL\_z} all normal, and \code{[FLUXGUARD]} stayed \textbf{silent}. The field that stood out in the
+dump is the SSH-solver right-hand-side: \code{ssh\_rhs}$=7.1\times10^{6}$ (from $-208$ the previous
+step), which is what this entry originally read as an \emph{external-mode (SSH) equation} blow-up.
+\dead{The couple-in hands FESOM a transport--geometry mismatch that detonates the SSH solve on step~1.}
+That reading did not survive opening the blow-up dump: \code{ssh\_rhs}$\sim10^{6}$ is the \emph{ordinary}
+value at a cavity-front node and the real fault is elsewhere entirely (\S\ref{sec:bug8}). What this
+entry does establish and what still stands: the run is on \code{which\_ale='linfs'}
+(\code{step\_per\_day=72}, a 1200\,s step), the scheme \S\ref{sec:linfs-coupled} showed \emph{preserves}
+the cavity where \code{zstar} collapses it, so face~(iii) is \textbf{not} the \code{zstar} seam collapse
+and \code{linfs} does not cure it; it is \emph{not} advection, \emph{not} \code{hnode}
+(\S\ref{sec:hnode}, fixed; clean here), and \emph{not} the ALE-mode issue of \S\ref{sec:linfs-coupled}.
+The daily stream captured nothing (crash before day~1 closed) and the guard correctly stayed silent,
+validating the instrumentation while telling us this crash is not flux-driven. The
+\code{omp=1} build makes it bit-reproducible on one leg, which is what made \S\ref{sec:bug8} possible.
 
 \textbf{Three faces now, to keep separate.} (i) \code{voskin:282}: OIFS single-precision overflow,
 chunk~$\ge2$, Antarctic, step~1. (ii) mid-year FESOM flux blow-up: Arctic, ice-edge, a garbage
@@ -1076,6 +1081,76 @@ flux, \code{mstep}~1, \code{ssh\_rhs}$=7.1\times10^{6}$ under \code{linfs}. Face
 step-1 timing and the Antarctic cavity region and may be the same underlying couple-in seeding; (ii) is
 a separate atmosphere-side flux corruption. The \code{omp=1} build makes face~(iii) bit-reproducible on
 one leg --- the cheapest next target.
+
+\subsection{Bug VIII --- an unassigned array element in the GM streamfunction (2026-07-31)}\label{sec:bug8}
+
+Face~(iii) is solved, and it is not an SSH problem. The 2\,GB \code{fesom.1906.oce.blowup.nc} that
+\code{check\_blowup} writes --- a full 3D dump of \code{ssh\_rhs}, \code{d\_eta}, \code{u}, \code{v},
+\code{u\_rhs}, \code{helem}, \code{hnode}, \code{w}, \code{cfl\_z}, \code{temp}, \code{salt} at the
+crash step --- had never been opened. It settles the face in one pass.
+
+\textbf{The SSH framing dies first.} \code{ssh\_rhs}$=7.1\times10^{6}$ is an unremarkable value here:
+1461 nodes exceed $10^{6}$, 506 exceed $10^{7}$, the global max is $5.97\times10^{7}$ (8$\times$ the
+crash node), and the crash node ranks \textbf{143rd of the 184} pinched open nodes. \code{d\_eta} stays
+within $[-1.76,+0.07]$\,m everywhere --- the CG solve absorbs the large rhs. There is no SSH-solver
+explosion. The large \code{ssh\_rhs} at the front is itself structural: \code{eta} is identically 0 at
+all 2416 cavity nodes (FESOM's own convention, present in the native end-of-year restarts too) while the
+open ocean south of 60$^\circ$S sits at $-1.58$\,m, so each of the 1311 mixed cavity/open elements
+carries a $\sim$1.59\,m \code{eta} step and a $-g\nabla\eta\,\mathrm{d}t\approx1.5$\,m/s velocity
+increment. Median \code{max|u\_rhs|} over those 1311 front elements is \textbf{1.01}\,m/s against
+0.006--0.007 for open-ocean and full-cavity elements; the crash node's elements (1.11--1.25) sit between
+the p50 and p90 of that population. They are typical front elements.
+
+\textbf{The needle.} Exactly \textbf{three} elements in 404\,607 carry an interior exact
+\code{0.0} in \code{u} where \code{v} is non-zero (none in \code{v}, none in \code{helem}), and they
+touch exactly the five nodes whose tracers exploded. The same test over the campaign's thirteen saved
+restart states across seven cycles returns \textbf{zero}. A probe called at seven points of the timestep
+fired only \emph{after} \code{solve\_tracers\_ale} --- silent after \code{compute\_vel\_rhs},
+\code{viscosity\_filter}, \code{impl\_vert\_visc\_ale}, \code{update\_vel} on both sides of
+\code{exchange\_elem}, \code{compute\_hbar\_ale} and \code{vert\_vel\_ale}.
+
+\textbf{Root cause.} \code{fer\_solve\_Gamma} (\code{oce\_fer\_gm.F90}) solves the Gent--McWilliams
+streamfunction over \code{nzmin=ulevels\_nod2D\_max(n)} to \code{nzmax=nlevels\_nod2D\_min(n)} --- max
+and min over the node's \emph{surrounding elements}. A node touching both a deep-cavity element and a
+very shallow one inverts that range. At node 19343 (elements with \code{ulevels} $=[7,1,1,1]$ and
+\code{nlevels} $=[18,18,14,5]$) it is \code{nzmin}$=7$, \code{nzmax}$=5$. Both sweeps then run zero
+times, but
+\begin{center}\code{tr(:,nzmax) = tp(:,nzmax)}\end{center}
+executes unconditionally and publishes an \textbf{unassigned element of the local automatic array}
+\code{tp} straight into \code{fer\_gamma}. \code{fer\_gamma2vel} divides gamma differences by
+\code{helem} to build the bolus velocity, giving the measured
+\code{fer\_uv}$(1)=\mp1.636\times10^{251}$ at levels 4 and 5 --- equal magnitude, opposite sign, zonal
+component only, with \code{fer\_uv}$(2)\sim10^{-4}$ and \code{helem}$=10$\,m both healthy, exactly the
+signature of one corrupted gamma at the level-5 interface. \code{solve\_tracers\_ale} then adds
+\code{fer\_uv} to \code{UV}, \textbf{advects the tracers with it} (\code{temp}$\to10^{250}$, \code{salt}
+pinned at its 3/45 bounds) and subtracts it back; $(x+y)-y$ with $|y|\gg|x|$ returns exactly \code{0.0},
+which is the half-zeroed \code{u}. The identical add/subtract pair on \code{Wvel} with \code{fer\_Wvel}
+five lines below produces the \code{W}$=0$ holes. So the chain runs the \emph{opposite} way to the
+first reading: the exact zeros are residue of the event, not its seed.
+
+\textbf{Why now, after a decade of FESOM.} The trigger needs a node touching both a deep-cavity element
+and a very shallow one --- a cavity front on steep bathymetry, which the moving cavity manufactures and
+relocates every cycle. The predicate
+$\max(\code{ulevels})>\min(\code{nlevels})$ over a node's elements finds
+1/2/1/2/0/2 such nodes in submeshes 1901--1906 and 2 in the base mesh, so the configuration recurs
+without always being fatal: \code{tp(:,nzmax)} is whatever the stack holds, usually benign, occasionally
+$10^{252}$. That is the 1-in-hundreds behaviour of \S\ref{sec:2026-07-30}, and it is why the identical
+source crashed at \code{mstep}~1 under \code{-O3} but ran clean under
+\code{-check bounds -check pointers -check uninit -g}. \code{-check bounds} cannot catch it:
+\code{fer\_gamma} is written in bounds; the defect is the \emph{read of an unassigned value}. Requires
+\code{Fer\_GM=.true.} (set here) and, for the degenerate range, \code{use\_cavity=.true.}
+
+\textbf{Fix and verification.} A node with no interior range carries no GM transport, so zero its column
+and skip:
+\begin{center}\code{if (nzmin >= nzmax) then; tr(:,:) = 0.0\_WP; cycle; end if}\end{center}
+The leg had died at \code{mstep}~1 on every previous attempt, bit-identically; with the fix it ran to
+day~27 / step~1920 with both detectors silent and no blow-up. Upstream as
+\href{https://github.com/FESOM/fesom2/pull/960}{FESOM/fesom2 PR~\#960} (branched off \code{main}, which
+carries the same defect), cherry-picked onto \code{awiesm3-implicit-ice-surftemp} as \code{26907ba9}.
+
+\textbf{\textcolor{red}{TAINTED}:} cycles 1901--1905 ran with this active. Wherever a degenerate node
+existed and the stack word was small-but-non-zero, the GM bolus transport there was junk without
+crashing, so the GM contribution in those legs is unreliable even though they completed.
 
 \section{State of the cycle and of the climate (2026-07-27)}\label{sec:state}
 
@@ -1200,6 +1275,16 @@ Failed coupling functions did not stop the workflow (backgrounded, observe saw n
 rstos size guard read the wrong dimension & fixed & \code{61c8ed8a} \\
 ocp-tool flipped a coastline cell's mask+soil only, leaving an inconsistent surface column &
   masked nearest-neighbour rebuild of the full column & ocp-tool PR\,\#51 \\
+Non-short-circuit \code{.and.} read \code{ulevels(0)} at every boundary edge (\code{ice\_maEVP.F90},
+  both EVP variants); inside \code{if (use\_cavity)}, so a garbage value decided whether sea-ice
+  velocity was zeroed at the cavity--ocean edge & guard \code{edge\_tri(2,ed)>0} separately &
+  PR\,\#960 \\
+Non-short-circuit \code{.and.} read \code{angles(0)} in the XIOS cell-corner insertion sort
+  (\code{io\_xios.F90}); harmless at \code{-O3}, aborts any bounds-checked build at init & split the
+  loop test & PR\,\#960 \\
+\code{alb} missing from \code{io\_xios\_is\_ice\_field} although declared
+  \code{detect\_missing\_value="true"} $\Rightarrow$ sea-ice albedo time-means averaged over open
+  water & add \code{'alb'} to the ice-field list & PR\,\#961 \\
 \bottomrule
 \end{longtable}
 
@@ -1246,6 +1331,26 @@ a correct refusal followed by an unconditional continue is worse than no guard a
 \item \dead{The barotropic margin force $F_x$ (eta$+$sea-ice) drives the spin-up.} The slow
   control carries the same $F_x$ distribution (p90 $\sim7\times10^{-4}$) as the fast runs; the
   step-1 force does not discriminate slow from fast (\S\ref{sec:standalone}).
+\item \dead{The leg-start crash is an SSH-RHS explosion: the couple-in hands FESOM a
+  transport--geometry mismatch that detonates the external-mode solve.} \code{ssh\_rhs}$=7.1\times10^6$
+  is ordinary at a cavity front --- 506 nodes exceed $10^7$, the crash node ranks 143rd of 184 pinched
+  nodes, and \code{d\_eta} stays $\le1.76$\,m everywhere because the CG solve absorbs it. The fault is
+  in the GM streamfunction (\S\ref{sec:bug8}).
+\item \dead{The pinched cavity-front peninsula tip drives the blow-up: remapped velocity has nowhere
+  to go through the pinched faces.} The pinch is the normal front geometry and its \code{ssh\_rhs}
+  signature is unremarkable at the crash node. The pinch \emph{is} implicated, but through
+  \code{ulevels\_nod2D\_max} inverting the GM solve range, not through trapped transport
+  (\S\ref{sec:bug8}).
+\item \dead{The exact zeros in \code{u} and \code{W} seed the tracer explosion via a singular vertical
+  operator.} \code{vert\_vel\_ale} runs \emph{before} \code{solve\_tracers\_ale} and the probe after it
+  is silent, so \code{W} was computed from a clean \code{UV}. Both zero fields are residue of the
+  $(x+y)-y$ cancellation in the GM bolus add/subtract pair --- the chain runs the other way
+  (\S\ref{sec:bug8}).
+\item \dead{The fix belongs in the restart remap (\code{mo\_remap\_fields.F90}).} The three affected
+  elements come out of the remap clean and geometrically identical to the previous cycle (unchanged
+  \code{ulevels}/\code{nlevels}, none new); \code{area}/\code{areasvol}, the partition and its halo
+  comm arrays are all self-consistent. The defect is in FESOM's GM solver, exposed --- not created ---
+  by the moving cavity (\S\ref{sec:bug8}).
 \end{enumerate}
 
 %======================================================================
@@ -1295,6 +1400,17 @@ a correct refusal followed by an unconditional continue is worse than no guard a
   node ordering --- would have caught Bug II on day one.
 \item \code{verify\_balance.py}: offline balance/stability gate for remapped restarts.
 \item Chunk-1 artifacts pooled at \code{input/fesom2/pism\_cavity\_ini/} (login-node launches).
+\item Face-(iii) probe set (\code{notes/ssh\_rhs\_probes/}): \code{blowup\_uvrhs.py},
+  \code{eta\_seam.py}, \code{front\_census.py}, \code{uv\_holes.py}, \code{uniqueness.py},
+  \code{inverted\_range.py} (the $\max(\code{ulevels})>\min(\code{nlevels})$ mesh predicate),
+  \code{read\_areas.py}, \code{partition\_check.py}, \code{comm\_symmetry.py}. Working notes in
+  \code{notes/ssh\_rhs\_leg\_start\_crash.md}.
+\item \code{fesom\_meshdiag} (a standalone utility already in the FESOM tree, \code{BUILD\_MESHDIAG=ON})
+  dumps \code{area}/\code{areasvol} per level without running the model --- how \S\ref{sec:bug8}
+  cleared the control-volume hypothesis.
+\item The crash-step blow-up dump \code{fesom.1906.oce.blowup.CRASH1\_KEEP.nc}: a full 3D state at
+  \code{mstep}~1. \code{check\_blowup} writes one on every blow-up and it is routinely ignored;
+  opening it is what solved face~(iii).
 \end{itemize}
 
 \end{document}
