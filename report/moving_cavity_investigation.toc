@@ -25,11 +25,12 @@
 \contentsline {subsection}{\numberline {1.18}The coupled-slab switch was off for \texttt {\small develop}/\texttt {\small develop-cc}; the sea-ice climate validated on a clean decade (2026-07-23$\to $27)}{26}{subsection.1.18}%
 \contentsline {subsection}{\numberline {1.19}The \texttt {\small voskin:282} overflow, inventoried across the campaign and instrumented (2026-07-24)}{30}{subsection.1.19}%
 \contentsline {subsection}{\numberline {1.20}Two more crash faces: a mid-year FESOM flux blow-up and a leg-start numerical explosion (2026-07-30)}{30}{subsection.1.20}%
-\contentsline {subsection}{\numberline {1.21}Bug VIII --- an unassigned array element in the GM streamfunction (2026-07-31)}{31}{subsection.1.21}%
-\contentsline {section}{\numberline {2}State of the cycle and of the climate (2026-07-27)}{33}{section.2}%
+\contentsline {subsection}{\numberline {1.21}Bug VIII --- an unassigned array element in the GM streamfunction (2026-07-31$\to $08-01)}{31}{subsection.1.21}%
+\contentsline {section}{\numberline {2}State of the cycle and of the climate (2026-08-02)}{33}{section.2}%
 \contentsline {subsection}{\numberline {2.1}What is proven}{33}{subsection.2.1}%
-\contentsline {subsection}{\numberline {2.2}Open item: the Southern-Hemisphere summer melt-back}{34}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.2}Taint ledger --- what must not be quoted}{34}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Open items}{34}{subsection.2.3}%
 \contentsline {section}{\numberline {3}Secondary bugs, fixed along the way}{35}{section.3}%
-\contentsline {section}{\numberline {4}Falsified claims (kept, struck through)}{37}{section.4}%
-\contentsline {section}{\numberline {5}Method notes}{38}{section.5}%
+\contentsline {section}{\numberline {4}Falsified claims (kept, struck through)}{36}{section.4}%
+\contentsline {section}{\numberline {5}Method notes}{37}{section.5}%
 \contentsline {section}{\numberline {6}Assets}{38}{section.6}%

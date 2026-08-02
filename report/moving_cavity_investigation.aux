@@ -89,24 +89,22 @@
 \newlabel{sec:voskin-inventory}{{1.19}{30}{The \code {voskin:282} overflow, inventoried across the campaign and instrumented (2026-07-24)}{subsection.1.19}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.20}Two more crash faces: a mid-year FESOM flux blow-up and a leg-start numerical explosion (2026-07-30)}{30}{subsection.1.20}\protected@file@percent }
 \newlabel{sec:2026-07-30}{{1.20}{30}{Two more crash faces: a mid-year FESOM flux blow-up and a leg-start numerical explosion (2026-07-30)}{subsection.1.20}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {1.21}Bug VIII --- an unassigned array element in the GM streamfunction (2026-07-31)}{31}{subsection.1.21}\protected@file@percent }
-\newlabel{sec:bug8}{{1.21}{31}{Bug VIII --- an unassigned array element in the GM streamfunction (2026-07-31)}{subsection.1.21}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {2}State of the cycle and of the climate (2026-07-27)}{33}{section.2}\protected@file@percent }
-\newlabel{sec:state}{{2}{33}{State of the cycle and of the climate (2026-07-27)}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.21}Bug VIII --- an unassigned array element in the GM streamfunction (2026-07-31$\to $08-01)}{31}{subsection.1.21}\protected@file@percent }
+\newlabel{sec:bug8}{{1.21}{31}{Bug VIII --- an unassigned array element in the GM streamfunction (2026-07-31$\to $08-01)}{subsection.1.21}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {21}{\ignorespaces The coupled system equilibrating over 24 coupled years / 240 PISM years, post-fix. (a) PISM ice volume $25\,745\to 24\,671\times 10^3$\,km$^3$ and (b) floating area $1561\to 916\times 10^3$\,km$^2$: both still declining but visibly decelerating, the shelf area flattening after $\sim $PISM year 150 --- the system is \emph  {approaching} a steady state, not yet at one. (c) Cavity-mean melt runs 0.70\,$\to $\,$\sim $1.05\,m\,w.e./yr, inside the observed circum-Antarctic band (shaded) --- no escalation, which is what the \texttt  {\small  zstar} runs failed to do (\S  \ref {sec:movcav37}). (d) The geometry increment is what equilibrates most clearly: nodes removed per cycle decays $430\to 45$ (last-5 mean) while nodes added stays flat at 25--85, i.e.\ successive submeshes converge. Panels use one y-axis each by design; the earlier timeline figures' twin axes invite misreading of exactly these trends.}}{33}{figure.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}State of the cycle and of the climate (2026-08-02)}{33}{section.2}\protected@file@percent }
+\newlabel{sec:state}{{2}{33}{State of the cycle and of the climate (2026-08-02)}{section.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}What is proven}{33}{subsection.2.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Open item: the Southern-Hemisphere summer melt-back}{34}{subsection.2.2}\protected@file@percent }
-\newlabel{sec:seaicemelt}{{2.2}{34}{Open item: the Southern-Hemisphere summer melt-back}{subsection.2.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {21}{\ignorespaces Year-1 sea ice and snow: implicit-solve run (blue) vs the movcav16-era state (orange) vs the 500-year-stable v3.4 reference (black dashed). Our runs track each other --- the crash fixes did not degrade climate --- but the reference collapses its SH ice almost completely each summer while ours retains $\sim $7k nodes, and its winter pack carries 0.03--0.08\,m of snow against our 0.2--0.3\,m. Bottom maps (same scale): December snow depth --- our thick band hugs the Antarctic coast; the reference is nearly bare.}}{34}{figure.21}\protected@file@percent }
-\newlabel{fig:seaiceref}{{21}{34}{Year-1 sea ice and snow: implicit-solve run (blue) vs the movcav16-era state (orange) vs the 500-year-stable v3.4 reference (black dashed). Our runs track each other --- the crash fixes did not degrade climate --- but the reference collapses its SH ice almost completely each summer while ours retains $\sim $7k nodes, and its winter pack carries 0.03--0.08\,m of snow against our 0.2--0.3\,m. Bottom maps (same scale): December snow depth --- our thick band hugs the Antarctic coast; the reference is nearly bare}{figure.21}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Taint ledger --- what must not be quoted}{34}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Open items}{34}{subsection.2.3}\protected@file@percent }
+\newlabel{sec:seaicemelt}{{2.3}{34}{Open items}{subsection.2.3}{}}
 \gdef \LT@i {\LT@entry 
     {1}{182.407pt}\LT@entry 
     {1}{199.78836pt}\LT@entry 
     {1}{68.59596pt}}
-\@writefile{lof}{\contentsline {figure}{\numberline {22}{\ignorespaces The extent of the coastal pile-up in the (pre-fix) movcav runs: annual-max and December snow depth, and the seasonal cycle. The thick snow is a band hugging the ice-shelf front (eastern Weddell/Fimbul, Amundsen), bounded at 2--2.6\,m by an autumn melt-back. Later runs that lost this melt-back drifted monotonically to 3.5\,m --- the insulation that raised Bug IV's loop gain.}}{35}{figure.22}\protected@file@percent }
-\newlabel{fig:snowband}{{22}{35}{The extent of the coastal pile-up in the (pre-fix) movcav runs: annual-max and December snow depth, and the seasonal cycle. The thick snow is a band hugging the ice-shelf front (eastern Weddell/Fimbul, Amundsen), bounded at 2--2.6\,m by an autumn melt-back. Later runs that lost this melt-back drifted monotonically to 3.5\,m --- the insulation that raised Bug IV's loop gain}{figure.22}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {3}Secondary bugs, fixed along the way}{35}{section.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}Falsified claims (kept, struck through)}{37}{section.4}\protected@file@percent }
-\newlabel{sec:falsified}{{4}{37}{Falsified claims (kept, struck through)}{section.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Method notes}{38}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Falsified claims (kept, struck through)}{36}{section.4}\protected@file@percent }
+\newlabel{sec:falsified}{{4}{36}{Falsified claims (kept, struck through)}{section.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Method notes}{37}{section.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {6}Assets}{38}{section.6}\protected@file@percent }
-\gdef \@abspage@last{39}
+\gdef \@abspage@last{38}

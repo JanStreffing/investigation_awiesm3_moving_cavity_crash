@@ -40,9 +40,13 @@ def node_areas(sub):
     lon, lat = np.radians(ao[:,1]), np.radians(ao[:,2])
     e = np.loadtxt(f"{sub}/elem2d.out", skiprows=1).astype(int)-1
     R = 6371e3
-    x = lon[e]*np.cos(lat[e].mean(axis=1, keepdims=True))*R
-    y = lat[e]*R
-    ar = 0.5*np.abs((x[:,1]-x[:,0])*(y[:,2]-y[:,0])-(x[:,2]-x[:,0])*(y[:,1]-y[:,0]))
+    # spherical excess (Girard): a plane formula explodes on the ~1000 elements
+    # spanning +/-180 deg, inflating the global total from 361 to 860e6 km^2
+    v = np.stack([np.cos(lat)*np.cos(lon), np.cos(lat)*np.sin(lon), np.sin(lat)], axis=1)
+    va, vb, vc = v[e[:,0]], v[e[:,1]], v[e[:,2]]
+    _num = np.abs(np.einsum('ij,ij->i', va, np.cross(vb, vc)))
+    _den = 1.0 + np.einsum('ij,ij->i',va,vb) + np.einsum('ij,ij->i',vb,vc) + np.einsum('ij,ij->i',vc,va)
+    ar = 2.0*np.arctan2(_num, _den)*R*R
     na = np.zeros(len(ao))
     for k in range(3): np.add.at(na, e[:,k], ar/3.0)
     return na

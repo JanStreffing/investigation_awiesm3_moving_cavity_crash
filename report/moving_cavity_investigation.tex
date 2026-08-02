@@ -14,7 +14,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-07-31}
+\date{Last updated: 2026-08-02}
 
 \begin{document}
 \maketitle
@@ -65,7 +65,11 @@ crash faces that instrumentation exposed, the leg-start one is \textbf{solved}: 
 looked like, but \textbf{Bug VIII} --- \code{fer\_solve\_Gamma} publishing an unassigned automatic-array
 element into the GM streamfunction wherever a node's surrounding elements invert its solve range, giving
 a $10^{251}$ bolus velocity that detonates the tracer solve. A cavity front on steep bathymetry is what
-creates that node geometry, which is why a decade of FESOM never hit it (\S\ref{sec:bug8}).
+creates that node geometry, which is why a decade of FESOM never hit it. With it fixed the cycle then
+ran itself from year 1906 to \textbf{1924 --- 18 further coupled years, zero blow-ups} --- and the
+system is visibly equilibrating: shelf area flattening, cavity melt settling at 0.8--0.9\,m/yr inside
+the observed band, and the per-cycle mesh increment decaying $430\to45$ nodes removed
+(\S\ref{sec:bug8}).
 \end{abstract}
 
 \tableofcontents
@@ -1082,7 +1086,7 @@ step-1 timing and the Antarctic cavity region and may be the same underlying cou
 a separate atmosphere-side flux corruption. The \code{omp=1} build makes face~(iii) bit-reproducible on
 one leg --- the cheapest next target.
 
-\subsection{Bug VIII --- an unassigned array element in the GM streamfunction (2026-07-31)}\label{sec:bug8}
+\subsection{Bug VIII --- an unassigned array element in the GM streamfunction (2026-07-31$\to$08-01)}\label{sec:bug8}
 
 Face~(iii) is solved, and it is not an SSH problem. The 2\,GB \code{fesom.1906.oce.blowup.nc} that
 \code{check\_blowup} writes --- a full 3D dump of \code{ssh\_rhs}, \code{d\_eta}, \code{u}, \code{v},
@@ -1148,102 +1152,115 @@ day~27 / step~1920 with both detectors silent and no blow-up. Upstream as
 \href{https://github.com/FESOM/fesom2/pull/960}{FESOM/fesom2 PR~\#960} (branched off \code{main}, which
 carries the same defect), cherry-picked onto \code{awiesm3-implicit-ice-surftemp} as \code{26907ba9}.
 
+\textbf{And then it just ran (2026-08-01).} Restarted from cycle~7, \code{fgdbg02} chained itself
+unattended to \textbf{cycle~25 (1924)} --- \textbf{18 further coupled years, 0 blow-ups, 0
+\code{check\_blowup} STOPs}, couple-out $\to$ PISM $\to$ couple-in $\to$ compute with no
+intervention. That is the real confirmation the single day-27 run could not give: the degenerate-node
+configuration recurs across submeshes, so 18 fresh meshes and 18 fresh couple-ins is a far stronger
+test than one leg, and it held on all of them. Incidentally this also carried past cycle~19 (1918),
+where the colleague's \code{repro\_movcav45} hit face~(ii) --- encouraging but not conclusive, that
+face being random in timing.
+
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{../report/fgdbg02_equilibration.png}
+\caption{The coupled system equilibrating over 24 coupled years / 240 PISM years, post-fix.
+(a) PISM ice volume $25\,745\to24\,671\times10^3$\,km$^3$ and (b) floating area
+$1561\to916\times10^3$\,km$^2$: both still declining but visibly decelerating, the shelf area
+flattening after $\sim$PISM year 150 --- the system is \emph{approaching} a steady state, not yet at
+one. (c) Cavity-mean melt runs 0.70\,$\to$\,$\sim$1.05\,m\,w.e./yr, inside the observed
+circum-Antarctic band (shaded) --- no escalation, which is what the \code{zstar} runs failed to do
+(\S\ref{sec:movcav37}). (d) The geometry increment is what equilibrates most clearly: nodes removed
+per cycle decays $430\to45$ (last-5 mean) while nodes added stays flat at 25--85, i.e.\ successive
+submeshes converge. Panels use one y-axis each by design; the earlier timeline figures' twin axes
+invite misreading of exactly these trends.}
+\end{figure}
+
 \textbf{\textcolor{red}{TAINTED}:} cycles 1901--1905 ran with this active. Wherever a degenerate node
 existed and the stack word was small-but-non-zero, the GM bolus transport there was junk without
 crashing, so the GM contribution in those legs is unreliable even though they completed.
 
-\section{State of the cycle and of the climate (2026-07-27)}\label{sec:state}
+\section{State of the cycle and of the climate (2026-08-02)}\label{sec:state}
 
 \subsection{What is proven}
 \begin{itemize}
 \item \textbf{Chunk-1 is quantitatively healthy and, under the coupled slab, crash-free}: January
   SST physical, zero translocated cells; OIFS Weddell September ci 0.61/0.99 (was 0.04);
-  both-hemisphere sea-ice annual cycles; per-basin cavity melt in the observed regimes
-  (\S\ref{sec:melt}); kilowatt flux events at real ice tiles: zero.
-\item \textbf{The workflow hands over in both directions} (Bug V fixed): awiesm3 $\to$ PISM $\to$
-  couple\_out $\to$ chunk-3 couple\_in runs unattended.
-\item \textbf{The PISM decade runs on FESOM's own melt} (\code{-ocean given}, 2026-07-17): real
-  output, and a \emph{gentle} geometry response --- 290 fully-opened nodes vs 1399 in the Bug-I
-  era, mean $|\Delta\mathrm{draft}|$ 1.0\,m, submesh 208\,810 $\to$ 208\,438 nodes
-  (Fig.\ pism\_change\_mc33).
-\item \textbf{The live mesh change works}: weights regenerated and runtime-order-validated
-  ($\le0.024^\circ$), restarts remapped through the rpart sandwich, ICMGG/plit regenerated.
-\item \textbf{The increment test passes end-to-end} (2026-07-17/18): chunk-3 runs its full
-  year on the changed mesh and hands to chunk-4 PISM unattended; movcav34 (10 awiesm3 years /
-  100 PISM years) repeats chunks 1--4 cleanly on the minimal committed build. The second
-  increment's Ross-front blowup (\S\ref{sec:zerowater}) is the current front.
-\item \textbf{The high, rising cavity melt is diagnosed} (\S\ref{sec:melt2}): near-realistic
-  thermal forcing ($+0.14$\,K) through a standard, validated melt scheme ($r=0.91$), driven by
-  cavity currents $\sim6\times$ too fast (median 13\,cm/s).
-\item \textbf{Those fast currents are injected by the mesh increment, not the physics}
-  (\S\ref{sec:standalone}--\ref{sec:hnode}, 2026-07-19/20): density-independent (chunk-1 /
-  smoothed / ambient / \emph{equilibrium} water all identical), geometry-independent (cold
-  start on the changed mesh is healthy $\sim$2.6\,cm/s). Tied to \textbf{the remapped
-  \code{hnode}} (ALE layer thickness): \code{remap\_hnode}'s ALE-rescale compresses the
-  changed columns using the stale chunk-1 $\eta$. The \code{remap\_hnode} edit (nominal at
-  changed columns) is implemented and \emph{halves} the over-speed ($17\to10$\,cm/s), but does
-  not fully restore health --- the residual is the \textbf{zstar/rigid-lid coordinate seam}
-  (stretched open-ocean layers vs.\ nominal cavity layers). \textbf{\code{linfs} removes it
-  cleanly}: the raw remap (no \code{hnode} surgery) under \code{linfs} does not spin up
-  ($\sim$1.7\,cm/s). \textbf{Open:} a fresh coupled movcav run on \code{linfs} from chunk-1 to
-  confirm end-to-end and check the open-ocean climate; strip the PGFDBG probe first.
-\item \dead{The chunk-3 dilution enters through the vertical-advection top boundary
-  (zero-tracer inflow ratchet / material-interface flux).} Cavity guards in both the implicit
-  (\code{adv\_tra\_vert\_impl}) and explicit (\code{upw1}, \code{qr4c}) schemes changed the
-  crash bitwise-nothing; the guards were reverted. The identical-fraction $(T,S)\to(0,0)$
-  signature belongs to the \emph{multiplicative} \code{hnode} mismatch drain (Bug VI).
-\item \dead{The dilution is unclosed column continuity: remnant $\nabla\!\cdot\!(u\,h)$ at
-  pinned-$\eta$ cavity columns drains tracer content at fixed volume.} The divergence and
-  ice-base $w$ are symptoms of the same \code{hnode} inconsistency, not an independent leak;
-  with the restart \code{hnode} reset the columns are quiet.
-\item \textbf{The coupled-slab configuration is now correct on all \code{develop*} setups and the
-  sea-ice climate validates} (\S\ref{sec:nammcc}, 2026-07-27): the OIFS \code{NAMMCC} switches
-  (\code{LNEMOLIMTHK=.true.}, \code{LNEMOLIMTEMP=.false.}) are set in \code{awiesm3.yaml}
-  (\code{0aca2487}); a 10-year \code{develop} run matches an independent CMIP7 spin-up
-  hemisphere-by-hemisphere (NH March volume 27, obs $\sim$28--30), with residual biases NH-thin
-  ($\sim$20\%) and SH-cycle-too-extreme. The \code{movcav} runs were never affected (their
-  runscripts set \code{NAMMCC} by hand).
-\item \textbf{Open --- the mesh-increment crash family} (\code{voskin:282}, Antarctic, chunk~$\ge2$;
-  \S\ref{sec:voskin-inventory}): every restart/ICMGG input checked clean, so the overflow is
-  generated in-step; OIFS instrumented, reproduction pending.
-\item \textbf{Open --- the single-point thickness runaway}: a $\sim$52\,m (by year 10) point in the
-  \code{develop} sea-ice run, present \emph{identically} in the reference CMIP7 spin-up (855\,m by
-  year 500); a shared FESOM point-convergence artifact, not coupling-specific.
+  both-hemisphere sea-ice annual cycles; kilowatt flux events at real ice tiles: zero.
+\item \textbf{The cycle runs unattended, at length.} \code{repro\_movcav45} has carried
+  \textbf{57 coupled years / 570 PISM years} (1900$\to$1957) and \code{fgdbg02} 24, including
+  \textbf{18 consecutive legs after the Bug VIII fix} with zero blow-ups. Everything the coupling
+  regenerates per leg --- submesh, partition, exchange weights, remapped restart, OIFS ICMGG/plit
+  --- has now been exercised 57 times without intervention. This supersedes the increment-test and
+  live-mesh-change milestones of \S\ref{sec:zerowater}.
+\item \textbf{\code{linfs} cures the remapped-restart spin-up} (\S\ref{sec:hnode},
+  \S\ref{sec:linfs-coupled}), with 57 cycles behind it rather than one decade.
+\item \textbf{Cavity melt sits in the observed band and does not escalate}:
+  0.70\,$\to$\,$\sim$1.05\,m\,w.e./yr over \code{fgdbg02}'s 24 cycles, against the observed
+  circum-Antarctic 0.3--1.5 (\S\ref{sec:bug8}, panel c).
+\item \textbf{Bug VIII is fixed and upstream}
+  (\href{https://github.com/FESOM/fesom2/pull/960}{PR~\#960}), with two further out-of-bounds reads
+  found alongside it and one XIOS ice-mask fix
+  (\href{https://github.com/FESOM/fesom2/pull/961}{PR~\#961}).
 \end{itemize}
 
-\subsection{Open item: the Southern-Hemisphere summer melt-back}\label{sec:seaicemelt}
-\emph{Resolved in \code{movcav37} --- see \S\ref{sec:mc37seaice}. The historical framing that
-identified the problem is kept below.}
-\begin{figure}[H]\centering
-\includegraphics[width=\textwidth]{seaice/snow_ice_mc25_vs_ref.png}
-\caption{Year-1 sea ice and snow: implicit-solve run (blue) vs the movcav16-era state (orange) vs
-the 500-year-stable v3.4 reference (black dashed). Our runs track each other --- the crash fixes did
-not degrade climate --- but the reference collapses its SH ice almost completely each summer while
-ours retains $\sim$7k nodes, and its winter pack carries 0.03--0.08\,m of snow against our
-0.2--0.3\,m. Bottom maps (same scale): December snow depth --- our thick band hugs the Antarctic
-coast; the reference is nearly bare.}
-\label{fig:seaiceref}
-\end{figure}
+\subsection{Taint ledger --- what must not be quoted}
+\begin{itemize}
+\item \textbf{All PISM-side results from 2026-07-17 to 2026-07-30, and \code{fgdbg02} entirely.}
+  The FESOM$\to$PISM sub-shelf mass flux was delivered with \emph{inverted sign}: FESOM's \code{fw}
+  (melt $<0$) was passed through unflipped, and PISM's \code{shelfbmassflux} is positive $=$ melt,
+  so PISM accreted where the ocean melted. Measured in \code{fgdbg02}:
+  \code{basal\_mass\_flux\_floating} $=+694$\,kg\,m$^{-2}$yr$^{-1}$, 90.5\,\% positive
+  (PISM's own attribute: ``positive $=$ ice gain''), against FESOM's own $\sim$1.0\,m\,w.e./yr of
+  melt in the same cavities. Fixed by \code{33f71c607} (\code{factor = -1} on the \code{fw}
+  partable entry), which \code{repro\_movcav45} has had throughout
+  ($-450$\,kg\,m$^{-2}$yr$^{-1}$, 14.5\,\% positive --- correct). This kills the ice-volume and
+  floating-area panels of \S\ref{sec:bug8} and the ``gentle geometry response'' of
+  \S\ref{sec:zerowater}.
+\item \textbf{Cycles 1901--1905 of \code{fgdbg02}} additionally ran with Bug VIII live: wherever a
+  degenerate node existed and the stack word was small-but-non-zero, the GM bolus transport there
+  was junk without crashing.
+\item \textbf{The eleven hygiene-amputated legs} (\S\ref{sec:hygiene}), already noted.
+\item \textbf{Any earlier figure using the node-area helper.} Its plane-projection formula exploded
+  on the $\sim$1000 elements spanning $\pm180^\circ$, inflating the global mesh area from 361 to
+  $860\times10^6$\,km$^2$. Fixed to spherical excess across all plotting scripts (2026-08-02); the
+  \code{fgdbg02} cavity melt moved 0.21$\to$0.70 at its start as a result.
+\item \textbf{Not tainted:} the FESOM-side melt diagnosis --- cavity currents $\sim6\times$ too
+  fast, the \code{hnode} seam, the \code{linfs} cure (\S\ref{sec:melt2}--\ref{sec:hnode}) --- was
+  measured inside FESOM and is unaffected by any of the above.
+\end{itemize}
 
-\begin{figure}[H]\centering
-\includegraphics[width=\textwidth]{seaice/snow_extent_movcav.png}
-\caption{The extent of the coastal pile-up in the (pre-fix) movcav runs: annual-max and December
-snow depth, and the seasonal cycle. The thick snow is a band hugging the ice-shelf front (eastern
-Weddell/Fimbul, Amundsen), bounded at 2--2.6\,m by an autumn melt-back. Later runs that lost this
-melt-back drifted monotonically to 3.5\,m --- the insulation that raised Bug IV's loop gain.}
-\label{fig:snowband}
-\end{figure}
+\subsection{Open items}\label{sec:seaicemelt}
+\begin{enumerate}
+\item \textbf{\code{fgdbg02} must be redone with the sign fix.} Its 240 PISM years are spent as
+  science; they remain a valid crash-hunt record for Bug VIII.
+\item \textbf{Southern-Hemisphere sea ice --- reframed.} The old ``we retain too much summer ice''
+  item is \emph{withdrawn}: it compared against the v3.4 CMIP7 reference, which carries roughly
+  \emph{half} the observed Antarctic sea ice. SH extent ($10^6$\,km$^2$, last 5 yr of each run,
+  against $\sim$18.5 max / $\sim$3.0 min observed):
 
-The ice-thermodynamics code is byte-identical to the v3.4 reference; the difference is state and
-forcing. Ours keeps $\sim$2.5$\times$ the reference's winter SH extent and only a $\sim$6$\times$
-summer retreat where the reference manages $\sim$200$\times$ (Fig.~\ref{fig:seaiceref}), and piles
-2--3.5\,m of snow against the Antarctic ice-shelf coast (Fig.~\ref{fig:snowband}). Two mitigations
-exist: a \emph{clean chunk-1 ice initial state} (reference year-1849 fields index-mapped onto the
-submesh via \code{map\_nod.out}, 7 Ronne artifact nodes hybridized; snow max 0.81\,m --- in use
-since movcav29), and the coupled slab itself (the pinned-skin era's fictitious equilibria drove a
-spurious congelation-growth term). Whether these restore the reference's melt-back is the first
-climate question for the post-slab runs; meltponds were checked and are \emph{not} the SH lever (the
-\code{hsno>hs1} lockout makes old and corrected schemes identical there).
+  \begin{center}\small
+  \begin{tabular}{@{}lrrl@{}}
+  \toprule
+   & max & min & \\
+  \midrule
+  \code{repro\_movcav45} (57\,yr) & 22.97 & 2.56 & too much winter ice \\
+  \code{fgdbg02} (24\,yr)         & 18.86 & 0.32 & melts back too far \\
+  v3.4 CMIP7 reference            & 10.08 & 0.01 & \emph{not a usable yardstick} \\
+  \bottomrule
+  \end{tabular}
+  \end{center}
+
+  The two runs err in \emph{opposite} directions and neither matches observations. Why they differ
+  is open; the sign fix is a candidate lever (correct-sign melt freshens and stratifies the shelf
+  front, which preserves summer ice).
+\item \textbf{\code{voskin:282} --- dormant, not fixed.} Last fired in \code{repro\_movcav45} at
+  year~1919 (\code{voskin\_mod.F90:318}); 38 cycles clean since, and never in \code{fgdbg02}.
+  Instrumentation is in place (\S\ref{sec:voskin-inventory}).
+\item \textbf{The mid-year Arctic flux blow-up} (face~(ii), \S\ref{sec:2026-07-30}) has not
+  recurred and was never reproduced.
+\item \textbf{The single-point thickness runaway}: present \emph{identically} in the reference
+  CMIP7 spin-up, so a shared FESOM point-convergence artifact rather than a coupling problem.
+\end{enumerate}
 
 %======================================================================
 \section{Secondary bugs, fixed along the way}

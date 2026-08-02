@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  31 JUL 2026 23:52
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  2 AUG 2026 10:11
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -531,71 +531,71 @@ cm-super/cm-super-t1.enc}])
 \openout4 = `moving_cavity_investigation.toc'.
 
  [2]
-<../figures/pism_change/pism_change_planview.png, id=186, 1228.59pt x 534.798pt
+<../figures/pism_change/pism_change_planview.png, id=191, 1228.59pt x 534.798pt
 >
 File: ../figures/pism_change/pism_change_planview.png Graphic file (type png)
 <use ../figures/pism_change/pism_change_planview.png>
 Package pdftex.def Info: ../figures/pism_change/pism_change_planview.png  used 
-on input line 116.
+on input line 120.
 (pdftex.def)             Requested size: 472.31595pt x 205.6pt.
-<../figures/pism_change/pism_change_section.png, id=188, 975.33078pt x 448.074p
+<../figures/pism_change/pism_change_section.png, id=193, 975.33078pt x 448.074p
 t>
 File: ../figures/pism_change/pism_change_section.png Graphic file (type png)
 <use ../figures/pism_change/pism_change_section.png>
 Package pdftex.def Info: ../figures/pism_change/pism_change_section.png  used o
-n input line 117.
+n input line 121.
 (pdftex.def)             Requested size: 434.5298pt x 199.62817pt.
 
 [3]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10.95> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 124.
-<../figures/spp/sst_scramble_global.png, id=197, 939.51pt x 794.97pt>
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 128.
+<../figures/spp/sst_scramble_global.png, id=202, 939.51pt x 794.97pt>
 File: ../figures/spp/sst_scramble_global.png Graphic file (type png)
 <use ../figures/spp/sst_scramble_global.png>
 Package pdftex.def Info: ../figures/spp/sst_scramble_global.png  used on input 
-line 134.
+line 138.
 (pdftex.def)             Requested size: 472.31595pt x 399.6432pt.
  [4
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.140 
+l.144 
        <../figures/pism_change/pism_change_planview.png> <../figures/pism_chang
 e/pism_change_section.png>] [5
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.158 
+l.162 
        <../figures/spp/sst_scramble_global.png>]
-<../figures/spp/wam_maxocean.png, id=213, 1005.15524pt x 500.46976pt>
+<../figures/spp/wam_maxocean.png, id=218, 1005.15524pt x 500.46976pt>
 File: ../figures/spp/wam_maxocean.png Graphic file (type png)
 <use ../figures/spp/wam_maxocean.png>
 Package pdftex.def Info: ../figures/spp/wam_maxocean.png  used on input line 18
-4.
+8.
 (pdftex.def)             Requested size: 472.31595pt x 235.16736pt.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 193.
+(hyperref)                removing `math shift' on input line 197.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\to' on input line 193.
+(hyperref)                removing `\to' on input line 197.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 193.
+(hyperref)                removing `math shift' on input line 197.
 
 [6
 pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.199 
+l.203 
        <../figures/spp/wam_maxocean.png>]
-Overfull \hbox (1.57486pt too wide) in paragraph at lines 223--227
+Overfull \hbox (1.57486pt too wide) in paragraph at lines 227--231
 []\T1/cmr/m/n/10.95 The re-ceived flux at cold FE-SOM nodes is \T1/cmr/bx/n/10.
 95 un-phys-i-cal and anti-braking\T1/cmr/m/n/10.95 : mean $\OMS/cmsy/m/n/10.95 
 ^^@\OT1/cmr/m/n/10.95 15\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 8$\T1/cmr/m/n/1
@@ -603,14 +603,14 @@ Overfull \hbox (1.57486pt too wide) in paragraph at lines 223--227
  []
 
 
-Overfull \hbox (22.90422pt too wide) in paragraph at lines 232--237
+Overfull \hbox (22.90422pt too wide) in paragraph at lines 236--241
 []\T1/cmr/m/n/10.95 The rea-son the skin can sit 80K be-low the air: \T1/cmtt/m
 /n/10 vlamsk_mod.F90\T1/cmr/m/n/10.95 , sea-ice tile, with \T1/cmtt/m/n/10 LNEM
 OSICOUP=.true.
  []
 
 
-Overfull \hbox (0.31607pt too wide) in paragraph at lines 254--262
+Overfull \hbox (0.31607pt too wide) in paragraph at lines 258--266
 \T1/cmr/m/n/10.95 whose path \T1/cmtt/m/n/10 esm_runscripts/chunky_parts.py \T1
 /cmr/m/n/10.95 builds by \T1/cmr/m/it/10.95 raw string con-cate-na-tion of \T1/
 cmtt/m/it/10 general.base_dir
@@ -618,7 +618,7 @@ cmtt/m/it/10 general.base_dir
 
 [7{/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/enc/dvips/cm-supe
 r/cm-super-ts1.enc}]
-Overfull \hbox (60.89682pt too wide) in paragraph at lines 263--268
+Overfull \hbox (60.89682pt too wide) in paragraph at lines 267--272
 \T1/cmr/m/n/10.95 gen-uine awiesm3$\OMS/cmsy/m/n/10.95 !$\T1/cmr/m/n/10.95 PISM
  han-dover of the cam-paign (mov-cav27), and a full awiesm3$\OMS/cmsy/m/n/10.95
  !$\T1/cmr/m/n/10.95 PISM$\OMS/cmsy/m/n/10.95 !$\T1/cmr/m/n/10.95 couple_out$\O
@@ -626,233 +626,233 @@ MS/cmsy/m/n/10.95 !$\T1/cmr/m/n/10.95 chunk-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 308--310
+Underfull \hbox (badness 10000) in paragraph at lines 312--314
 []\T1/cmr/m/n/10.95 FESOM's albedo drives OIFS ra-di-a-tion
  []
 
 [8]
-<../figures/seaice/senddbg_collapse.png, id=241, 711.8595pt x 257.0747pt>
+<../figures/seaice/senddbg_collapse.png, id=246, 711.8595pt x 257.0747pt>
 File: ../figures/seaice/senddbg_collapse.png Graphic file (type png)
 <use ../figures/seaice/senddbg_collapse.png>
 Package pdftex.def Info: ../figures/seaice/senddbg_collapse.png  used on input 
-line 333.
+line 337.
 (pdftex.def)             Requested size: 425.08147pt x 153.51247pt.
  [9]
-<zero_water_george6.png, id=248, 903.375pt x 794.97pt>
+<zero_water_george6.png, id=253, 903.375pt x 794.97pt>
 File: zero_water_george6.png Graphic file (type png)
 <use zero_water_george6.png>
-Package pdftex.def Info: zero_water_george6.png  used on input line 388.
+Package pdftex.def Info: zero_water_george6.png  used on input line 392.
 (pdftex.def)             Requested size: 472.31595pt x 415.643pt.
  [10
 pdfTeX warning (ext4): destination with the same identifier (name{figure.4}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.399 
+l.403 
        <../figures/seaice/senddbg_collapse.png>] [11
 pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.417 \subsubsection
+l.421 \subsubsection
                     *{Bug VII --- the drowned island} <./zero_water_george6.png
 >]
-<elephant_island_anatomy.png, id=263, 939.51pt x 650.43pt>
+<elephant_island_anatomy.png, id=268, 939.51pt x 650.43pt>
 File: elephant_island_anatomy.png Graphic file (type png)
 <use elephant_island_anatomy.png>
-Package pdftex.def Info: elephant_island_anatomy.png  used on input line 435.
+Package pdftex.def Info: elephant_island_anatomy.png  used on input line 439.
 (pdftex.def)             Requested size: 472.31595pt x 326.9808pt.
-<elephant_island_drowned.png, id=264, 1011.78pt x 505.89pt>
+<elephant_island_drowned.png, id=269, 1011.78pt x 505.89pt>
 File: elephant_island_drowned.png Graphic file (type png)
 <use elephant_island_drowned.png>
-Package pdftex.def Info: elephant_island_drowned.png  used on input line 447.
+Package pdftex.def Info: elephant_island_drowned.png  used on input line 451.
 (pdftex.def)             Requested size: 472.31595pt x 236.16272pt.
  [12
 pdfTeX warning (ext4): destination with the same identifier (name{figure.6}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.454 
+l.458 
        <./elephant_island_anatomy.png>] [13
 pdfTeX warning (ext4): destination with the same identifier (name{figure.7}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.495 
+l.499 
        <./elephant_island_drowned.png>]
-<movcav34_evolution_timelines.png, id=286, 794.97pt x 722.7pt>
+<movcav34_evolution_timelines.png, id=291, 794.97pt x 722.7pt>
 File: movcav34_evolution_timelines.png Graphic file (type png)
 <use movcav34_evolution_timelines.png>
-Package pdftex.def Info: movcav34_evolution_timelines.png  used on input line 4
-98.
+Package pdftex.def Info: movcav34_evolution_timelines.png  used on input line 5
+02.
 (pdftex.def)             Requested size: 472.31595pt x 429.38878pt.
-<fris_top_side_chunks.png, id=287, 1084.05pt x 939.51pt>
+<fris_top_side_chunks.png, id=292, 1084.05pt x 939.51pt>
 File: fris_top_side_chunks.png Graphic file (type png)
 <use fris_top_side_chunks.png>
-Package pdftex.def Info: fris_top_side_chunks.png  used on input line 510.
+Package pdftex.def Info: fris_top_side_chunks.png  used on input line 514.
 (pdftex.def)             Requested size: 472.31595pt x 409.343pt.
  [14
 pdfTeX warning (ext4): destination with the same identifier (name{figure.8}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.517 
+l.521 
        <./movcav34_evolution_timelines.png>] [15
 pdfTeX warning (ext4): destination with the same identifier (name{figure.9}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.540 
+l.544 
        <./fris_top_side_chunks.png>]
-Overfull \hbox (15.16258pt too wide) in paragraph at lines 571--576
+Overfull \hbox (15.16258pt too wide) in paragraph at lines 575--580
 \T1/cmr/m/n/10.95 averaged against an ob-served circum-Antarctic $\OMS/cmsy/m/n
 /10.95 ^^X$\T1/cmr/m/n/10.95 0.8m/yr, and \T1/cmr/m/it/10.95 es-ca-lates \T1/cm
 r/m/n/10.95 (0.9$\OMS/cmsy/m/n/10.95 !$\T1/cmr/m/n/10.95 5.5m/yr over 1900$\OMS
 /cmsy/m/n/10.95 !$\T1/cmr/m/n/10.95 1901
  []
 
-<melt_diagnosis.png, id=301, 1040.18959pt x 384.77545pt>
+<melt_diagnosis.png, id=306, 1040.18959pt x 384.77545pt>
 File: melt_diagnosis.png Graphic file (type png)
 <use melt_diagnosis.png>
-Package pdftex.def Info: melt_diagnosis.png  used on input line 579.
+Package pdftex.def Info: melt_diagnosis.png  used on input line 583.
 (pdftex.def)             Requested size: 472.31595pt x 174.71495pt.
 [16] [17
 pdfTeX warning (ext4): destination with the same identifier (name{figure.10}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.629 
+l.633 
        <./melt_diagnosis.png>]
-Overfull \hbox (9.83734pt too wide) in paragraph at lines 638--642
+Overfull \hbox (9.83734pt too wide) in paragraph at lines 642--646
 \T1/cmr/m/n/10.95 To test the ``fast cur-rents'' hy-pothe-ses cheaply, a \T1/cm
 r/m/it/10.95 stan-dalone \T1/cmr/m/n/10.95 FE-SOM har-ness (\T1/cmtt/m/n/10 bui
 ld_sa\T1/cmr/m/n/10.95 , sub-mesh_1901,
  []
 
-<standalone_bifurcation.png, id=316, 650.43pt x 375.804pt>
+<standalone_bifurcation.png, id=321, 650.43pt x 375.804pt>
 File: standalone_bifurcation.png Graphic file (type png)
 <use standalone_bifurcation.png>
-Package pdftex.def Info: standalone_bifurcation.png  used on input line 644.
+Package pdftex.def Info: standalone_bifurcation.png  used on input line 648.
 (pdftex.def)             Requested size: 472.31595pt x 272.90106pt.
 [18
 pdfTeX warning (ext4): destination with the same identifier (name{figure.11}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.669 \textbf{Footprint.}
+l.673 \textbf{Footprint.}
                           Matching submesh\_1901 to the initial submesh by c...
  <./standalone_bifurcation.png>]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 684.
-<hnode_seam.png, id=324, 650.43pt x 390.258pt>
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 688.
+<hnode_seam.png, id=329, 650.43pt x 390.258pt>
 File: hnode_seam.png Graphic file (type png)
 <use hnode_seam.png>
-Package pdftex.def Info: hnode_seam.png  used on input line 698.
+Package pdftex.def Info: hnode_seam.png  used on input line 702.
 (pdftex.def)             Requested size: 387.30254pt x 232.388pt.
  [19
 pdfTeX warning (ext4): destination with the same identifier (name{figure.12}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.717 
+l.721 
        <./hnode_seam.png>]
-<movcavlinfs_evolution_timelines.png, id=335, 794.97pt x 722.7pt>
+<movcavlinfs_evolution_timelines.png, id=340, 794.97pt x 722.7pt>
 File: movcavlinfs_evolution_timelines.png Graphic file (type png)
 <use movcavlinfs_evolution_timelines.png>
 Package pdftex.def Info: movcavlinfs_evolution_timelines.png  used on input lin
-e 757.
+e 761.
 (pdftex.def)             Requested size: 434.5298pt x 395.03812pt.
  [20]
-<newly_iced_warmwater.png, id=344, 953.964pt x 440.5978pt>
+<newly_iced_warmwater.png, id=349, 953.964pt x 440.5978pt>
 File: newly_iced_warmwater.png Graphic file (type png)
 <use newly_iced_warmwater.png>
-Package pdftex.def Info: newly_iced_warmwater.png  used on input line 788.
+Package pdftex.def Info: newly_iced_warmwater.png  used on input line 792.
 (pdftex.def)             Requested size: 462.8676pt x 213.78378pt.
  [21
 pdfTeX warning (ext4): destination with the same identifier (name{figure.13}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.797 
+l.801 
        <./movcavlinfs_evolution_timelines.png>]
-<movcav37_cavity_speed.png, id=352, 676.34752pt x 369.82303pt>
+<movcav37_cavity_speed.png, id=357, 676.34752pt x 369.82303pt>
 File: movcav37_cavity_speed.png Graphic file (type png)
 <use movcav37_cavity_speed.png>
-Package pdftex.def Info: movcav37_cavity_speed.png  used on input line 813.
+Package pdftex.def Info: movcav37_cavity_speed.png  used on input line 817.
 (pdftex.def)             Requested size: 425.08147pt x 232.43108pt.
  [22
 pdfTeX warning (ext4): destination with the same identifier (name{figure.14}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.820 
+l.824 
        <./newly_iced_warmwater.png>]
-<movcav37_evolution_timelines.png, id=360, 794.97pt x 722.7pt>
+<movcav37_evolution_timelines.png, id=365, 794.97pt x 722.7pt>
 File: movcav37_evolution_timelines.png Graphic file (type png)
 <use movcav37_evolution_timelines.png>
 Package pdftex.def Info: movcav37_evolution_timelines.png  used on input line 8
-31.
+35.
 (pdftex.def)             Requested size: 448.6987pt x 407.91824pt.
  [23
 pdfTeX warning (ext4): destination with the same identifier (name{figure.15}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.837 
+l.841 
        <./movcav37_cavity_speed.png>] [24
 pdfTeX warning (ext4): destination with the same identifier (name{figure.16}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.856 \end{itemize}
+l.860 \end{itemize}
                     <./movcav37_evolution_timelines.png>]
-<../figures/seaice/movcav37_seaice_snow_thickness_ts.png, id=380, 939.51pt x 50
+<../figures/seaice/movcav37_seaice_snow_thickness_ts.png, id=385, 939.51pt x 50
 5.89pt>
 File: ../figures/seaice/movcav37_seaice_snow_thickness_ts.png Graphic file (typ
 e png)
 <use ../figures/seaice/movcav37_seaice_snow_thickness_ts.png>
 Package pdftex.def Info: ../figures/seaice/movcav37_seaice_snow_thickness_ts.pn
-g  used on input line 859.
+g  used on input line 863.
 (pdftex.def)             Requested size: 462.8676pt x 249.23141pt.
-<../figures/seaice/movcav37_seaice_snow_seasonal.png, id=381, 1213.60066pt x 62
+<../figures/seaice/movcav37_seaice_snow_seasonal.png, id=386, 1213.60066pt x 62
 7.41066pt>
 File: ../figures/seaice/movcav37_seaice_snow_seasonal.png Graphic file (type pn
 g)
 <use ../figures/seaice/movcav37_seaice_snow_seasonal.png>
 Package pdftex.def Info: ../figures/seaice/movcav37_seaice_snow_seasonal.png  u
-sed on input line 869.
+sed on input line 873.
 (pdftex.def)             Requested size: 472.31595pt x 244.1722pt.
  [25
 pdfTeX warning (ext4): destination with the same identifier (name{figure.17}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.877 
+l.881 
        <../figures/seaice/movcav37_seaice_snow_thickness_ts.png>]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 889.
+(hyperref)                removing `math shift' on input line 893.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\to' on input line 889.
+(hyperref)                removing `\to' on input line 893.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 889.
+(hyperref)                removing `math shift' on input line 893.
 
 [26
 pdfTeX warning (ext4): destination with the same identifier (name{figure.18}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.913 
+l.917 
        <../figures/seaice/movcav37_seaice_snow_seasonal.png>]
-<../figures/seaice/si10y_maps.png, id=398, 718.65288pt x 963.79272pt>
+<../figures/seaice/si10y_maps.png, id=403, 718.65288pt x 963.79272pt>
 File: ../figures/seaice/si10y_maps.png Graphic file (type png)
 <use ../figures/seaice/si10y_maps.png>
 Package pdftex.def Info: ../figures/seaice/si10y_maps.png  used on input line 9
-19.
+23.
 (pdftex.def)             Requested size: 472.31595pt x 633.44333pt.
  [27]
 Overfull \vbox (48.1171pt too high) has occurred while \output is active []
@@ -863,152 +863,165 @@ pdfTeX warning (ext4): destination with the same identifier (name{figure.19}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.930 
+l.934 
        <../figures/seaice/si10y_maps.png>]
-<../figures/seaice/si10y_vs_ref.png, id=412, 929.50339pt x 640.42339pt>
+<../figures/seaice/si10y_vs_ref.png, id=417, 929.50339pt x 640.42339pt>
 File: ../figures/seaice/si10y_vs_ref.png Graphic file (type png)
 <use ../figures/seaice/si10y_vs_ref.png>
 Package pdftex.def Info: ../figures/seaice/si10y_vs_ref.png  used on input line
- 959.
+ 963.
 (pdftex.def)             Requested size: 434.5298pt x 299.38664pt.
  [29
 pdfTeX warning (ext4): destination with the same identifier (name{figure.20}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.980 
+l.984 
        <../figures/seaice/si10y_vs_ref.png>]
-Overfull \hbox (2.7047pt too wide) in paragraph at lines 1030--1045
+Overfull \hbox (2.7047pt too wide) in paragraph at lines 1034--1049
 []\T1/cmr/bx/n/10.95 (i) A mid-year FE-SOM flux blow-up. \T1/cmr/m/n/10.95 A co
 l-league's 17-cycle con-cur-rent run (\T1/cmtt/m/n/10 repro_movcav45\T1/cmr/m/n
 /10.95 )
  []
 
 [30]
-Overfull \hbox (33.40788pt too wide) in paragraph at lines 1046--1056
+Overfull \hbox (33.40788pt too wide) in paragraph at lines 1050--1060
 \T1/cmr/m/n/10.95 added to \T1/cmtt/m/n/10 check_blowup \T1/cmr/m/n/10.95 (\T1/
 cmtt/m/n/10 write_step_info.F90\T1/cmr/m/n/10.95 ) that, ev-ery step, prints \T
 1/cmtt/m/n/10 mstep, node, lon/lat, qso/qsi/qsr,
  []
 
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1089.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\to' on input line 1089.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1089.
+
 [31]
-Overfull \hbox (5.37253pt too wide) in paragraph at lines 1146--1150
+Overfull \hbox (5.37253pt too wide) in paragraph at lines 1150--1154
 \T1/cmr/m/n/10.95 (branched off \T1/cmtt/m/n/10 main\T1/cmr/m/n/10.95 , which c
 ar-ries the same de-fect), cherry-picked onto \T1/cmtt/m/n/10 awiesm3-implicit-
 ice-surftemp
  []
 
-[32] [33]
-<../figures/seaice/snow_ice_mc25_vs_ref.png, id=455, 1112.44179pt x 722.18379pt
->
-File: ../figures/seaice/snow_ice_mc25_vs_ref.png Graphic file (type png)
-<use ../figures/seaice/snow_ice_mc25_vs_ref.png>
-Package pdftex.def Info: ../figures/seaice/snow_ice_mc25_vs_ref.png  used on in
-put line 1218.
-(pdftex.def)             Requested size: 472.31595pt x 306.621pt.
-<../figures/seaice/snow_extent_movcav.png, id=456, 1076.823pt x 725.28107pt>
-File: ../figures/seaice/snow_extent_movcav.png Graphic file (type png)
-<use ../figures/seaice/snow_extent_movcav.png>
-Package pdftex.def Info: ../figures/seaice/snow_extent_movcav.png  used on inpu
-t line 1229.
-(pdftex.def)             Requested size: 472.31595pt x 318.11757pt.
- [34
+<../report/fgdbg02_equilibration.png, id=443, 903.375pt x 549.252pt>
+File: ../report/fgdbg02_equilibration.png Graphic file (type png)
+<use ../report/fgdbg02_equilibration.png>
+Package pdftex.def Info: ../report/fgdbg02_equilibration.png  used on input lin
+e 1165.
+(pdftex.def)             Requested size: 472.31595pt x 287.17152pt.
+[32] [33
 pdfTeX warning (ext4): destination with the same identifier (name{figure.21}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1236 
-        <../figures/seaice/snow_ice_mc25_vs_ref.png>]
-Underfull \hbox (badness 6316) in paragraph at lines 1256--1257
+l.1197 \item \textbf
+                    {Cavity melt sits in the observed band and does not esca...
+ <../report/fgdbg02_equilibration.png>]
+Overfull \hbox (17.40619pt too wide) in paragraph at lines 1208--1219
+\T1/cmr/m/n/10.95 90.5% pos-i-tive (PISM's own at-tribute: ``pos-i-tive $\OT1/c
+mr/m/n/10.95 =$ \T1/cmr/m/n/10.95 ice gain''), against FE-SOM's own $\OMS/cmsy/
+m/n/10.95 ^^X$\T1/cmr/m/n/10.95 1.0mw.e./yr
+ []
+
+
+Overfull \hbox (32.28711pt too wide) in paragraph at lines 1256--1259
+[]\T1/cmtt/m/n/10 voskin:282 \T1/cmr/bx/n/10.95 --- dor-mant, not fixed. \T1/cm
+r/m/n/10.95 Last fired in \T1/cmtt/m/n/10 repro_movcav45 \T1/cmr/m/n/10.95 at y
+ear 1919 (\T1/cmtt/m/n/10 voskin_mod.F90:318\T1/cmr/m/n/10.95 );
+ []
+
+[34]
+Underfull \hbox (badness 6316) in paragraph at lines 1273--1274
 []|\T1/cmr/m/n/10.95 Remap ex-trap-o-lated un-bound-edly
  []
 
 
-Underfull \hbox (badness 6876) in paragraph at lines 1260--1261
+Underfull \hbox (badness 6876) in paragraph at lines 1277--1278
 []|\T1/cmr/m/n/10.95 First mesh-change leg read the
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1260--1261
+Underfull \hbox (badness 10000) in paragraph at lines 1277--1278
 \T1/cmr/m/n/10.95 mother mesh as cavity-free
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1260--1261
+Underfull \hbox (badness 10000) in paragraph at lines 1277--1278
 \T1/cmr/m/n/10.95 (\T1/cmtt/m/n/10 cavity_nlvls.out \T1/cmr/m/n/10.95 miss-ing 
 from
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1263--1264
+Underfull \hbox (badness 10000) in paragraph at lines 1280--1281
 []|\T1/cmr/m/n/10.95 Same-chunk \T1/cmtt/m/n/10 couple_in \T1/cmr/m/n/10.95 re-
 run
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1263--1264
+Underfull \hbox (badness 10000) in paragraph at lines 1280--1281
 \T1/cmr/m/n/10.95 pro-moted its own sub-mesh to
  []
 
 
-Underfull \hbox (badness 2401) in paragraph at lines 1263--1264
+Underfull \hbox (badness 2401) in paragraph at lines 1280--1281
 \T1/cmtt/m/n/10 previous_submesh \T1/cmr/m/n/10.95 (old $\OT1/cmr/m/n/10.95 =$ 
 \T1/cmr/m/n/10.95 new $\OMS/cmsy/m/n/10.95 )$
  []
 
 
-Underfull \hbox (badness 2460) in paragraph at lines 1276--1276
+Underfull \hbox (badness 2460) in paragraph at lines 1293--1293
 []|\T1/cmr/m/n/10.95 ocp-tool flipped a coast-line cell's
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1277--1278
+Underfull \hbox (badness 10000) in paragraph at lines 1294--1295
 []|\T1/cmr/m/n/10.95 ocp-tool
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1278--1280
+Underfull \hbox (badness 10000) in paragraph at lines 1295--1297
 []|\T1/cmr/m/n/10.95 Non-short-circuit \T1/cmtt/m/n/10 .and. \T1/cmr/m/n/10.95 
 read
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1282--1283
+Underfull \hbox (badness 10000) in paragraph at lines 1299--1300
 []|\T1/cmr/m/n/10.95 Non-short-circuit \T1/cmtt/m/n/10 .and. \T1/cmr/m/n/10.95 
 read
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1285--1287
+Underfull \hbox (badness 10000) in paragraph at lines 1302--1304
 []|\T1/cmtt/m/n/10 alb \T1/cmr/m/n/10.95 miss-ing from
  []
 
 
-Underfull \hbox (badness 1038) in paragraph at lines 1285--1287
+Underfull \hbox (badness 1038) in paragraph at lines 1302--1304
 \T1/cmtt/m/n/10 io_xios_is_ice_field \T1/cmr/m/n/10.95 al-though de-
  []
 
-ignored error: Infinite glue shrinkage found in box being split [35
-pdfTeX warning (ext4): destination with the same identifier (name{figure.22}) h
-as been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.1289 \end{longtable}
-                       <../figures/seaice/snow_extent_movcav.png>] [36]
-Overfull \hbox (5.01596pt too wide) in paragraph at lines 1335--1339
+ignored error: Infinite glue shrinkage found in box being split [35] [36]
+Overfull \hbox (5.01596pt too wide) in paragraph at lines 1352--1356
 [][]|   []   |   []   |   []   |   []   |   []   |   []   |   []   |   []   |  
  []   |   []   |   []   |   []   |   []
  []
 
 
-Overfull \hbox (5.8841pt too wide) in paragraph at lines 1345--1349
+Overfull \hbox (5.8841pt too wide) in paragraph at lines 1362--1366
 [][]|   []   |   []   |   []   |   []   |   []   |   []   |   []   |   []   |  
  []   |   []   |   []   |   []   |   []   |   []   |   []   |   [][] \T1/cmtt/m
 /n/10 vert_vel_ale
  []
 
-[37] [38]
-Overfull \hbox (0.6679pt too wide) in paragraph at lines 1403--1408
+[37]
+Overfull \hbox (0.6679pt too wide) in paragraph at lines 1420--1425
 []\T1/cmr/m/n/10.95 Face-(iii) probe set (\T1/cmtt/m/n/10 notes/ssh_rhs_probes/
 \T1/cmr/m/n/10.95 ): \T1/cmtt/m/n/10 blowup_uvrhs.py\T1/cmr/m/n/10.95 , \T1/cmt
 t/m/n/10 eta_seam.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10 front_census.py\T1/cmr/
@@ -1016,30 +1029,30 @@ m/n/10.95 ,
  []
 
 
-Overfull \hbox (126.47713pt too wide) in paragraph at lines 1403--1408
+Overfull \hbox (126.47713pt too wide) in paragraph at lines 1420--1425
 \T1/cmr/m/n/10.95 pred-i-cate), \T1/cmtt/m/n/10 read_areas.py\T1/cmr/m/n/10.95 
 , \T1/cmtt/m/n/10 partition_check.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10 comm_sy
 mmetry.py\T1/cmr/m/n/10.95 . Work-ing notes in \T1/cmtt/m/n/10 notes/ssh_rhs_le
 g_start_crash.md\T1/cmr/m/n/10.95 . 
  []
 
-[39] (./moving_cavity_investigation.aux)
+[38] (./moving_cavity_investigation.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-06>
  ***********
 Package rerunfilecheck Info: File `moving_cavity_investigation.out' has not cha
 nged.
-(rerunfilecheck)             Checksum: D97FD05BF045151B746D17F589FC7E35;11106.
+(rerunfilecheck)             Checksum: 83654DF6466FC854C4C752C6DCD186BD;11186.
  ) 
 Here is how much of TeX's memory you used:
- 11606 strings out of 467538
- 180284 string characters out of 5410173
- 635818 words of memory out of 5000000
- 40221 multiletter control sequences out of 15000+600000
+ 11598 strings out of 467538
+ 179783 string characters out of 5410173
+ 627855 words of memory out of 5000000
+ 40209 multiletter control sequences out of 15000+600000
  651128 words of font info for 102 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,10n,79p,975b,584s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,10n,79p,1078b,584s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/amsf
 onts/cm/cmex10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/
 type1/public/amsfonts/cm/cmmi10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/
@@ -1067,10 +1080,10 @@ w/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/
 sfti1000.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/
 public/cm-super/sfti1095.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-d
 ist/fonts/type1/public/cm-super/sftt1000.pfb>
-Output written on moving_cavity_investigation.pdf (39 pages, 6837649 bytes).
+Output written on moving_cavity_investigation.pdf (38 pages, 5743061 bytes).
 PDF statistics:
- 651 PDF objects out of 1000 (max. 8388607)
- 510 compressed objects within 6 object streams
- 126 named destinations out of 1000 (max. 500000)
- 348 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 660 PDF objects out of 1000 (max. 8388607)
+ 521 compressed objects within 6 object streams
+ 130 named destinations out of 1000 (max. 500000)
+ 351 words of extra memory for PDF output out of 10000 (max. 10000000)
 
