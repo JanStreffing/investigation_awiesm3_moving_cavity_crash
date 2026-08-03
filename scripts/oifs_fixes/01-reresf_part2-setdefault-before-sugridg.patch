@@ -1,0 +1,258 @@
+From cfe38c9c901ddce8f8e98e4092a6948c134c39e1 Mon Sep 17 00:00:00 2001
+From: Xiaojie Hao <xiaojie.hao@awi.de>
+Date: Mon, 3 Aug 2026 14:02:16 +0200
+Subject: [PATCH] reresf: seed surface defaults before re-reading ICMGG on a
+ warm start
+
+The moving-coastline re-ingest re-reads the initial file with SUGRIDG so it can
+inject an ICMGG surface column at cells whose land-sea mask has flipped. SUGRIDG
+fills fields by GRIB code, and 178 of the 465 surface field slots have no GRIB
+code at all -- U/V-STOKES_DRIFT among them. On a cold start that is harmless,
+because SUGRIDF applies SETDEFAULT (sugridf.F90:140) before calling SUGRIDG
+(:178). A warm start skips SUGRIDF entirely (LNF=.FALSE.), so nothing seeded
+those slots and they still held whatever ALLO_SURF's allocation left behind.
+GETALLFLDS then serialised that heap residue into ZBUF_IC and PUTALLFLDS_M wrote
+it into every flipped cell.
+
+That is the origin of the floating overflow in VOSKIN: |PUSTOKES| was not wrong
+physics but uninitialised memory, which is why it varied between runs -- a
+subnormal 5.3E-42 was observed at one flipped cell, and ZROADRW*ZUST**2 divided
+by its square overflows single precision.
+
+Apply SETDEFAULT to every block before SUGRIDG, mirroring the cold-start order.
+The order is load-bearing and not obvious: the two selections are not
+complementary (SETDEFAULT acts on NREQIN <= 0, SUGRIDG on IGRBCODE /= -999, and
+210 fields satisfy both), so running SETDEFAULT afterwards would discard what
+SUGRIDG had just read. With the present ICMGG file that would still be harmless
+-- SUGRIDG reads 57 GRIB codes covering exactly the 77 NREQIN==1 slots and
+nothing else, an empty intersection -- but that is a property of the file, not of
+this code.
+
+Also add LLREINGEST_VERBOSE, a separate PARAMETER gate for the per-cell dump and
+a bit-pattern scan of the serialised column for NaN/subnormal values. This is the
+only positive evidence the fix works: a leg completing proves nothing, since
+uninitialised heap varies between runs. Off by default, and being a PARAMETER it
+compiles away completely -- verified by the strings being absent from the built
+libarpifs.SP.so. LLREINGEST_DBG is left as-is but gains a comment noting it is
+the feature gate, not a debug switch.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ ifs-source/arpifs/control/reresf_part2.F90 | 163 +++++++++++++++++++--
+ 1 file changed, 153 insertions(+), 10 deletions(-)
+
+diff --git a/ifs-source/arpifs/control/reresf_part2.F90 b/ifs-source/arpifs/control/reresf_part2.F90
+index cd79d9e..2cc7836 100644
+--- a/ifs-source/arpifs/control/reresf_part2.F90
++++ b/ifs-source/arpifs/control/reresf_part2.F90
+@@ -109,10 +109,27 @@ REAL(KIND=JPRB), ALLOCATABLE :: ZBUF(:),ZBUF2(:,:),ZBUF3(:,:,:)
+ ! Moving-coastline (ECE_LANDICE) surface re-ingest workspace:
+ REAL(KIND=JPRB), ALLOCATABLE :: ZBUF_IC(:,:,:)   ! ICMGG-init surface serialised (as ZBUF3)
+ REAL(KIND=JPRB), ALLOCATABLE :: ZLSM_IC(:,:)     ! ICMGG-init land-sea mask, per (NPROMA,block)
+-REAL(KIND=JPRB), ALLOCATABLE :: ZSKT_IC(:,:), ZSTL1_IC(:,:)  ! DBG: ICMGG skin/soil-1 T
++REAL(KIND=JPRB), ALLOCATABLE :: ZSKT_IC(:,:), ZSTL1_IC(:,:)  ! VERBOSE: ICMGG skin/soil-1 T
++REAL(KIND=JPRB), ALLOCATABLE :: ZUSTK_IC(:,:), ZVSTK_IC(:,:) ! VERBOSE: ICMGG Stokes drift
+ LOGICAL :: LLDSPOR_IC
++LOGICAL :: LLSTKOK                                           ! Stokes slots really exist
+ INTEGER(KIND=JPIM) :: ILSMMP, ICHGCELL, IDBGRE, JROFRE, IGPRE
++INTEGER(KIND=JPIM) :: IUSTKMP, IVSTKMP
++INTEGER(KIND=JPIM) :: IANOM, JFLDRE                          ! VERBOSE: buffer scan
++INTEGER(KIND=JPIM) :: IWRE, IEXPRE, IMANRE                   ! VERBOSE: bit-pattern test
++REAL(KIND=JPRB)    :: ZVRE                                   ! VERBOSE: buffer scan
++! NOT a debug switch despite the name: this gates the moving-coastline surface
++! re-ingest itself, including the PUTALLFLDS_M below. Setting it .FALSE. disables the
++! feature. Diagnostic OUTPUT is controlled separately, by LLREINGEST_VERBOSE.
+ LOGICAL, PARAMETER :: LLREINGEST_DBG = .TRUE.
++! Per-cell report of what the re-ingest injects, plus a scan of the whole serialised
++! column for values no input can have produced (NaN/subnormal bit patterns). This is
++! the only positive evidence that the SETDEFAULT fix below is working: the run
++! completing proves nothing, because uninitialised heap varies between runs and a leg
++! that happens to find benign residue finishes normally. Turn it on after touching
++! anything here and confirm the "ic" column reads 0.0 at every flipped cell. Costs
++! ~50 lines per leg when on; being a PARAMETER, it costs nothing at all when off.
++LOGICAL, PARAMETER :: LLREINGEST_VERBOSE = .FALSE.
+ 
+ INTEGER(KIND=JPIM) :: I, IEND, IPROCA, IPROCB,&
+  & IRET, ISDDH, IT, IUNIT, IWSTEP, JLEV, ILEN_CPL, ILEN_IO, J2D,&
+@@ -342,16 +359,69 @@ IF (.NOT. LNF) THEN
+ ! its spun-up srf state.
+   IF (ECE_LANDICE .AND. LLREINGEST_DBG) THEN
+     LLDSPOR_IC = .FALSE.
++!   Seed every field with its declared default BEFORE reading the file, mirroring the
++!   cold-start path exactly (SUGRIDF applies SETDEFAULT at :140, then calls SUGRIDG at
++!   :178). SUGRIDG fills fields BY GRIB CODE, so the 178 of 465 fields that have no GRIB
++!   code at all -- among them U/V-STOKES_DRIFT -- are never written by it, and without
++!   this they stay exactly as ALLO_SURF left them, i.e. uninitialised. A cold start is
++!   safe because SETDEFAULT has already covered them; a warm start skips SUGRIDF
++!   (LNF=.FALSE.) and nothing else does it, so the GETALLFLDS below would serialise heap
++!   contents into ZBUF_IC and PUTALLFLDS_M would write them into every land-sea flipped
++!   cell. That is the origin of the |PUSTOKES| overflow in VOSKIN: the value is not
++!   wrong physics, it is whatever the allocator left behind, which is why it varied
++!   between runs (a subnormal 5.3E-42 was observed at one flipped cell).
++!
++!   ORDER MATTERS -- SETDEFAULT MUST COME FIRST. The two selections are not
++!   complementary: SETDEFAULT acts on NREQIN <= 0, SUGRIDG on IGRBCODE /= -999, and 210
++!   fields satisfy both. Running SETDEFAULT afterwards would discard whatever SUGRIDG
++!   had just read for those. It happens to be harmless with the present ICMGG file,
++!   which contains records for none of the 210 -- SUGRIDG reads 57 GRIB codes, covering
++!   exactly the 77 NREQIN==1 slots and nothing else -- but that is a property of the
++!   file, not of this code, and a richer initial file would silently break it.
++    DO JBLK=1,NGPBLKS
++      CALL GPOPER(YDDIM,YDMODEL%YRML_DYN%YRDYN,'SETDEFAULT',YDSURF,KBL=JBLK)
++    ENDDO
+     CALL SUGRIDG(YDGEOMETRY,YDSURF,YDEPHY,YDMCC,YDMODEL%YRML_DYN%YRDYN,0_JPIM,LLDSPOR_IC)
+     ILSMMP = YDSURF%YSD_VF%YLSM%MP
+     ALLOCATE(ZLSM_IC(NPROMA,NGPBLKS))
+-    ALLOCATE(ZSKT_IC(NPROMA,NGPBLKS))
+-    ALLOCATE(ZSTL1_IC(NPROMA,NGPBLKS))
+     ALLOCATE(ZBUF_IC(NPROMA,NDIMSURFL,NGPBLKS))
++!   The remaining captures exist only to be printed, so they follow LLREINGEST_VERBOSE.
++!   The Stokes slots are the ones that were under suspicion: unlike skin and soil
++!   temperature they have no GRIB code and no ICMGG source, so SUGRIDG above cannot have
++!   set them and the re-ingest can only copy whatever the buffer already held -- keeping
++!   them alongside the temperatures lets the dump show both ends of that copy. They exist
++!   only when LWSTOKES built them (SU_SURF_FLDS); otherwise the pointers are still NULL
++!   and dereferencing %MP would be invalid, hence the guard rather than an NDIM test.
++    LLSTKOK = .FALSE.
++    IUSTKMP = 0 ; IVSTKMP = 0
++    IF (LLREINGEST_VERBOSE) THEN
++      ALLOCATE(ZSKT_IC(NPROMA,NGPBLKS))
++      ALLOCATE(ZSTL1_IC(NPROMA,NGPBLKS))
++      ALLOCATE(ZUSTK_IC(NPROMA,NGPBLKS))
++      ALLOCATE(ZVSTK_IC(NPROMA,NGPBLKS))
++      IF (YDSURF%YSD_WSD%NDIM > 0) THEN
++        IF (ASSOCIATED(YDSURF%YSD_WS%YUSTOKES) .AND. ASSOCIATED(YDSURF%YSD_WS%YVSTOKES)) THEN
++          LLSTKOK = YDSURF%YSD_WS%YUSTOKES%LSET .AND. YDSURF%YSD_WS%YVSTOKES%LSET
++        ENDIF
++      ENDIF
++      IF (LLSTKOK) THEN
++        IUSTKMP = YDSURF%YSD_WS%YUSTOKES%MP
++        IVSTKMP = YDSURF%YSD_WS%YVSTOKES%MP
++      ENDIF
++    ENDIF
+     DO JBLK=1,NGPBLKS
+       ZLSM_IC(:,JBLK)  = YDSURF%SD_VF(:,ILSMMP,JBLK)
+-      ZSKT_IC(:,JBLK)  = YDSURF%SP_RR(:,YDSURF%YSP_RR%YT%MP,JBLK)      ! DBG: ICMGG skin T
+-      ZSTL1_IC(:,JBLK) = YDSURF%SP_SB(:,1,YDSURF%YSP_SB%YT%MP,JBLK)    ! DBG: ICMGG soil-1 T
++      IF (LLREINGEST_VERBOSE) THEN
++        ZSKT_IC(:,JBLK)  = YDSURF%SP_RR(:,YDSURF%YSP_RR%YT%MP,JBLK)    ! ICMGG skin T
++        ZSTL1_IC(:,JBLK) = YDSURF%SP_SB(:,1,YDSURF%YSP_SB%YT%MP,JBLK)  ! ICMGG soil-1 T
++        IF (LLSTKOK) THEN
++          ZUSTK_IC(:,JBLK) = YDSURF%SD_WS(:,IUSTKMP,JBLK)
++          ZVSTK_IC(:,JBLK) = YDSURF%SD_WS(:,IVSTKMP,JBLK)
++        ELSE
++          ZUSTK_IC(:,JBLK) = -999.0_JPRB
++          ZVSTK_IC(:,JBLK) = -999.0_JPRB
++        ENDIF
++      ENDIF
+       CALL GPOPER(YDDIM,YDMODEL%YRML_DYN%YRDYN,'GETALLFLDS',YDSURF,KBL=JBLK,PFIELD=ZBUF_IC(:,:,JBLK))
+     ENDDO
+   ENDIF
+@@ -375,17 +445,86 @@ IF (.NOT. LNF) THEN
+     ICHGCELL = 0 ; IDBGRE = 0
+     DO JBLK=1,NGPBLKS
+       LGPOWMASK(:) = ABS(YDSURF%SD_VF(:,ILSMMP,JBLK) - ZLSM_IC(:,JBLK)) > 0.5_JPRB
+-      ! DBG-REINGEST: classify each re-ingested (land-sea-changed) cell -- where it is,
+-      ! how its LSM flipped, and the ICMGG skin/soil-1 T being injected. WRITE(*) so it
+-      ! reaches stdout (NULOUT is buffered and lost when a later rank aborts).
++      ! Identify each re-ingested (land-sea-changed) cell and print both ends of the copy
++      ! PUTALLFLDS_M is about to make. At this point PUTALLFLDS above has already restored
++      ! the srf state and PUTALLFLDS_M has not run, so the live arrays hold the RESTART
++      ! value and the _IC arrays hold the ICMGG value: "srf" is what is about to be
++      ! discarded, "ic" is what replaces it. The "ic" column is the acceptance test for
++      ! the SETDEFAULT fix above -- USTK/VSTK must read 0.0, never a subnormal.
++      !
++      ! Unit 0, not NULOUT: only rank 1 ever writes NODE.001_01, and the cells that flip
++      ! are Antarctic, so this block once reported 0 cells simply because it was reporting
++      ! from the wrong task. Unit 0 reaches the compute log from every rank and is
++      ! unbuffered, so it also survives an abort elsewhere. Capped at 20 cells per rank.
++      IF (LLREINGEST_VERBOSE) THEN
+       DO JROFRE=1,NPROMA
+         IF (LGPOWMASK(JROFRE)) THEN
+           IGPRE = (JBLK-1)*NPROMA + JROFRE
+           IF (IGPRE <= YDGEOMETRY%YRGEM%NGPTOT .AND. IDBGRE < 20) THEN
+             IDBGRE = IDBGRE + 1
++            WRITE(0,'(A,I8,A,I6,A,I6)') 'REINGEST: cell IGP=',IGPRE, &
++             & '  JBLK=',JBLK,'  JROF=',JROFRE
++            WRITE(0,'(A,2F8.3)')  'REINGEST:  LSM   srf ic =', &
++             & YDSURF%SD_VF(JROFRE,ILSMMP,JBLK),ZLSM_IC(JROFRE,JBLK)
++            WRITE(0,'(A,2E15.6)') 'REINGEST:  SKT   srf ic =', &
++             & YDSURF%SP_RR(JROFRE,YDSURF%YSP_RR%YT%MP,JBLK),ZSKT_IC(JROFRE,JBLK)
++            WRITE(0,'(A,2E15.6)') 'REINGEST:  STL1  srf ic =', &
++             & YDSURF%SP_SB(JROFRE,1,YDSURF%YSP_SB%YT%MP,JBLK),ZSTL1_IC(JROFRE,JBLK)
++            IF (LLSTKOK) THEN
++              WRITE(0,'(A,2E15.6)') 'REINGEST:  USTK  srf ic =', &
++               & YDSURF%SD_WS(JROFRE,IUSTKMP,JBLK),ZUSTK_IC(JROFRE,JBLK)
++              WRITE(0,'(A,2E15.6)') 'REINGEST:  VSTK  srf ic =', &
++               & YDSURF%SD_WS(JROFRE,IVSTKMP,JBLK),ZVSTK_IC(JROFRE,JBLK)
++            ELSE
++              WRITE(0,'(A)')        'REINGEST:  USTK/VSTK not allocated (LWSTOKES off)'
++            ENDIF
++!           Buffer scan. After the SETDEFAULT above, every slot of the column about to
++!           be injected should hold either a value read from ICMGG or the field's
++!           declared default -- so nothing in it can be non-representable. A NaN, a
++!           subnormal, or an absurd magnitude is by definition a value no input ever
++!           set: it is allocator residue, which is precisely what this fix removes.
++!           The four fields printed above cover only 4 of the 465 slots, whereas 388
++!           of them have no file source, so the scan is what makes the test cover the
++!           whole column rather than the part we happened to name. Read-only.
++!           Expected result is 0 anomalous slots outside positions 13-24: those are the
++!           MP1 (t+1) soil slots, which CPG_GP overwrites from MP9 before the physics
++!           ever reads them, and they legitimately hold nothing at this point.
++!           The test is on the BIT PATTERN, never on the value. An earlier version used
++!           ABS() and a self-comparison, which aborts the run the instant it meets a
++!           signalling NaN, because this build leaves the invalid-operation FPE
++!           unmasked -- the scan destroyed exactly the case it existed to report.
++!           TRANSFER moves storage without interpreting it, so nothing below can trap:
++!           for IEEE single, exponent 255 with a non-zero mantissa is a NaN, and
++!           exponent 0 with a non-zero mantissa is a subnormal. Neither can arise from
++!           a value any input set, so either one means the slot was never written.
++!           Guarded on a 4-byte JPRB, which is what the SP build uses; the masks below
++!           are single-precision specific and a double-precision build would need the
++!           64-bit equivalents, so the scan reports itself skipped rather than lying.
++            IANOM = 0
++            IF (KIND(ZVRE) == 4) THEN
++              DO JFLDRE=1,NDIMSURFL
++                ZVRE   = ZBUF_IC(JROFRE,JFLDRE,JBLK)
++                IWRE   = TRANSFER(ZVRE,IWRE)
++                IEXPRE = IAND(ISHFT(IWRE,-23),255_JPIM)
++                IMANRE = IAND(IWRE,8388607_JPIM)
++                IF (IMANRE /= 0_JPIM .AND. (IEXPRE == 255_JPIM .OR. IEXPRE == 0_JPIM)) THEN
++                  IANOM = IANOM + 1
++                  IF (IANOM <= 10) THEN
++!                   Print the raw words, not the value: formatting it would convert it.
++                    WRITE(0,'(A,I8,A,I5,A,I12,A,I4)') 'REINGEST-SCAN: IGP=',IGPRE, &
++                     & '  pos=',JFLDRE,'  bits=',IWRE,'  exp=',IEXPRE
++                  ENDIF
++                ENDIF
++              ENDDO
++            ELSE
++              WRITE(0,'(A)') 'REINGEST-SCAN: skipped (JPRB is not 4 bytes)'
++            ENDIF
++            WRITE(0,'(A,I8,A,I6,A,I6)') 'REINGEST-SCAN: IGP=',IGPRE, &
++             & '  anomalous slots=',IANOM,'  of ',NDIMSURFL
+           ENDIF
+         ENDIF
+       ENDDO
++      ENDIF
+       ICHGCELL = ICHGCELL + COUNT(LGPOWMASK(:))
+       CALL GPOPER(YDDIM,YDMODEL%YRML_DYN%YRDYN,'PUTALLFLDS_M',YDSURF,KBL=JBLK,PFIELD=ZBUF_IC(:,:,JBLK))
+     ENDDO
+@@ -395,8 +534,12 @@ IF (.NOT. LNF) THEN
+     DEALLOCATE(LGPOWMASK)
+     DEALLOCATE(ZBUF_IC)
+     DEALLOCATE(ZLSM_IC)
+-    DEALLOCATE(ZSKT_IC)
+-    DEALLOCATE(ZSTL1_IC)
++    IF (LLREINGEST_VERBOSE) THEN
++      DEALLOCATE(ZSKT_IC)
++      DEALLOCATE(ZSTL1_IC)
++      DEALLOCATE(ZUSTK_IC)
++      DEALLOCATE(ZVSTK_IC)
++    ENDIF
+   ENDIF
+ 
+ 
+-- 
+2.31.1
+

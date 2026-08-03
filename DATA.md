@@ -76,6 +76,14 @@ enabler for `figures/movies/*.mp4` (grab before the next leg overwrites them).
   (`build_submesh`, `remap_fesom_restart`, `regenerate_oasis_weights`, `remap_oasis_restart`).
 - `fesom_mesh_to_cdo.py` — native pyfesom2 griddes (replaces the meshtools container).
 
+## The OIFS fix code (in `scripts/oifs_fixes/`)
+Bug IX — the `voskin:282` overflow. Three patches exported from
+`/work/ab0246/a270234/model_codes/awiesm3-develop-is/oifs-48r1`, branch
+`movcav-landice+co2-concdriven`: `cfe38c9` (reresf_part2 SETDEFAULT-before-SUGRIDG),
+`8abc199` (surface_fields_mix `NREQIN <= 0`), `14e0fda` (VOSKIN open-water mask).
+Rebuilt libraries: `oifs-48r1/build/lib/{libarpifs,libsurf}.SP.so`.
+See `scripts/oifs_fixes/README.md` for the debug-gate verdicts.
+
 ## Environments
 - Analysis / unstructured-FESOM plotting: `/home/a/a270092/.conda/envs/pyfesom2_env/bin/python`
   (numpy, scipy, netCDF4, matplotlib, pyfesom2).

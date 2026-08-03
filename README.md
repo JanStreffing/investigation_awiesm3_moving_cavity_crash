@@ -12,8 +12,15 @@ so all components agree on the new coastline.
   the coastline cells whose land–sea type flipped: `ocp-tool` half-converted a flipped cell
   (only mask + soil type), OIFS re-ingested the inconsistency from the regenerated `ICMGG` and
   NaN'd in moist physics. Fixed by a masked NN rebuild of each flipped cell + `ICMGG` re-ingest.
-  (A recurring `voskin` floating-overflow variant still shows up state-dependently — see the
-  report / `DATA.md`.)
+
+  **The recurring `voskin` floating-overflow variant is now root-caused too (Bug IX, 2026-08-03).**
+  The value that overflowed was never physics: the warm-start re-ingest re-reads `ICMGG` with
+  `SUGRIDG`, which fills fields *by GRIB code* and so never touches the 178 of 465 surface slots
+  that have none — the Stokes drift among them — and the warm-start path skips the `SETDEFAULT`
+  that the cold start applies first. Allocator residue was serialised into every land–sea-flipped
+  cell. It reached the arithmetic only because `VOSKIN`, an ocean scheme, is called over the whole
+  `NPROMA` block including land. Both ends fixed; patches in `scripts/oifs_fixes/`, write-up in the
+  report. The confirming re-run of the year-1919 leg is still outstanding.
 
 - **Blocker II — FESOM cavity-margin blowup — ROOT CAUSE REVISED 2026-07-13.**
   ~4–10 model days in, FESOM blows up at the cavity margin. **Read

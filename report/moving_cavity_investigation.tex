@@ -14,7 +14,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-08-02}
+\date{Last updated: 2026-08-03}
 
 \begin{document}
 \maketitle
@@ -59,8 +59,14 @@ decade 1900--1909 --- \textbf{ten coupled years, nine mesh increments, cavity cu
 siblings then caught a months-old silent bug --- \code{develop}/\code{develop-cc} never set the OIFS
 \code{NAMMCC} switches, so the coupled ice thickness was discarded and their Arctic went ice-free
 every summer; fixed in config, the 10-year sea-ice climate validates against an independent CMIP7
-spin-up (\S\ref{sec:nammcc}). The mesh-increment crash family (\code{voskin:282}, Antarctic) is now
-inventoried and instrumented, reproduction pending (\S\ref{sec:voskin-inventory}). Of the two further
+spin-up (\S\ref{sec:nammcc}). The mesh-increment crash family (\code{voskin:282}, Antarctic) is
+inventoried, instrumented (\S\ref{sec:voskin-inventory}) and now \textbf{root-caused --- Bug~IX}: the
+overflowing \code{PUSTOKES} was never physics but \emph{uninitialised memory}, seeded because the
+warm-start re-ingest re-reads ICMGG with \code{SUGRIDG} (which fills by GRIB code and so never touches
+the 178 slots that have none, the Stokes drift among them) without the \code{SETDEFAULT} that the
+cold-start path applies first --- and it reached the arithmetic at all only because \code{VOSKIN}, an
+ocean scheme, is called over the whole \code{NPROMA} block including land. Both ends fixed; the
+confirming leg is outstanding (\S\ref{sec:bug9}). Of the two further
 crash faces that instrumentation exposed, the leg-start one is \textbf{solved}: not the SSH solve it
 looked like, but \textbf{Bug VIII} --- \code{fer\_solve\_Gamma} publishing an unassigned automatic-array
 element into the GM streamfunction wherever a node's surrounding elements invert its solve range, giving
@@ -1022,8 +1028,15 @@ $Z_\mathrm{UST}>10$ or non-finite, and when the buoyancy $Z_\mathrm{BUO}$ blows 
 \code{libsurf.SP.so}). The instrumented reproduction --- par03 chunk~2 crashes $\sim$60\,s in ---
 is \textbf{ready but not yet run} (it mutates the par03 experiment). Its output will separate the
 two candidate routes: huge \code{PUSTR/PVSTR} (stress arrived broken from the turbulence scheme)
-vs.\ a collapsed \code{PTSKM1M}/large fluxes (the buoyancy amplifier). \emph{This is the current
+vs.\ a collapsed \code{PTSKM1M}/large fluxes (the buoyancy amplifier). \dead{This is the current
 open front for the mesh-increment crash family.}
+
+\emph{Superseded 2026-08-03 (\S\ref{sec:bug9}).} Neither candidate route was it, which is why neither
+\code{VOSKIN-DIAG} probe ever fired: the bad value was \code{PUSTOKES}, not \code{ZUST}, it was
+uninitialised memory rather than any physical quantity, and it was reached only because \code{VOSKIN}
+runs over land. The framing above --- ``generated inside the first timestep'' --- is right about the
+\emph{timing} and wrong about the \emph{origin}: it was generated at the warm-start re-ingest, one
+routine earlier.
 
 \subsection{Two more crash faces: a mid-year FESOM flux blow-up and a leg-start numerical explosion (2026-07-30)}\label{sec:2026-07-30}
 
@@ -1179,6 +1192,125 @@ invite misreading of exactly these trends.}
 existed and the stack word was small-but-non-zero, the GM bolus transport there was junk without
 crashing, so the GM contribution in those legs is unreliable even though they completed.
 
+\subsection{Bug IX --- the warm-start re-ingest injected uninitialised surface memory (2026-08-03)}\label{sec:bug9}
+
+Face~(i), \code{voskin:282}, is solved, and it was never a physics problem: the value that overflowed
+was \emph{allocator residue}, copied into the model by our own moving-coastline re-ingest and then
+evaluated at points that are not ocean. Three commits on
+\code{oifs-48r1}, branch \code{movcav-landice+co2-concdriven}.
+
+\textbf{Where the garbage came from} (\code{cfe38c9}, \code{reresf\_part2.F90}). The re-ingest re-reads
+the regenerated ICMGG with \code{SUGRIDG} so it can inject an ICMGG surface column at every cell whose
+land--sea mask flipped. \code{SUGRIDG} fills fields \emph{by GRIB code}, and \textbf{178 of the 465
+surface field slots have no GRIB code at all} --- \code{U/V\_STOKES\_DRIFT} among them. On a cold start
+that is harmless because \code{SUGRIDF} applies \code{SETDEFAULT} (\code{sugridf.F90:140}) \emph{before}
+calling \code{SUGRIDG} (\code{:178}). A warm start skips \code{SUGRIDF} entirely (\code{LNF=.FALSE.}), so
+nothing seeded those slots and they still held whatever \code{ALLO\_SURF}'s allocation left behind.
+\code{GETALLFLDS} then serialised that heap residue into \code{ZBUF\_IC} and \code{PUTALLFLDS\_M} wrote
+it into \emph{every flipped cell}. A subnormal $5.3\times10^{-42}$ was observed at one such cell; that
+is what $\rho_a/\rho_w\cdot Z_\mathrm{UST}^2$, divided by its square, turned into an overflow. \emph{Fix:}
+\code{SETDEFAULT} over every block before \code{SUGRIDG}, mirroring the cold-start order. The order is
+load-bearing and not obvious --- the two selections are \emph{not} complementary (\code{SETDEFAULT} acts
+on \code{NREQIN}$\le0$, \code{SUGRIDG} on \code{IGRBCODE}$\neq-999$, and 210 fields satisfy both), so
+running \code{SETDEFAULT} afterwards would discard what \code{SUGRIDG} had just read. With the present
+ICMGG that would still be harmless (57 GRIB codes covering exactly the 77 \code{NREQIN==1} slots, an
+empty intersection) --- but that is a property of the file, not of the code.
+
+\textbf{A second, shared-code hole} (\code{8abc199}, \code{surface\_fields\_mix.F90}). \code{SETDEFAULT}
+itself selected \code{NREQIN == -1} (``use the declared default'') and skipped \code{NREQIN == 0} (``no
+initial value''), leaving nine \code{SD\_VD} diagnostic slots --- 10\,m wind, 2\,m T/Td/q, FC roughness
+--- on allocator contents. Harmless as long as nothing reads them before the physics overwrites them,
+which is why it has never mattered in 30 years of IFS; the re-ingest breaks that assumption because it
+copies \emph{every} slot of the column. One of the nine was observed holding a signalling NaN. Widened
+to \code{NREQIN <= 0} in both the 2-D and 3-D branches (declared default is 0.0 for all nine). This is
+\code{GPOPER}, used by every configuration --- behaviour-neutral for any field already written before
+use, but it wants a second reader before it goes upstream.
+
+\textbf{Why it reached \code{voskin} at all} (\code{14e0fda}, \code{voskin\_mod.F90} +
+\code{surfpp\_ctl\_mod.F90}). \code{SURFPP\_CTL} calls \code{VOSKIN} over the \emph{whole} \code{NPROMA}
+block regardless of tile fraction, so an ocean warm-layer/cool-skin scheme ran its arithmetic over land
+points, where \code{PSST}, \code{PUSTOKES} and \code{PVSTOKES} are written by no process and hold exactly
+the residue above. \emph{That is why the crash was reachable only on land, and why runs survived decades
+before the wrong residue happened to appear.} \emph{Fix:} an optional \code{PFRWATER} argument
+(\code{PFRTI(:,1)} from the one caller), and \code{CYCLE} on zero water fraction in the four working
+loops. The argument is optional, so any caller that omits it gets the old behaviour exactly. The test
+\code{> 0} is the exact complement of the caller's own \code{PFRTI(JL,1) == 0} branch: at a skipped point
+the caller discards \code{PTSK} and substitutes the tile-weighted aggregate, so skipping cannot change
+the model state. \code{ZDCOOL}/\code{ZDWARM} are zeroed before the loops and the closing
+\code{PTSK = PSST + ZDWARM + ZDCOOL} is deliberately left \emph{unmasked}, so skipped points still get
+\code{PTSK = PSST} rather than an untouched \code{INTENT(OUT)}. Arithmetic at ocean points is
+byte-identical to before --- the change only removes work that should never have been done.
+
+\textbf{Status.} The two mechanisms are independent and either alone would have been enough: the first
+stops the garbage being created, the second stops it being evaluated. The libraries were rebuilt
+(\code{libarpifs.SP.so}, \code{libsurf.SP.so}, 2026-08-03) but \textbf{no coupled leg has yet run on the
+fixed build} --- the confirming re-run of the year-1919 leg is the outstanding step. Note that a leg
+merely \emph{completing} would prove little: uninitialised heap varies between runs, so the positive
+evidence is the \code{LLREINGEST\_VERBOSE} scan below, not a clean finish.
+
+\textbf{\textcolor{red}{TAINTED (mildly)}:} every warm-start leg of every experiment injected an
+uninitialised surface column at its land--sea-flipped cells. In the overwhelming majority of cases the
+residue was benign and the physics overwrote the affected slots within a step, which is why the campaign
+ran at all; but any flipped-cell surface diagnostic on step~0 of a mesh-change leg is unreliable.
+
+\subsubsection*{The instrumentation, and what of it should now go}
+
+Sweeping the whole local OIFS delta --- 17 files, 711 added lines against \code{origin/main} ---
+turns up six pieces of instrumentation and one piece of litter. They are not the same kind of thing,
+and only two of the six were debug in the ``strip before merging'' sense; those two and the litter
+were removed on 2026-08-03. Everything else in the delta (\code{surfece}, \code{ecearth},
+\code{callpar}, \code{srfi/srfis\_mod}, the \code{ece\_*} coupling routines,
+\code{cplng2\_data\_mod}, \code{yomxios}) is functional, with no log-only code in it.
+
+\begin{center}\small
+\begin{tabular}{@{}p{4.1cm}p{2.0cm}p{9.4cm}@{}}
+\toprule
+\textbf{Gate / probe} & \textbf{Verdict} & \textbf{Why} \\
+\midrule
+\code{LLREINGEST\_DBG} \newline (\code{reresf\_part2.F90:124}) & \textbf{keep --- not debug} &
+Misnamed. It gates the moving-coastline re-ingest \emph{itself}, including \code{PUTALLFLDS\_M}.
+Setting it \code{.FALSE.} disables the feature. Worth renaming before anyone ``cleans up'' a
+\code{\_DBG} flag set \code{.TRUE.} \\
+\code{LLREINGEST\_VERBOSE} \newline (\code{:132}) & \textbf{keep, off} &
+Per-cell dump plus a bit-pattern scan of the serialised column for NaN/subnormal slots. This is the
+\emph{only} positive acceptance test for the fix above. Being a \code{PARAMETER} it compiles away
+completely --- verified: zero \code{REINGEST} strings in the built \code{libarpifs.SP.so}. Zero cost
+when off, so there is no reason to delete it \\
+\code{VOSKIN-ZLA} \newline (\code{voskin\_mod.F90:$\sim$358}) & \textbf{keep} &
+The tripwire on the actual failure mode. It tests the \emph{raw} Stokes components before any
+arithmetic touches them (squaring first would trap before the dump could print --- which is why the
+earlier version of this probe never produced output). With the water mask in place it can no longer
+fire on land, so it now covers only the residual route the mask does not close: broken Stokes
+delivered at a genuine ocean point, e.g.\ from WAM \\
+\code{VOSKIN-DIAG} $\times2$ \newline (\code{:$\sim$225}, \code{:$\sim$249}) & \textbf{removed} &
+Jan's \code{45a7bea} probes, built to separate the two candidate routes into a large
+$Z_\mathrm{UST}$ --- surface stress \code{PUSTR/PVSTR} vs.\ the buoyancy amplifier via
+\code{PAHFS/PAHFL} and $1/$\code{PTSKM1M}. Neither was the cause; the question they were built to
+answer is closed, and they never fired. They sat inside the now-masked loop, so they could only have
+reported an unphysical \emph{ocean} column. Deleted; \code{ZFRWA} stays, because \code{VOSKIN-ZLA}
+prints it too \\
+\code{updtim.F90:$\sim$1059} & \textbf{removed} &
+Litter, not instrumentation: a six-line \code{--- TEMPORARY DEBUG (KSTEP=0)} comment block
+describing a dump of cells still reading skin T$<$100\,K after the coupling updates. The code it
+describes had already been removed; only the comment survived, and it read as if a probe were
+still there \\
+\code{WRITE(*)} beside \code{WRITE(NULOUT)} \newline (\code{updtim.F90:$\sim$885}) &
+\textbf{keep for now} &
+The \code{UPDTIM/LANDICE} reseed count is deliberately written twice, to stdout as well as
+\code{NULOUT}, because \code{NULOUT} is buffered and is lost if a later routine aborts before the
+node log flushes --- which is exactly the failure mode this campaign kept hitting. Drop the stdout
+copy once legs stop aborting \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Two further \code{WRITE(NULOUT)} additions are \emph{not} debug and should stay: the
+one-liner reporting the re-ingested cell count per leg (provenance --- it is how you know the
+re-ingest touched anything at all), and the \code{XIOSFPOS} axis-name echo in \code{suxios.F90}
+(ordinary configuration logging). Likewise the two \code{ABOR1} guards on \code{LGPOWMASK} in
+\code{GPOPER}'s \code{PUTALLFLDS\_M} branch: those are assertions on a masked write, not diagnostics.
+Nothing anywhere here is a clamp --- no probe modifies a value.
+
 \section{State of the cycle and of the climate (2026-08-02)}\label{sec:state}
 
 \subsection{What is proven}
@@ -1253,9 +1385,11 @@ crashing, so the GM contribution in those legs is unreliable even though they co
   The two runs err in \emph{opposite} directions and neither matches observations. Why they differ
   is open; the sign fix is a candidate lever (correct-sign melt freshens and stratifies the shelf
   front, which preserves summer ice).
-\item \textbf{\code{voskin:282} --- dormant, not fixed.} Last fired in \code{repro\_movcav45} at
-  year~1919 (\code{voskin\_mod.F90:318}); 38 cycles clean since, and never in \code{fgdbg02}.
-  Instrumentation is in place (\S\ref{sec:voskin-inventory}).
+\item \textbf{\code{voskin:282} --- root-caused and fixed, confirmation run outstanding} (Bug~IX,
+  \S\ref{sec:bug9}; was ``dormant, not fixed'' as of 2026-08-02). Last fired in
+  \code{repro\_movcav45} at year~1919 (\code{voskin\_mod.F90:318}); 38 cycles clean before that, and
+  never in \code{fgdbg02}. The fix is built but no leg has run on it yet --- re-run the 1919 leg with
+  \code{LLREINGEST\_VERBOSE=.TRUE.} and check that the ``ic'' column reads 0.0 at every flipped cell.
 \item \textbf{The mid-year Arctic flux blow-up} (face~(ii), \S\ref{sec:2026-07-30}) has not
   recurred and was never reproduced.
 \item \textbf{The single-point thickness runaway}: present \emph{identically} in the reference
@@ -1407,6 +1541,15 @@ a correct refusal followed by an unconditional continue is worse than no guard a
 \item Send/receive flux instrumentation: \code{SENDDBG} (OIFS \code{A\_Q\_ice} decomposition +
   tile state), \code{ICEDBG} (FESIM received flux + state at cold nodes), \code{CPLDBG} (OIFS
   ingest bounds) --- all log-only, strip before merging.
+\item The Bug~IX fix, as three applicable patches: \code{scripts/oifs\_fixes/} (\code{cfe38c9},
+  \code{8abc199}, \code{14e0fda} off \code{oifs-48r1} branch
+  \code{movcav-landice+co2-concdriven}), with the debug-gate verdicts of \S\ref{sec:bug9}.
+\item \code{LLREINGEST\_VERBOSE} (\code{reresf\_part2.F90}): a \code{PARAMETER}-gated bit-pattern
+  scan of the serialised surface column for NaN/subnormal slots. The general trick is worth
+  reusing --- test the \emph{bit pattern}, never the value: an earlier version used \code{ABS()}
+  and a self-comparison and aborted the run the instant it met a signalling NaN, because this
+  build leaves the invalid-operation FPE unmasked. The scan destroyed exactly the case it existed
+  to report.
 \item \code{oasis\_expout\_o2a} runscript flag: every o2a exchange dumped to netcdf
   ($\sim$20$\times$ slowdown; crash-window probes only).
 \item Clean chunk-1 ice initial state (\code{prep/clean\_ice\_ini}): reference year-1849 ice fields

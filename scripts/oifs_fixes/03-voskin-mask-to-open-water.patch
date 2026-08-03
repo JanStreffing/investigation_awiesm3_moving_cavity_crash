@@ -1,0 +1,217 @@
+From 14e0fda147a041929599ec62c8ce9d9ba8d37c0f Mon Sep 17 00:00:00 2001
+From: Xiaojie Hao <xiaojie.hao@awi.de>
+Date: Mon, 3 Aug 2026 14:03:19 +0200
+Subject: [PATCH] voskin: only compute the ocean skin where there is water
+
+VOSKIN was called for the whole NPROMA block regardless of tile fraction, so it
+ran its warm-layer/cool-skin arithmetic over land points too. There the inputs
+are meaningless: PSST, PUSTOKES and PVSTOKES are never written by any land
+process, so they hold whatever the surface arrays were left with -- the same
+uninitialised values the re-ingest was injecting. Passing them through
+ZROADRW*ZUST**2 / (USTK**2+VSTK**2) is what produced the single-precision
+overflow, and it was reached only on land, which is why the run kept going for
+decades before the wrong residue happened to appear.
+
+Add an optional PFRWATER argument and skip points with no water fraction in the
+four working loops. The argument is optional so the routine keeps working for any
+caller that does not supply it (there is only one today, surfpp_ctl_mod:306, and
+it now passes PFRTI(:,1)); absent it, every point is treated as ocean and the
+behaviour is exactly as before. The final PTSK assignment is deliberately left
+unmasked, so skipped points still get PTSK = PSST rather than an untouched value.
+
+Arithmetic at ocean points is byte-identical to before -- this only removes work
+that should never have been done.
+
+The VOSKIN-ZLA probe is kept: it reports the raw Stokes components when either
+exceeds 1E3 or is NaN, without modifying them. It has not fired since the fix.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ ifs-source/surf/module/surfpp_ctl_mod.F90 |  2 +-
+ ifs-source/surf/module/voskin_mod.F90     | 80 +++++++++++++++++------
+ 2 files changed, 61 insertions(+), 21 deletions(-)
+
+diff --git a/ifs-source/surf/module/surfpp_ctl_mod.F90 b/ifs-source/surf/module/surfpp_ctl_mod.F90
+index 1b87442..ef2bc72 100644
+--- a/ifs-source/surf/module/surfpp_ctl_mod.F90
++++ b/ifs-source/surf/module/surfpp_ctl_mod.F90
+@@ -309,7 +309,7 @@ IF (LEOCWA .OR. LEOCCO) THEN
+    & PUSTRTI(:,1),PVSTRTI(:,1),&
+    & PUMLEV,PVMLEV,PTSKTI(:,1),PSST,PUSTOKES,PVSTOKES,&
+    & YDCST,YDEXC,&
+-   & PTSKTIP1(:,1),PRPLRG)  
++   & PTSKTIP1(:,1),PRPLRG,PFRWATER=PFRTI(:,1))
+ ENDIF
+ 
+ !         4.2 SKIN TEMPERATURE AVERAGING OVER TILES 
+diff --git a/ifs-source/surf/module/voskin_mod.F90 b/ifs-source/surf/module/voskin_mod.F90
+index f641653..8558646 100644
+--- a/ifs-source/surf/module/voskin_mod.F90
++++ b/ifs-source/surf/module/voskin_mod.F90
+@@ -4,8 +4,8 @@ SUBROUTINE VOSKIN(KIDIA,KFDIA,KLON, &
+  & PTMST, &
+  & PSSRFL, PSLRFL, PAHFS, PAHFL, PUSTR, PVSTR, &
+  & PUMLEV, PVMLEV, PTSKM1M, PSST, PUSTOKES, PVSTOKES,  &
+- & YDCST, YDEXC, & 
+- & PTSK, PRPLRG)  
++ & YDCST, YDEXC, &
++ & PTSK, PRPLRG, PFRWATER)
+ !     ------------------------------------------------------------------
+ 
+ !**   *VOSKIN* - COMPUTES WARM AND COLD SKIN EFFECTS OVER THE OCEAN
+@@ -43,6 +43,11 @@ SUBROUTINE VOSKIN(KIDIA,KFDIA,KLON, &
+ !     *PSST*         SST
+ !     *PUSTOKES*     SURFACE STOKES VELOCITY X-DIRECTION
+ !     *PVSTOKES*     SURFACE STOKES VELOCITY Y-DIRECTION
++!     *PFRWATER*     OPTIONAL. OPEN-WATER (TILE 1) FRACTION. WHERE SUPPLIED, POINTS
++!                    WITH ZERO FRACTION ARE SKIPPED ENTIRELY: THIS ROUTINE IS AN
++!                    OCEAN SCHEME BUT IS CALLED OVER THE WHOLE NPROMA BLOCK, SO ON
++!                    LAND IT OTHERWISE EVALUATES ON TILE-1 SLOTS THAT NOTHING
++!                    CONSTRAINS. OMITTING THE ARGUMENT RESTORES THE OLD BEHAVIOUR.
+ 
+ !     OUTPUT PARAMETERS (REAL):
+ 
+@@ -100,8 +105,9 @@ REAL(KIND=JPRB)   ,INTENT(IN)    :: PUSTOKES(:)
+ REAL(KIND=JPRB)   ,INTENT(IN)    :: PVSTOKES(:)
+ TYPE(TCST)        ,INTENT(IN)    :: YDCST
+ TYPE(TEXC)        ,INTENT(IN)    :: YDEXC
+-REAL(KIND=JPRB)   ,INTENT(OUT)   :: PTSK(:) 
++REAL(KIND=JPRB)   ,INTENT(OUT)   :: PTSK(:)
+ REAL(KIND=JPRB)   ,INTENT(IN)    :: PRPLRG
++REAL(KIND=JPRB)   ,OPTIONAL,INTENT(IN) :: PFRWATER(:)
+ 
+ INTEGER(KIND=JPIM) :: JL
+ CHARACTER*1 CHVER
+@@ -112,10 +118,11 @@ REAL(KIND=JPRB) :: ZNUW,ZROW,ZROA,ZCPW,ZKW,ZG,ZROC,ZCONM13,ZCON23,ZCON34,&
+  & ZEPUST,ZUST2,ZDZC,ZFI,ZDU2,ZDL,ZDL2,&
+  & ZENHAN,ZA1,ZA2,ZD1,ZD2,ZROWT,ZROWQ,ZUSTW2,&
+  & ZWST2,ZDZ,ZPHI,ZROADRW,ZAN,ZLA,ZSCALE,ZEPS,ZM23,ZT0,ZCSA,ZCRA,ZCSAH,&
+- & ZLA_NUM,ZLA_DEN
++ & ZLA_NUM,ZLA_DEN,ZUSTK,ZVSTK
+ 
+ REAL(KIND=JPRB) :: ZBUO(KLON),ZU(KLON),ZALPHA(KLON),ZDCOOL(KLON),&
+-                 & ZDWARM(KLON),ZUST(KLON)
++                 & ZDWARM(KLON),ZUST(KLON),ZFRWA(KLON)
++LOGICAL :: LLOCN(KLON)
+ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+ 
+ !     1. Initialize constants for ocean warm layer and cool skin
+@@ -185,8 +192,28 @@ ZM23=-2.0_JPRB/3.0_JPRB
+ ZDCOOL(KIDIA:KFDIA)=0.0_JPRB
+ ZDWARM(KIDIA:KFDIA)=0.0_JPRB
+ 
++!     Open-water mask. SURFPP_CTL calls this routine over the whole block, so
++!     without it every land point is pushed through an ocean scheme on tile-1
++!     inputs (skin T, heat fluxes, Stokes drift) that carry no meaningful value
++!     there. The test is "> 0", which is the exact complement of the caller's own
++!     "PFRTI(JL,1) == 0" branch: at a point this skips, the caller discards PTSK
++!     and substitutes the tile-weighted aggregate, so skipping cannot change the
++!     model state -- it only stops the arithmetic that has nothing to stand on.
++!     ZDCOOL/ZDWARM stay at the zero set just above, and the closing statement
++!     leaves PTSK = PSST there, defined rather than whatever INTENT(OUT) left.
++IF (PRESENT(PFRWATER)) THEN
++  DO JL=KIDIA,KFDIA
++    ZFRWA(JL)=PFRWATER(JL)
++    LLOCN(JL)=PFRWATER(JL) > 0.0_JPRB
++  ENDDO
++ELSE
++  ZFRWA(KIDIA:KFDIA)=-1.0_JPRB
++  LLOCN(KIDIA:KFDIA)=.TRUE.
++ENDIF
++
+ IF (LEOCWA .OR. LEOCCO) THEN
+   DO JL=KIDIA,KFDIA
++    IF (.NOT.LLOCN(JL)) CYCLE
+ 
+ !     Atmospheric buoyancy and wind
+     ZROWQ=PAHFL(JL)/RLVTT
+@@ -232,6 +259,10 @@ IF (LEOCWA .OR. LEOCCO) THEN
+         & PSST(JL),PUMLEV(JL),PVMLEV(JL)
+       WRITE(0,'(A,4E15.6)') 'VOSKIN-DIAG:  PSSRFL PSLRFL USTK VSTK=', &
+         & PSSRFL(JL),PSLRFL(JL),PUSTOKES(JL),PVSTOKES(JL)
++!     Open-water fraction at the offending point. -1 means the caller did not
++!     supply it. A value at or near zero says this is a land point being run
++!     through an ocean scheme, i.e. the inputs above were never meaningful.
++      WRITE(0,'(A,E15.6)')  'VOSKIN-DIAG:  PFRWATER              =',ZFRWA(JL)
+     ENDIF
+ 
+ !     Ocean buoyancy
+@@ -245,6 +276,7 @@ IF (LEOCCO) then
+   ZCSAH=ZCSA**4*ZCRA**3
+ 
+   DO JL=KIDIA,KFDIA
++    IF (.NOT.LLOCN(JL)) CYCLE
+ 
+ !      3.2 Apply empirical formulas
+ 
+@@ -275,6 +307,7 @@ IF (LEOCWA) then
+ !     2.2 Warm layer; formulation A (empirical adapted from Webster al. 1996)
+ 
+     DO JL=KIDIA,KFDIA
++      IF (.NOT.LLOCN(JL)) CYCLE
+       ZDSST=MAX(PTSKM1M(JL)-PSST(JL)-ZDCOOL(JL),0.0_JPRB)
+       IF (ZU(JL) < 2.0_JPRB) THEN
+         ZGU=ZENHAN*(ZA1+ZD1*LOG(ZU(JL)))
+@@ -290,6 +323,7 @@ IF (LEOCWA) then
+ !     2.2 Warm layer; formulation C (Xubin Zeng)
+ !
+     DO JL=KIDIA,KFDIA
++        IF (.NOT.LLOCN(JL)) CYCLE
+         ZDSST=PTSKM1M(JL)-PSST(JL)-ZDCOOL(JL)
+ 
+         ZSRD=(PSSRFL(JL)*ZFI+PSLRFL(JL)+PAHFS(JL)+PAHFL(JL))/ZROC
+@@ -310,30 +344,36 @@ IF (LEOCWA) then
+ 
+           IF(LEOCLA) THEN
+ !           Langmuir number
+-!           Diagnostic: this is the crash site (error 72). Evaluate the argument
+-!           BEFORE the **0.25 so the dump survives the overflow, and report it
+-!           whichever way it goes bad -- huge ZUST, or a Stokes denominator that
+-!           is degenerate/NaN (the WAM sea-point route the ZUST probe cannot see).
+-            ZLA_NUM=ZROADRW*(ZUST(JL)**2)
+-            ZLA_DEN=MAX(PUSTOKES(JL)**2+PVSTOKES(JL)**2,ZEPS)
+-!           ZLA_DEN is floored at ZEPS=1e-8, so the quotient can only overflow
+-!           single precision once ZLA_NUM > ~3.4e30. Test the numerator alone --
+-!           forming the ratio here would trap before the dump could print.
+-            IF (ZLA_NUM > 1.0E30_JPRB .OR. ZLA_NUM /= ZLA_NUM .OR. &
+-              & ZLA_DEN /= ZLA_DEN) THEN
+-              WRITE(0,'(A,I6,A,I6,A,I6)') 'VOSKIN-ZLA: overflow imminent  JL=',JL, &
++!           Diagnostic only -- it reports and then lets the arithmetic proceed
++!           exactly as before. The trap (error 72) is PUSTOKES**2 below, in single
++!           precision, so the test has to be on the RAW components, before any
++!           arithmetic touches them: squaring or dividing first would trap before
++!           the dump could print, which is why the earlier version of this probe
++!           never produced any output. The threshold is ~700x WAM's own STMAX clamp
++!           (stokesdrift.F90), so it can only fire on a value that is already
++!           broken -- one that no input set, i.e. an uninitialised surface slot.
++!           If it ever fires the run still dies on the next line, but it dies with
++!           the point and its inputs named instead of a bare 'error 72'.
++            ZUSTK=PUSTOKES(JL)
++            ZVSTK=PVSTOKES(JL)
++            IF (ABS(ZUSTK) > 1.0E3_JPRB .OR. ABS(ZVSTK) > 1.0E3_JPRB &
++              & .OR. ZUSTK /= ZUSTK .OR. ZVSTK /= ZVSTK) THEN
++!$OMP CRITICAL (VOSKIN_STKDUMP)
++              WRITE(0,'(A,I6,A,I6,A,I6)') 'VOSKIN-ZLA: bad Stokes  JL=',JL, &
+                 & '  KIDIA=',KIDIA,'  KFDIA=',KFDIA
+-              WRITE(0,'(A,2E15.6)') 'VOSKIN-ZLA:  num den            =', &
+-                & ZLA_NUM,ZLA_DEN
+               WRITE(0,'(A,3E15.6)') 'VOSKIN-ZLA:  ZUST USTOKES VSTOKES=', &
+-                & ZUST(JL),PUSTOKES(JL),PVSTOKES(JL)
++                & ZUST(JL),ZUSTK,ZVSTK
+               WRITE(0,'(A,3E15.6)') 'VOSKIN-ZLA:  PUSTR PVSTR PTSKM1M =', &
+                 & PUSTR(JL),PVSTR(JL),PTSKM1M(JL)
+               WRITE(0,'(A,3E15.6)') 'VOSKIN-ZLA:  PAHFS PAHFL PSST    =', &
+                 & PAHFS(JL),PAHFL(JL),PSST(JL)
+               WRITE(0,'(A,3E15.6)') 'VOSKIN-ZLA:  PUMLEV PVMLEV ZDL   =', &
+                 & PUMLEV(JL),PVMLEV(JL),ZDL
++              WRITE(0,'(A,E15.6)')  'VOSKIN-ZLA:  PFRWATER           =',ZFRWA(JL)
++!$OMP END CRITICAL (VOSKIN_STKDUMP)
+             ENDIF
++            ZLA_NUM=ZROADRW*(ZUST(JL)**2)
++            ZLA_DEN=MAX(ZUSTK**2+ZVSTK**2,ZEPS)
+             ZLA=( ZLA_NUM / ZLA_DEN )**0.25_JPRB
+             ZSCALE=MIN(MAX(ZLA**ZM23,1.0_JPRB),10.0_JPRB)   ! Grant and Belcher(2009)
+           ELSE
+-- 
+2.31.1
+

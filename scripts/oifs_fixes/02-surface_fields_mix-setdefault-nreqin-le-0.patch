@@ -1,0 +1,64 @@
+From 8abc19915fef9705b5ae9824d766684a63c83328 Mon Sep 17 00:00:00 2001
+From: Xiaojie Hao <xiaojie.hao@awi.de>
+Date: Mon, 3 Aug 2026 14:02:37 +0200
+Subject: [PATCH] surface_fields_mix: SETDEFAULT also seeds NREQIN==0 fields
+
+SETDEFAULT selected NREQIN == -1 ("use the declared default") and skipped
+NREQIN == 0 ("no initial value"), leaving 9 SD_VD diagnostic slots -- 10m wind,
+2m T/Td/q, FC roughness -- holding whatever the allocator had put there.
+
+That is harmless as long as nothing reads them before the physics overwrites
+them, which is why it has never mattered. The moving-coastline re-ingest breaks
+that assumption: it copies EVERY slot of the surface column at a land-sea flipped
+cell, so those slots get propagated, and one of them was observed holding a
+signalling NaN.
+
+Widen the test to NREQIN <= 0 in both the 2-D and 3-D branches. The declared
+default is 0.0 for all nine, so this writes zeros. NREQIN > 0 fields, which are
+read from file, are untouched.
+
+Note this is shared code (GPOPER, arpifs/module) used by every configuration, not
+just the coupled one -- behaviour-neutral for any field that was already written
+before use, but it deserves a second pair of eyes before going upstream.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ ifs-source/arpifs/module/surface_fields_mix.F90 | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/ifs-source/arpifs/module/surface_fields_mix.F90 b/ifs-source/arpifs/module/surface_fields_mix.F90
+index d754587..a76ffa7 100644
+--- a/ifs-source/arpifs/module/surface_fields_mix.F90
++++ b/ifs-source/arpifs/module/surface_fields_mix.F90
+@@ -1801,8 +1801,15 @@ ELSEIF(CDACT == 'SETPERTOVAL') THEN
+     PFLD(:,YD(J)%MP) = YDCOM%VALUE
+   ENDDO
+ ELSEIF(CDACT == 'SETDEFAULT') THEN
++  ! NREQIN <= 0 rather than == -1: -1 means "take the default", 0 means "no initial
++  ! value at all", and the latter left 9 SD_VD diagnostic slots (10m wind, 2m T/Td/q,
++  ! FC roughness) holding whatever the allocator did. That is harmless while nothing
++  ! reads them before the physics rewrites them, but the moving-coastline re-ingest
++  ! copies EVERY slot of the surface column at a land-sea flipped cell, so those slots
++  ! get propagated -- and one of them was observed to hold a signalling NaN. Their
++  ! declared default is 0.0 in all nine cases, so this writes zeros.
+   DO J=1,YDSC%NUMFLDS
+-    IF(YD(J)%NREQIN == -1) THEN
++    IF(YD(J)%NREQIN <= 0) THEN
+       PFLD(:,YD(J)%MP) = YD(J)%REFVALI
+     ENDIF
+   ENDDO
+@@ -2000,9 +2007,10 @@ ELSEIF(CDACT == 'SETPERTOVAL') THEN
+     PFLD(:,:,YD(J)%MP) = YDCOM%VALUE
+   ENDDO
+ ELSEIF(CDACT == 'SETDEFAULT') THEN
++  ! NREQIN <= 0 -- see the comment in the 2-D branch above.
+   DO J=1,YDSC%NUMFLDS
+     DO JLEV=1,YDSC%NLEVS
+-      IF(YD(J)%NREQIN(JLEV) == -1) THEN
++      IF(YD(J)%NREQIN(JLEV) <= 0) THEN
+         PFLD(:,JLEV,YD(J)%MP) = YD(J)%REFVALI(JLEV)
+       ENDIF
+     ENDDO
+-- 
+2.31.1
+
