@@ -10,11 +10,10 @@
 \setlength{\parskip}{0.35em}
 
 \title{\vspace{-1.5em}\textbf{AWI-ESM3 $\leftrightarrow$ PISM orography and SMB coupling}\\[0.3em]
-       \large design notes and decisions\\[0.4em]
-       \normalsize\textit{Companion to the moving-cavity investigation report.
-       Same convention: superseded claims are struck through, not deleted.}}
+       \large the investigation report\\[0.4em]
+       \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-08-03 (second revision)}
+\date{Last updated: 2026-08-03}
 
 \begin{document}
 \maketitle
@@ -22,343 +21,300 @@
 
 \begin{abstract}
 \noindent
-The moving-cavity campaign closed the \emph{ocean} side of the AWI-ESM3 $\leftrightarrow$ PISM
-cycle: FESOM cavity melt reaches PISM, and PISM geometry moves the FESOM mesh, the OIFS
-land--sea mask and the WAM sea points. The \emph{atmosphere} side is still open in both
-directions. PISM's surface mass balance is not driven by our OIFS, and PISM's evolving surface
-elevation does not reach OIFS. This document records what \code{develop-is} actually has today,
-what the EC-Earth4 reference design does, and what we decided to build on branch
-\code{awiesm3-is-orography-and-smb-coupling}.
+\textbf{Mission.} Close the atmosphere half of the AWI-ESM3 $\leftrightarrow$ PISM cycle in both
+directions: PISM's surface mass balance driven by the OIFS leg that just ran, and the ice-sheet
+surface elevation OIFS runs with following the ice sheet PISM produced. The ocean half was closed
+by the moving-cavity campaign; this is its companion.
+
+\medskip\noindent
+\textbf{Where we are.} The ISM-mapper builds and links as an esm\_tools component, the PISM grid
+and all three coupling links are generated and verified, and the OASIS exchange is declared, but
+nothing has yet run coupled.
+
+\medskip\noindent
+Timeline in \S\ref{sec:campaign}, current state and open items in \S\ref{sec:state}, dead claims
+in \S\ref{sec:falsified}.
 \end{abstract}
 
-\tableofcontents
+\section{The campaign, in the order it happened}
+\label{sec:campaign}
 
-\section{Goal}
-
-Close the atmosphere half of the cycle, in both directions:
-
-\begin{itemize}
-\item \textbf{SMB (OIFS $\to$ PISM).} PISM's surface forcing comes from the OIFS leg that
-      just ran, not from a canned file.
-\item \textbf{Orography (PISM $\to$ OIFS).} The ice-sheet surface elevation OIFS runs with
-      follows the ice sheet PISM produced, so the atmosphere sees the ice sheet it is forcing.
-\end{itemize}
-
-\section{What \code{develop-is} has today}
-\label{sec:today}
-
-\subsection{The atmosphere forcing PISM has been eating is a stub}
+\subsection{Taking stock: the atmosphere side is a stub (2026-08-03)}
 \label{sec:taint}
 
-\code{couplings/oifs/just\_copy\_stuff.functions} copies
-\code{atmosphere\_file\_for\_ice.nc} verbatim out of
-\code{a270122/lars\_and\_paul/experiments/E130ka\_coupled3}. Confirmed in \code{eval5}: the
-staged file is a $192\times96$ ECHAM Gaussian grid carrying
-\code{temp2}, \code{tsurf}, \code{aprt}, \code{orog}, \code{swd}, \code{cc}, \code{q2m},
-\code{tau}, \code{emiss}, \code{uv}, \code{TOAswd}.
+\code{couplings/oifs/just\_copy\_stuff.functions} copies \code{atmosphere\_file\_for\_ice.nc}
+verbatim out of \code{a270122/lars\_and\_paul/experiments/E130ka\_coupled3}. Confirmed in
+\code{eval5}: a $192\times96$ ECHAM Gaussian grid carrying \code{temp2}, \code{tsurf},
+\code{aprt}, \code{orog}, \code{swd}, \code{cc}, \code{q2m}, \code{tau}, \code{emiss},
+\code{uv}, \code{TOAswd}.
+
+\textcolor{red}{\textbf{TAINTED}}: every PISM leg of the moving-cavity campaign, \code{eval5} and
+\code{fgdbg02} included, ran dEBM on a 130\,ka paleo ECHAM atmosphere. No PISM surface mass
+balance number from that campaign is a statement about AWI-ESM3. Ocean-side results are not
+affected; they are forced from FESOM output directly.
+
+Two further findings from the same read. \code{suorog.F90:151--250} already implements both
+returns: \code{ECE\_CPL\_ISMM} reads \code{usurf\_oifs} and patches \code{ZZOROG} through
+\code{REESPE}/\code{SPEREE}, \code{ECE\_LANDICE} reads \code{plit\_oifs}. That code is upstream
+(vendor \code{a2e46d5}, Jorge Bernales) and our \code{suorog.F90} is byte-identical to it. But we
+run \code{ECE\_LANDICE} only, and the \code{plit} we write is not PISM's ice mask:
+\code{make\_plit\_oifs.py} derives it from the regenerated ICMGG land--sea mask capped at
+$60^\circ$S. \code{eval5/couple/antar\_pism2ece.nc} holds one variable, \code{plit\_oifs},
+\code{nx}=40320. No \code{usurf\_oifs}. So no PISM geometry reaches the atmosphere at all.
+
+\subsection{Choosing the ISM-mapper over XIOS (2026-08-03)}
+
+Everything dEBM needs is already in the XIOS output, and the de-accumulation pattern exists in
+\code{field\_def\_lpjg\_safe.xml.j2}. Checked against \code{eval5} year 1903: \code{ssrd}
+$=6.845\times10^5$ and \code{tisr} $=1.226\times10^6$\,J\,m$^{-2}$ per one-hour step give 190 and
+340\,W\,m$^{-2}$; \code{lsp+cp} $=1.13\times10^{-4}$\,m/step gives
+$3.14\times10^{-5}$\,kg\,m$^{-2}$\,s$^{-1}$. All correct global means, so a jinja-gated
+\code{file\_def} block would have delivered the forward direction with no new component.
+
+Decided against it. XIOS solves the forward direction only: it cannot deliver \code{plit} into the
+live atmosphere, and cannot route basal melt and discharge into the ocean. Both need a component
+inside the OASIS exchange, and one mechanism is better than two. Staying on the EC-Earth component
+also keeps CISSEMBEL available.
+
+Also decided: carry both SMB schemes with dEBM as default; SMB before orography; everything behind
+\code{general.smb\_coupled}.
+
+\subsection{The ISM-mapper becomes an esm\_tools component (2026-08-03)}
+
+\code{configs/components/ismm/ismm.yaml}, in the \code{develop-is} coupling, always built.
+
+It is not a standalone repository: it lives inside \code{ecearth4} under
+\code{sources/ism-mapper}, so the component clones ecearth4 and builds that subtree. The clone is
+37\,MB, not the 663\,MB the local \code{.git} suggests, because every \code{sources/*} model is a
+submodule that is not recursed into. The branch \code{cissembel-levante-intel} is required rather
+than preferred: it carries \code{5799a2a}, which fixes an \code{EBMfinalize} use-after-free that
+crashes any run with a non-CISSEMBEL region.
+
+CISSEMBEL is a \emph{link-time} dependency even on the direct path
+(\code{ism-mapper\_run\_mod.F90:7} has an unguarded \code{use modEBMworld}), so it is built from
+the same clone. At runtime \code{EBMworld} only fires for regions with
+\code{ISMRGNCIS(n)=.true.}, so it never executes for us.
+
+The committed \code{Makefile} carries ECMWF HPC2020 paths. Everything it needs is a plain make
+variable and command-line macros beat file assignments, so the machine configuration is passed in
+\code{comp\_command} rather than by patching a tracked file.
 
 \medskip\noindent
-\textbf{Taint.} Every PISM leg of the campaign, \code{eval5} and \code{fgdbg02} included, ran
-dEBM on a 130\,ka paleo ECHAM atmosphere. Our own OIFS never reached the ice sheet. This is a
-\emph{surface} taint only: it does not touch the FESOM-side melt diagnosis or the ocean-side
-results, which are forced from FESOM output directly. It does mean no PISM surface mass balance
-number from this campaign is a statement about AWI-ESM3.
-
-\subsection{The orography return path exists in the binary but is switched off}
-
-\code{suorog.F90:151--250} in the \code{develop-is} OIFS build already implements both halves:
-
-\begin{itemize}
-\item \code{ECE\_CPL\_ISMM} reads \code{usurf\_oifs} from \code{\{prefix\}\_pism2ece.nc},
-      multiplies by \code{RG}, patches \code{ZZOROG} where \code{usurf > 0}, and restores
-      spectral consistency through \code{REESPE}/\code{SPEREE}.
-\item \code{ECE\_LANDICE} reads \code{plit\_oifs} from the same file and publishes it through
-      \code{SURFECE\_SET\_LANDICE\_LOCAL}.
-\end{itemize}
-
-We run \code{ECE\_LANDICE} only. And the \code{plit} we write is not PISM's ice mask:
-\code{couplings/fesom/make\_plit\_oifs.py} derives it from the regenerated ICMGG land--sea mask
-capped at $60^\circ$S. So no PISM geometry reaches the atmosphere today, in either field.
-
-Verified in \code{eval5/couple/antar\_pism2ece.nc}: dimensions \code{ny}=1, \code{nx}=40320
-(TCO95 octahedral), one variable, \code{plit\_oifs}. No \code{usurf\_oifs}.
-
-\subsection{Known-good pieces we inherit}
-
-\begin{itemize}
-\item The \code{-HUGE} cold-start hazard from the EC-Earth notes is already fixed in our OIFS
-      fork: \code{cplng2\_data\_mod.F90:354} initialises \code{OASIS\_OUT} fields to
-      \code{0.0\_JPRB}.
-\item dEBM is wired and running. \code{eval5\_pism.yaml} sets \code{ablation\_method: DEBM},
-      and the couple dir carries \code{dEBMmain} plus its \code{SMB}/\code{SNH}/\code{A}/
-      \code{tsurf} output per decade. Only its \emph{input} is wrong.
-\item The per-leg feedback-file staging already works. \code{antar\_pism2ece.nc} is staged into
-      \code{work/} through \code{add\_input\_in\_work}, so it no longer depends on a file
-      surviving in \code{work/} by luck. Adding a second variable to that file needs no new
-      plumbing.
-\end{itemize}
-
-\section{The EC-Earth4 reference design}
-
-Recorded from \code{ece4-pism-coupling.md}. Two tiers at different times:
-
-\begin{enumerate}
-\item \textbf{In-line OASIS component, the ISM-mapper} (\code{sources/ism-mapper}, OASIS name
-      \code{ISMMAP}). Runs as an MPI rank alongside OIFS for the whole leg. Receives precip,
-      evaporation, runoff, soil temperature and SST from OIFS every coupling step, accumulates,
-      and writes \code{\{region\}\_smb\_\{year\}.nc} monthly. In the other direction it reads
-      the previous PISM feedback file and sends \code{plit} to OIFS and basal melt plus
-      discharge to the runoff-mapper.
-\item \textbf{Offline PISM driver} (\code{coupling\_ece4\_pism\_v3.py}), run between legs. Turns
-      the accumulated SMB file plus ocean output plus current PISM geometry into PISM forcing,
-      runs PISM for the year, and builds \code{\{region\}\_pism2ece\_\{year\}.nc}, which the
-      \emph{next} leg's \code{suorog} and ISM-mapper consume.
-\end{enumerate}
-
-Tier 2 is what our iterative coupling already is. Tier 1 is what we do not have.
-
-\section{Decisions}
-\label{sec:decisions}
-
-\subsection{Use the ISM-mapper, as EC-Earth does}
-
-\textbf{Decided.} Port \code{sources/ism-mapper} into the \code{develop-is} build and add it as
-an OASIS component, rather than synthesising the SMB forcing from XIOS output between legs.
-
-\medskip\noindent
-\textbf{The considered alternative.} Everything dEBM needs is already in our XIOS output. The
-monthly remapped stream carries \code{2t}, \code{skt}, \code{ssrd}, \code{strd}, \code{tisr},
-\code{tcc}, \code{2d}, \code{msl}, \code{10u}, \code{10v}, \code{lsp}, \code{cp}, \code{sf},
-\code{e}, \code{ro}, and the de-accumulation pattern is already in the tree:
-\code{field\_def\_lpjg\_safe.xml.j2} divides by \code{\{\{ oifs.flux\_accumulation\_period \}\}},
-including \code{1000*tp/...} for precipitation and \code{sqrt(ewss*ewss + nsss*nsss)/...} for
-stress. Arithmetic checked against \code{eval5} year 1903: \code{ssrd} $=6.845\times10^5$ and
-\code{tisr} $=1.226\times10^6$\,J\,m$^{-2}$ per one-hour step give 190 and 340\,W\,m$^{-2}$,
-and \code{lsp+cp} $=1.13\times10^{-4}$\,m/step gives $3.14\times10^{-5}$\,kg\,m$^{-2}$\,s$^{-1}$,
-all correct global means. So a jinja-gated \code{file\_def} block would have delivered the
-forward direction with no new component and no rebuild.
-
-\medskip\noindent
-\textbf{Why the ISM-mapper anyway.} XIOS solves the \emph{forward} direction only. It cannot
-deliver \code{plit} into the live atmosphere, and it cannot route PISM basal melt and discharge
-into the ocean as freshwater. Both of those need a component inside the OASIS exchange. Since
-one has to exist, having two mechanisms for one coupling is worse than having one. Staying on
-the EC-Earth component also keeps CISSEMBEL available as a future surface scheme and keeps this
-work mergeable with EC-Earth4 developments rather than diverging from them.
-
-\medskip\noindent
-\textbf{Cost, corrected twice.} The original entry read: \dead{AWI-ESM3 does not use rdy2cpl, so
-adding a PISM regional grid means teaching the per-leg regeneration to emit a pism-antar grid
-with SCRIP weights to and from TCO95 on every cycle. This is the expensive part of the port and
-the main schedule risk.} That overstated it, but a first correction (\dead{OASIS computes the
-weights itself at runtime, and the PISM grid does not move, so there is no per-cycle work}) was
-also wrong. What is actually true is \S\ref{sec:weights}: weights are \emph{precomputed} by
-\code{ocp\_tool/oasis\_weights.py} through pyOASIS, and that machinery is general, so PISM costs
-a few \code{Link} entries rather than new code. But the links do still regenerate every
-mesh-change leg, because the OIFS land--sea mask moves and it moves exactly where PISM is.
-
-\subsection{Both SMB schemes, dEBM as the default}
-
-Wire the forcing so it can feed either dEBM (insolation-driven melt, already running) or the
-EC-Earth direct path,
-$\text{climatic\_mass\_balance} = P_\ell + P_s - E - R$ with
-$\text{ice\_surface\_temp}$ from soil layer 4 merged with SST. Selected by a runscript switch,
-defaulting to dEBM. The direct path costs only \code{e} and \code{ro} in the field set, so it is
-cheap to carry from the start, and having both lets the two be compared on identical legs.
-
-\subsection{SMB first, orography second}
-
-The SMB half is testable without an OIFS rebuild once the component is in place; the orography
-half needs \code{ECE\_CPL\_ISMM} on and a rebuild. Land and validate SMB against a leg first.
-
-\subsection{Feature switch}
-
-\code{smb\_coupled}, defaulting true for \code{develop-is} and false elsewhere, in the same
-spirit as the existing \code{general.interactive\_mesh} flag. All new wiring sits behind it so
-that \code{develop} and \code{develop-cc} are untouched.
-
-\section{Built so far}
-\label{sec:built}
-
-\subsection{The ISM-mapper is an esm\_tools component}
-
-Not a hand-built binary: \code{configs/components/ismm/ismm.yaml}, in the \code{develop-is}
-coupling, always built, with \code{smb\_coupled} deciding at runtime whether it joins the launch.
-Notes worth keeping:
-
-\begin{itemize}
-\item It is not a standalone repository. It lives inside \code{ecearth4} under
-      \code{sources/ism-mapper}, so the component clones ecearth4 and builds that subtree. The
-      clone is 37\,MB, not the 663\,MB the local \code{.git} suggests: the local copy carries
-      three remotes and all of upstream, and every \code{sources/*} model is a submodule that is
-      not recursed into. We get none of EC-Earth's NEMO, OIFS, XIOS or PISM, which is what we
-      want. If recursive cloning is ever switched on, that changes.
-\item The branch is required, not preferred. \code{cissembel-levante-intel} carries
-      \code{5799a2a}, which fixes an \code{EBMfinalize} use-after-free that crashes any run with
-      a non-CISSEMBEL region. That is our path.
-\item CISSEMBEL is a \emph{link-time} dependency even on the direct path:
-      \code{ism-mapper\_run\_mod.F90:7} has an unguarded \code{use modEBMworld} and the link line
-      ends in \code{libebm\_cpl.a}. At runtime \code{EBMworld} is only called for regions with
-      \code{ISMRGNCIS(n)=.true.}, so it never executes for us. It is built from the same clone,
-      not its own upstream, so the two cannot drift.
-\item The committed \code{Makefile} carries ECMWF HPC2020 paths and \code{mpifort}. Everything it
-      needs is a plain make variable and command-line macros beat file assignments, so the
-      machine configuration is passed in \code{comp\_command} rather than by patching a tracked
-      file. \code{OASIS\_LIBS} differs: ours is \code{libpsmile.a}, EC-Earth's is
-      \code{libpsmile.MPI1.a}.
-\item One real upstream bug fixed (\code{41e0d8e}): \code{CISSEMBEL/src/makefile} listed
-      \code{mod\_domain.F08} in \code{MOD\_SRC0} and no such file exists in the tree, so a clean
-      clone failed to build on any machine.
-\end{itemize}
-
-\noindent
 \textbf{Verified.} Built end to end from a fresh clone. The open risk was whether code written
 against OASIS 5.2 links against our 5.0-smhi; it does, with no source change. The binary carries
 \code{oasis\_init\_comp}, \code{oasis\_def\_var}, \code{oasis\_enddef}, \code{ebmworld} and
 \code{ebminitialize}.
 
-\subsection{The PISM grid is in ocp-tool}
-\label{sec:oasisgrid}
+\subsection{The PISM grid goes into ocp-tool (2026-08-03)}
+\label{sec:grid}
 
-The ISM-mapper is an OASIS component, so the PISM domain has to appear in
-\code{grids.nc}/\code{masks.nc}/\code{areas.nc}. This went into \textbf{ocp-tool}, not esm\_tools:
-ocp-tool is already the tool sitting between PISM and AWI-ESM3, it is where the weight generation
-lives (\S\ref{sec:weights}, itself ported from rdy2cpl, whose \code{PismGrid} class EC-Earth uses
-for exactly this grid), and \code{ocp\_tool/grids/}
-already has the abstraction, a class with \code{cell\_latitudes}, \code{cell\_longitudes},
-\code{cell\_corners}, \code{cell\_areas}, \code{cell\_masks}. Putting it there also deleted a
-planned step: ocp-tool writes \code{ismp} into the OASIS files itself, so nothing has to append
-fragments afterwards or keep them in sync.
+The ISM-mapper is an OASIS component, so the PISM domain must appear in
+\code{grids.nc}/\code{masks.nc}/\code{areas.nc}. This went into ocp-tool, not esm\_tools: ocp-tool
+already sits between PISM and AWI-ESM3, it is where the weight generation lives, and
+\code{ocp\_tool/grids/} already has the abstraction (a class with \code{cell\_latitudes},
+\code{cell\_longitudes}, \code{cell\_corners}, \code{cell\_areas}, \code{cell\_masks}). Putting it
+there deleted a planned step: ocp-tool writes \code{ismp} itself, so nothing appends fragments
+afterwards.
 
-Centres come from the PISM file's own \code{lat}/\code{lon}. Corners are inverse-projected from
-the cell corner $(x,y)$. Areas are spherical excess over two triangles, not a plane formula: the
-domain wraps the pole, so cells on the $\pm180$ meridian would get a longitude span of $\sim2\pi$.
+Centres come from the PISM file's own \code{lat}/\code{lon}; corners are inverse-projected from the
+cell corner $(x,y)$; areas are spherical excess over two triangles.
 
 \medskip\noindent
-\textbf{Verified} on \code{antarct\_cr} 8\,km, $761\times761$. Total area 36.03 against
-36.28\,$\times10^6$\,km$^2$ from the plane area corrected by the polar stereographic scale
-factor, $-0.70\%$. Cell areas run 67.0\,km$^2$ at the pole to 53.8 at the outer corner against a
-nominal 64, the right sign and size for \code{lat\_ts}$=-71$. All 579121 cells wind
-counterclockwise seen from outside the sphere, which SCRIP requires and the area check cannot
-detect. A full TCO95/CORE3 run puts \code{ismp} in all three files, bit-identical to an
-independently generated reference.
-
-\subsection{How the weights are actually made}
-\label{sec:weights}
-
-Worth writing down, because it was easy to get wrong. Weights are \emph{not} left to OASIS at
-model runtime. \code{ocp\_tool/oasis\_weights.py} precomputes them with pyOASIS, taken from the
-coupled model's own OASIS build (compiled \code{OASIS\_WITH\_PYOASIS=ON}) rather than a second
-install. The design is ported from rdy2cpl: run the coupler itself with one MPI rank per unique
-coupling link, let each rank define its source and target grids and a variable pair, and call
-\code{enddef()} so OASIS/SCRIP writes that link's \code{rmp\_*.nc}.
-
-Two consequences for us. First, grid geometry is read back from the very
-\code{grids.nc}/\code{masks.nc}/\code{areas.nc} that ocp-tool writes, so the \code{ismp} entry of
-\S\ref{sec:oasisgrid} is exactly what a PISM link consumes; nothing recomputes geometry. Second,
-this needs compute nodes: esm\_tools drives it with \code{OCP\_WEIGHTGEN\_DRIVER\_PY},
-\code{OCP\_WEIGHTGEN\_WORKER\_PY}, \code{OCP\_WEIGHTGEN\_THREADS} (64) and
-\code{OCP\_WEIGHTGEN\_PARTITION} (\code{compute}), and it is the one-rank-per-link parallelism
-that makes it tractable at all.
-
-The link set is declared per setup, currently \code{awiesm3\_feom\_links()}, five \code{Link}
-entries carrying the transformation strings verbatim (\code{"GAUSWGT D SCALAR LATITUDE 1 25
-0.1"} and friends). PISM needs the same treatment: atmosphere$\to$\code{ismp} for the forcing
-fields and \code{ismp}$\to$atmosphere for \code{plit}.
-
-\subsection{\code{feom} no longer written by default}
-
-Found on the way: ocp-tool was appending the FESOM grid to the OASIS files unconditionally. FESOM
-writes its own \code{feom} entry at runtime in domain-decomposition order, and what ocp-tool
-writes is mesh order, so the two disagree; \code{couplings/fesom/permute\_feom\_to\_runtime.py}
-exists because of that ordering difference. Now behind \code{ocean.write\_oasis\_grid}, default
-off. \emph{This changes default output for every FESOM config, not just ours.}
-
-\subsection{OIFS tree current}
-
-Merged \code{vendor/main} (\code{14fa22d}), which had not moved since 2026-07-06, and cherry-picked
-Violet's \code{ECE\_ISMM\_SET\_STATE} refactor (\code{5779a3d}) so the ISM field fill is in its own
-file rather than inline in \code{callpar.F90}, which is the code the SMB work extends. Added the
-missing \code{intfb} include for it (\code{38c3ab0}): the call passes six derived types and had no
-explicit interface, so a signature change would have gone uncaught. Jorge's ice-sheet coupling is
-already in vendor main (\code{a2e46d5}), and our \code{suorog.F90} is byte-identical to it, so the
-orography read we plan to use is upstream code.
-
-\section{Open items}
-
+\textbf{Verified} on \code{antarct\_cr} 8\,km, $761\times761$, three ways, because a wrong grid
+fails as silently-bad weights rather than a crash:
 \begin{itemize}
-\item \textbf{OASIS field set for the direct path.} \code{ecearth.F90:360} declares
-      \code{A\_Evap\_ISM}, \code{A\_SST\_ISM}, \code{A\_Soil4T\_ISM} and \code{PLIT\_<region>};
-      \code{cnt4.F90:1336} issues the \code{ISM\_SND} exchange. The grid now exists
-      (\S\ref{sec:oasisgrid}); what is still missing is the declaration in awiesm3.yaml, the
-      \code{ismp} grid entry plus \code{ismm.coupling\_fields} and the
-      \code{atma->ismp}/\code{ismp->atma} directions with a coupling method. Until that lands
-      \code{ECE\_CPL\_ISMM} must stay off, because the fields would be declared with no partner.
-\item \textbf{PISM links for the weight generator.} Add the atmosphere$\leftrightarrow$\code{ismp}
-      \code{Link} entries next to \code{awiesm3\_feom\_links()} (\S\ref{sec:weights}). They
-      regenerate every mesh-change leg along with the feom ones, because the OIFS mask moves
-      where PISM is; the \code{ismp} geometry itself never changes.
-\item \textbf{\code{ismm} in the launch.} It has to be an MPI rank whenever it runs, or OASIS
-      \code{enddef} fails. That is what \code{smb\_coupled} has to do, and the switch itself does
-      not exist yet: it is named in comments but nothing reads it.
-\item \textbf{Per-leg \code{namelist.ismm}} (\code{RunLengthSec}, \code{TimeStepSec},
-      \code{StartDate}, the region lists) and the \code{cpl\_dir/\{aux,prev\_year\}} staging.
-\item \textbf{Consume the SMB.} Turn \code{\{region\}\_smb\_\{year\}.nc} into
-      \code{atmosphere\_file\_for\_ice.nc} plus its names file, replacing \code{just\_copy} and
-      the 130\,ka stub of \S\ref{sec:taint}.
-\item \textbf{Push before a clean build works.} The component clones remotes, not working copies,
-      so \code{esm\_tools}, \code{oifs-48r1} and \code{ecearth4} all have to be pushed before a
-      fresh \code{esm\_master comp-awiesm3-develop-is} succeeds for anyone, including us.
-\item \textbf{atlas 0.31.1 $\to$ 0.39.0} came in with the vendor merge and has not been built yet.
-\item \textbf{Pre-existing ocp-tool bug, left alone.} \code{\_append\_fesom\_grid\_to\_oasis\_files}
-      guards its optional import with \code{except ImportError}, but \code{import pyfesom2} raises
-      \code{AttributeError} when cmocean meets a matplotlib that has dropped
-      \code{matplotlib.cm.register\_cmap}, so the whole run dies. Widening the catch would be
-      worse: it would silently ship OASIS files with no ocean grid. Now moot on the default path,
-      since that function is no longer called unless asked for.
-\item \textbf{\code{orog} for the downscaling reference.} dEBM needs the low-resolution
-      elevation OIFS actually ran with. \code{field\_def.xml:176} has a \code{z}, but it is in
-      the \code{3D\_ml} group, so it is model-level geopotential, not surface. Source it from
-      the ICMGG init file we already stage and regenerate per leg, read with eccodes for param
-      129, mirroring what \code{make\_plit\_oifs.py} already does for \code{lsm}. Once the
-      orography feedback is live this tracks the ice sheet automatically.
-\item \textbf{\code{usurf\_oifs} writer.} PISM \code{usurf} on the 8\,km polar-stereographic
-      grid must be conservatively remapped into native OIFS gridpoint order (40320 for TCO95)
-      and written alongside \code{plit\_oifs} into \code{antar\_pism2ece.nc}. EC-Earth uses
-      precomputed \code{pism2ifs\_con\_weights\_\{region\}.nc}; ours must be regenerated per leg
-      with the rest.
-\item \textbf{Real \code{plit}.} Once PISM geometry is available on the OIFS grid, replace the
-      ICMGG-derived \code{plit} of \S\ref{sec:today} with PISM's own ice mask.
-\item \textbf{Freshwater return.} PISM basal melt and discharge currently do not reach FESOM at
-      all. Decide whether to re-target the runoff-mapper's ocean side to FESOM or wire the
-      ISM-mapper \code{SND\_OCE} fields into FESOM's surface freshwater coupling. Not needed for
-      the SMB or orography halves, but it is the remaining leg of the mass budget.
-\item \textbf{\code{flux\_accumulation\_period}} is defined only in \code{oifsamip.yaml:90}. If
-      any XIOS-side derived field is used for validation it needs a default for awiesm3.
+\item Area total 36.03 against 36.28\,$\times10^6$\,km$^2$ from the plane area corrected by the
+      polar stereographic scale factor, $-0.70\%$.
+\item Cell areas 67.0\,km$^2$ at the pole to 53.8 at the outer corner against a nominal 64, the
+      right sign and size for \code{lat\_ts}$=-71$.
+\item All 579121 cells wind counterclockwise seen from outside the sphere, no sign flips. SCRIP
+      requires this and the area check cannot detect it.
+\end{itemize}
+A full TCO95/CORE3 run puts \code{ismp} in all three files, bit-identical to an independently
+generated reference.
+
+\medskip\noindent
+\textbf{Found on the way:} ocp-tool was appending the FESOM grid unconditionally. FESOM writes its
+own \code{feom} entry at runtime in domain-decomposition order; ocp-tool's is mesh order, and the
+two disagree. Now behind \code{ocean.write\_oasis\_grid}, default off. \emph{This changes default
+output for every FESOM config, not only ours.}
+
+\subsection{Declaring the OASIS coupling (2026-08-03)}
+
+Field names on the ice side come from the ism-mapper itself
+(\code{cplng\_config\_mod.F90}): \code{<prefix>\_Precip\_liquid}, \code{\_Precip\_solid},
+\code{\_Evaporation}, \code{\_Runoff}, \code{\_Soil4T}, \code{\_SST} inbound and
+\code{<prefix>\_plit} out. On the OIFS side \code{A\_Evap\_ISM}, \code{A\_SST\_ISM} and
+\code{A\_Soil4T\_ISM} are what \code{ecearth.F90} declares for the direct path; precip and runoff
+are reused from the ocean path.
+
+Two constraints the parser caught, both of which would have been expensive later:
+\begin{itemize}
+\item \code{A\_Runoff} is on \code{atmr}, not \code{atma}, so it needs its own exchange line and
+      its own direction. Grouping it with precip fails the same-grid validation.
+\item \code{include\_models} is consumed before general-level \code{choose\_} blocks resolve, so
+      \code{ismm} must sit in the \code{develop-is} \code{add\_include\_models}. It moves together
+      with \code{smb\_coupled}: a launched \code{ismm} with no coupled fields deadlocks OASIS.
 \end{itemize}
 
-\section{Provenance}
+\subsection{Generating the weights (2026-08-03)}
+\label{sec:weights}
 
-Reference document \code{esm\_tools/ece4-pism-coupling.md}, written from the EC-Earth4 checkout at
-\code{/work/ab0246/a270092/model\_codes/ecearth4}. Runtime evidence from
-\code{/work/ab0246/a270092/runtime/awiesm3-develop-is/eval5}.
+Weights are not left to OASIS at model runtime. \code{ocp\_tool/oasis\_weights.py} precomputes
+them with pyOASIS taken from the coupled model's own OASIS build, ported from rdy2cpl: one MPI
+rank per link, each calling \code{enddef()} so SCRIP writes that link's \code{rmp\_*.nc}. Geometry
+is read back from the OASIS description files, so the \code{ismp} entry of \S\ref{sec:grid} is
+exactly what a link consumes. It needs compute nodes; the one-rank-per-link parallelism is what
+makes it tractable.
+
+Tested on 3 nodes against ocp-tool's own TCO95/CORE3 output:
 
 \begin{center}
-\begin{tabular}{@{}llll@{}}
+\begin{tabular}{@{}llr@{}}
 \toprule
-repository & branch & commits & from \\
+link & map & result \\
 \midrule
-\code{esm\_tools}  & \code{awiesm3-is-orography-and-smb-coupling} & \code{55a79350f}, \code{da8c1e069} & \code{c327e5dc1} \\
-\code{ocp-tool}    & \code{feat/pism-oasis-grid}                  & \code{e29f59a}                     & \code{7e76751} (master) \\
-\code{oifs-48r1}   & \code{movcav-landice+co2-concdriven}         & \code{14fa22d}, \code{5779a3d}, \code{38c3ab0} & \code{45a7bea} \\
-\code{ecearth4}    & \code{cissembel-levante-intel}               & \code{41e0d8e} (pushed)            & \code{5cc50a0} \\
+\code{A096 $\to$ ismp} & \code{BILINEAR D}  & 69\,MB \\
+\code{R096 $\to$ ismp} & \code{GAUSWGT D}   & 122\,MB \\
+\code{ismp $\to$ A096} & \code{GAUSWGT LR}  & 44\,MB \\
+\code{ismp $\to$ A096} & \code{DISTWGT LR}  & 34\,MB \\
+\code{ismp $\to$ A096} & \code{BILINEAR}    & OASIS abort, rc=1 \\
+\code{ismp $\to$ A096} & \code{CONSERV}     & OASIS abort, rc=1 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \noindent
-\code{da8c1e069} is the standalone PISM-grid script that preceded the ocp-tool port. It is
-superseded by \code{e29f59a} and should be removed once the ocp-tool branch merges; its output,
-in \code{/work/ab0246/a270092/input/pism/oasis/}, is what ocp-tool's is diffed against.
+\textbf{Why the ice$\to$atm conservative and bilinear maps die.} 381 of the 579121 cells have a
+corner longitude spread above $180^\circ$ along the polar seam, and the pole cell's four corners
+sit at $-135, 135, 45, -45$, encircling the pole outright. That breaks SCRIP's per-cell longitude
+line integral (CONSERV) and its enclosing-quadrilateral search (BILINEAR). Neighbour-based maps do
+not care. Same geometry as the reason the areas use spherical excess.
+
+\medskip\noindent
+\textbf{Consequence.} \code{plit} reaches \code{suorog} as an interpolated value, not the area
+fraction \code{ECE\_LANDICE\_THRESH} is written to read. EC-Earth's bilinear would give the same,
+so we are no worse than the reference, but the threshold semantics are looser than ideal.
+
+\section{State of the coupling (2026-08-03)}
+\label{sec:state}
+
+\subsection{Proven}
+
+\begin{itemize}
+\item ISM-mapper builds from a clean clone and links against our OASIS 5.0-smhi.
+\item \code{ismp} grid written by ocp-tool into all three OASIS files, geometry verified three
+      ways (\S\ref{sec:grid}).
+\item All three coupling links generate on compute (\S\ref{sec:weights}).
+\item The esm\_tools config assembles: \code{ismm} in \code{process\_ordering}, \code{rstism.nc}
+      a recognised OASIS restart, four exchange lines resolving with the prefix substituted.
+\end{itemize}
+
+\subsection{Open}
+
+\begin{itemize}
+\item \textbf{Nothing has run coupled.} No leg has been launched with \code{ismm} in it.
+\item \textbf{\code{ECE\_CPL\_ISMM} not yet set.} It belongs in the runscript next to
+      \code{ECE\_LANDICE}/\code{ISMRGNPFX}; \code{NAMECECFG} is \code{add\_}'d per chunk there and
+      a second \code{add\_} from the setup collides.
+\item \textbf{PISM links not wired into \code{regenerate\_oasis\_weights}}, which still defaults to
+      the feom set. Also \code{nlinks} there defaults to 4 while \code{awiesm3\_feom\_links()}
+      returns 5, so one link already serialises; PISM takes it to 8.
+\item \textbf{Per-leg \code{namelist.ismm}} and the \code{cpl\_dir/\{aux,prev\_year\}} staging.
+\item \textbf{Consume the SMB:} turn \code{\{region\}\_smb\_\{year\}.nc} into
+      \code{atmosphere\_file\_for\_ice.nc}, replacing the stub of \S\ref{sec:taint}.
+\item \textbf{\code{orog} for the downscaling reference.} \code{field\_def.xml:176} has a \code{z}
+      but it is in the \code{3D\_ml} group, so model-level geopotential. Source it from the ICMGG
+      with eccodes for param 129, as \code{make\_plit\_oifs.py} does for \code{lsm}.
+\item \textbf{\code{usurf\_oifs} writer} and replacing the ICMGG-derived \code{plit} with PISM's
+      own mask.
+\item \textbf{Freshwater return.} PISM basal melt and discharge do not reach FESOM. Not needed for
+      SMB or orography, but it is the remaining leg of the mass budget.
+\item \textbf{atlas 0.31.1 $\to$ 0.39.0} came in with the vendor merge and is unbuilt.
+\end{itemize}
+
+\section{Reference}
+
+\subsection{Secondary fixes}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+what & where & commit \\
+\midrule
+\code{mod\_domain.F08} listed in \code{MOD\_SRC0} but absent, CISSEMBEL unbuildable & ecearth4 & \code{41e0d8e} \\
+Runoff / runoff-mapper exchanges made optional (\code{-huge} trap) & ecearth4 & \code{f9d0349} \\
+\code{ECE\_ISMM\_SET\_STATE} call had no \code{intfb} include & oifs-48r1 & \code{38c3ab0} \\
+\code{debm} missing from \code{add\_other\_components}, esm\_master aborted & esm\_tools & \code{55a7935} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The \code{-huge} trap is worth stating once in full: receive buffers are initialised to
+\code{-huge}, \code{AccumulateECEForcingFields} adds every \code{OASIS\_IN} field with no check
+that it is coupled, and an uncoupled field is never written. So a declared-but-unpartnered input
+accumulates \code{-huge} for a whole leg. This is the same failure class as the OIFS-side
+\code{-HUGE} first-send bug, arriving from the other end.
+
+\subsection{Falsified claims (kept, struck through)}
+\label{sec:falsified}
+
+\begin{itemize}
+\item \dead{Adding a PISM grid means teaching the per-leg regeneration to emit SCRIP weights to
+      and from TCO95 on every cycle. This is the expensive part and the main schedule risk.}
+      Overstated: the weight machinery is general, so PISM costs a few \code{Link} entries.
+\item \dead{OASIS computes the weights itself at runtime, and the PISM grid does not move, so
+      there is no per-cycle work.} Wrong twice. Weights are precomputed via pyOASIS
+      (\S\ref{sec:weights}), and the links do regenerate per mesh-change leg because the OIFS mask
+      moves where PISM is.
+\item \dead{CONSERV is the right map for plit, since ECE\_LANDICE\_THRESH reads an area fraction.}
+      It aborts on a pole-centred grid (\S\ref{sec:weights}). GAUSWGT is what works.
+\item \dead{The ice$\to$atm link is \code{BILINEAR D}.} The SCRIPR letter is the \emph{source}
+      grid type and \code{ismp} is logically rectangular, so \code{LR}; and \code{BILINEAR} fails
+      here regardless.
+\end{itemize}
+
+\subsection{Method notes}
+
+\begin{itemize}
+\item \code{esm\_runscripts -c} assembles the full runtime config and catches grid-consistency and
+      component-loading errors. Both config bugs above were found this way, not by reading.
+\item \code{esm\_master --check <target>} renders the build without executing it. It also revealed
+      the pre-existing \code{debm} section-header failure.
+\item Weight generation must run from a shared filesystem. A first attempt with the working
+      directory on \code{/tmp} died in 14\,s: \code{/tmp} is node-local on Levante, so the compute
+      node could not write the job output.
+\item Grid winding is invisible to an area check, which takes an absolute value. Test it
+      separately by dotting the corner-polygon normal with the outward radial vector.
+\end{itemize}
+
+\subsection{Assets}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+what & where \\
+\midrule
+Reference document & \code{esm\_tools/ece4-pism-coupling.md} \\
+PISM OASIS grid (reference copy) & \code{/work/ab0246/a270092/input/pism/oasis/} \\
+Weight-generation test output & \code{/work/ab0246/a270092/tmp/ismp\_wgen\{,2\}/} \\
+ocp-tool ice-enabled config & \code{configs/TCO95\_CORE3\_ICE.yaml} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+repository & branch & state \\
+\midrule
+\code{esm\_tools} & \code{awiesm3-is-orography-and-smb-coupling} & \code{c94d11f89} local \\
+\code{ocp-tool}   & \code{feat/pism-oasis-grid}                  & PR \#57, draft \\
+\code{oifs-48r1}  & \code{movcav-landice+co2-concdriven}         & pushed \\
+\code{ecearth4}   & \code{cissembel-levante-intel}               & pushed \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \end{document}

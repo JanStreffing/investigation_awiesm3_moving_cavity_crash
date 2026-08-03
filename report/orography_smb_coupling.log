@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021) (preloaded format=pdflatex 2022.3.24)  3 AUG 2026 13:56
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021) (preloaded format=pdflatex 2022.3.24)  3 AUG 2026 15:31
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -402,24 +402,24 @@ File: l3backend-pdftex.def 2022-02-07 L3 backend support: PDF output (pdfTeX)
 ) (./orography_smb_coupling.aux)
 \openout1 = `orography_smb_coupling.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -491,7 +491,7 @@ topdf-sys.cfg
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring ON on input line 19.
+Package hyperref Info: Link coloring ON on input line 18.
 
 (/sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/tex/latex/hyperref/namere
 f.sty
@@ -507,188 +507,127 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
 \c@section@level=\count302
 )
-LaTeX Info: Redefining \ref on input line 19.
-LaTeX Info: Redefining \pageref on input line 19.
-LaTeX Info: Redefining \nameref on input line 19.
+LaTeX Info: Redefining \ref on input line 18.
+LaTeX Info: Redefining \pageref on input line 18.
+LaTeX Info: Redefining \nameref on input line 18.
  (./orography_smb_coupling.out)
 (./orography_smb_coupling.out)
 \@outlinefile=\write3
 \openout3 = `orography_smb_coupling.out'.
 
-LaTeX Font Info:    Trying to load font information for U+msa on input line 21.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 20.
 
 
 (/sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/tex/latex/amsfonts/umsa.f
 d
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 21.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 20.
 
 
 (/sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/tex/latex/amsfonts/umsb.f
 d
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 2
-9.
+LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 4
+5.
 
 (/sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/tex/latex/base/t1cmtt.fd
 File: t1cmtt.fd 2019/12/16 v2.5j Standard LaTeX font definitions
-) (./orography_smb_coupling.toc
-LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10.95> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 2.
-LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 2.
 )
-\tf@toc=\write4
-\openout4 = `orography_smb_coupling.toc'.
-
- [1
-
-{/sw/spack-levante/texlive-live2021-l5o6sw/texmf-var/fonts/map/pdftex/updmap/pd
-ftex.map}]
-LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 47.
-
-Overfull \hbox (244.96536pt too wide) in paragraph at lines 53--59
+Overfull \hbox (244.96536pt too wide) in paragraph at lines 45--50
 \T1/cmtt/m/n/10 couplings/oifs/just_copy_stuff.functions \T1/cmr/m/n/10.95 copi
 es \T1/cmtt/m/n/10 atmosphere_file_for_ice.nc \T1/cmr/m/n/10.95 ver-ba-tim out 
 of \T1/cmtt/m/n/10 a270122/lars_and_paul/experiments/E130ka_coupled3\T1/cmr/m/n
 /10.95 .
  []
 
+[1
 
-Overfull \hbox (26.52565pt too wide) in paragraph at lines 75--77
-[]\T1/cmtt/m/n/10 ECE_LANDICE \T1/cmr/m/n/10.95 reads \T1/cmtt/m/n/10 plit_oifs
- \T1/cmr/m/n/10.95 from the same file and pub-lishes it through \T1/cmtt/m/n/10
- SURFECE_SET_LANDICE_LOCAL\T1/cmr/m/n/10.95 . 
- []
-
-
-Overfull \hbox (58.17865pt too wide) in paragraph at lines 79--82
-[]\T1/cmr/m/n/10.95 We run \T1/cmtt/m/n/10 ECE_LANDICE \T1/cmr/m/n/10.95 only. 
-And the \T1/cmtt/m/n/10 plit \T1/cmr/m/n/10.95 we write is not PISM's ice mask:
- \T1/cmtt/m/n/10 couplings/fesom/make_plit_oifs.py
- []
-
-
-Overfull \hbox (53.72258pt too wide) in paragraph at lines 106--112
-\T1/cmr/m/n/10.95 soil tem-per-a-ture and SST from OIFS ev-ery cou-pling step, 
-ac-cu-mu-lates, and writes \T1/cmtt/m/n/10 {region}_smb_{year}.nc
- []
-
-[2] [3]
-Overfull \hbox (2.3633pt too wide) in paragraph at lines 214--219
+{/sw/spack-levante/texlive-live2021-l5o6sw/texmf-var/fonts/map/pdftex/updmap/pd
+ftex.map}]
+Overfull \hbox (2.3633pt too wide) in paragraph at lines 102--107
 \T1/cmr/m/n/10.95 SIS 5.2 links against our 5.0-smhi; it does, with no source c
 hange. The bi-nary car-ries \T1/cmtt/m/n/10 oasis_init_comp\T1/cmr/m/n/10.95 ,
  []
 
 
-Overfull \hbox (40.44539pt too wide) in paragraph at lines 223--232
+Overfull \hbox (35.90436pt too wide) in paragraph at lines 111--118
 \T1/cmr/m/n/10.95 The ISM-mapper is an OA-SIS com-po-nent, so the PISM do-main 
-has to ap-pear in \T1/cmtt/m/n/10 grids.nc\T1/cmr/m/n/10.95 /\T1/cmtt/m/n/10 ma
-sks.nc\T1/cmr/m/n/10.95 /\T1/cmtt/m/n/10 areas.nc\T1/cmr/m/n/10.95 .
- []
-
-[4]
-Overfull \hbox (19.54843pt too wide) in paragraph at lines 256--263
-[]\T1/cmr/m/n/10.95 Two con-se-quences for us. First, grid ge-om-e-try is read 
-back from the very \T1/cmtt/m/n/10 grids.nc\T1/cmr/m/n/10.95 /\T1/cmtt/m/n/10 m
-asks.nc\T1/cmr/m/n/10.95 /\T1/cmtt/m/n/10 areas.nc
+must ap-pear in \T1/cmtt/m/n/10 grids.nc\T1/cmr/m/n/10.95 /\T1/cmtt/m/n/10 mask
+s.nc\T1/cmr/m/n/10.95 /\T1/cmtt/m/n/10 areas.nc\T1/cmr/m/n/10.95 .
  []
 
 
-Overfull \hbox (9.81737pt too wide) in paragraph at lines 256--263
-\T1/cmr/m/n/10.95 putes ge-om-e-try. Sec-ond, this needs com-pute nodes: esm_to
-ols drives it with \T1/cmtt/m/n/10 OCP_WEIGHTGEN_DRIVER_PY\T1/cmr/m/n/10.95 ,
+Overfull \hbox (44.95358pt too wide) in paragraph at lines 144--150
+\T1/cmr/m/n/10.95 Field names on the ice side come from the ism-mapper it-self 
+(\T1/cmtt/m/n/10 cplng_config_mod.F90\T1/cmr/m/n/10.95 ): \T1/cmtt/m/n/10 <pref
+ix>_Precip_liquid\T1/cmr/m/n/10.95 ,
  []
 
-LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 269.
-[5]
-Overfull \hbox (89.35425pt too wide) in paragraph at lines 304--306
-[]\T1/cmr/bx/n/10.95 Per-leg \T1/cmtt/m/n/10 namelist.ismm \T1/cmr/m/n/10.95 (\
-T1/cmtt/m/n/10 RunLengthSec\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10 TimeStepSec\T1/c
-mr/m/n/10.95 , \T1/cmtt/m/n/10 StartDate\T1/cmr/m/n/10.95 , the re-gion lists) 
-and the \T1/cmtt/m/n/10 cpl_dir/{aux,prev_year}
+[2]
+Overfull \hbox (7.70946pt too wide) in paragraph at lines 194--198
+\T1/cmr/bx/n/10.95 Consequence. \T1/cmtt/m/n/10 plit \T1/cmr/m/n/10.95 reaches 
+\T1/cmtt/m/n/10 suorog \T1/cmr/m/n/10.95 as an in-ter-po-lated value, not the a
+rea frac-tion \T1/cmtt/m/n/10 ECE_LANDICE_THRESH
  []
 
+[3]
+LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10.95> not available
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 217.
+LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 217.
 
-Overfull \hbox (64.24484pt too wide) in paragraph at lines 309--312
-\T1/cmtt/m/n/10 esm_tools\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10 oifs-48r1 \T1/cmr/
-m/n/10.95 and \T1/cmtt/m/n/10 ecearth4 \T1/cmr/m/n/10.95 all have to be pushed 
-be-fore a fresh \T1/cmtt/m/n/10 esm_master comp-awiesm3-develop-is
- []
-
-
-Overfull \hbox (1.16408pt too wide) in paragraph at lines 325--330
-\T1/cmr/m/n/10.95 into \T1/cmtt/m/n/10 antar_pism2ece.nc\T1/cmr/m/n/10.95 . EC-
-Earth uses pre-com-puted \T1/cmtt/m/n/10 pism2ifs_con_weights_{region}.nc\T1/cm
-r/m/n/10.95 ; ours
- []
-
-[6]
-Overfull \hbox (142.09927pt too wide) in paragraph at lines 342--345
-\T1/cmtt/m/n/10 /work/ab0246/a270092/model_codes/ecearth4\T1/cmr/m/n/10.95 . Ru
-n-time ev-i-dence from \T1/cmtt/m/n/10 /work/ab0246/a270092/runtime/awiesm3-dev
-elop-is/eval5\T1/cmr/m/n/10.95 . 
+Overfull \hbox (47.1501pt too wide) in paragraph at lines 253--259
+\T1/cmr/m/n/10.95 The \T1/cmtt/m/n/10 -huge \T1/cmr/m/n/10.95 trap is worth sta
+t-ing once in full: re-ceive buffers are ini-tialised to \T1/cmtt/m/n/10 -huge\
+T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10 AccumulateECEForcingFields
  []
 
 
-Overfull \hbox (10.235pt too wide) in paragraph at lines 347--357
- [] 
+Overfull \hbox (10.94617pt too wide) in paragraph at lines 281--283
+[]\T1/cmtt/m/n/10 esm_runscripts -c \T1/cmr/m/n/10.95 as-sem-bles the full run-
+time con-fig and catches grid-consistency and component-
  []
 
-
-Overfull \hbox (97.12614pt too wide) in paragraph at lines 359--363
-\T1/cmtt/m/n/10 e29f59a \T1/cmr/m/n/10.95 and should be re-moved once the ocp-t
-ool branch merges; its out-put, in \T1/cmtt/m/n/10 /work/ab0246/a270092/input/p
-ism/oasis/\T1/cmr/m/n/10.95 ,
- []
-
-[7] (./orography_smb_coupling.aux)
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
+[4] [5] (./orography_smb_coupling.aux)
 Package rerunfilecheck Info: File `orography_smb_coupling.out' has not changed.
 
-(rerunfilecheck)             Checksum: 3193F18F4AD0D766A20AC8DE5C2A25E7;3765.
+(rerunfilecheck)             Checksum: F872E436F82763820AF69EFDA687D918;3234.
  ) 
 Here is how much of TeX's memory you used:
- 10934 strings out of 478276
- 169630 string characters out of 5837522
- 477845 words of memory out of 5000000
- 28946 multiletter control sequences out of 15000+600000
- 491021 words of font info for 86 fonts, out of 8000000 for 9000
+ 10903 strings out of 478276
+ 169246 string characters out of 5837522
+ 480875 words of memory out of 5000000
+ 28932 multiletter control sequences out of 15000+600000
+ 488179 words of font info for 81 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 60i,7n,63p,482b,416s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 60i,9n,63p,436b,395s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/enc/dvips/cm-supe
-r/cm-super-t1.enc}{/sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/e
-nc/dvips/cm-super/cm-super-ts1.enc}</sw/spack-levante/texlive-live2021-l5o6sw/t
+r/cm-super-ts1.enc}{/sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/
+enc/dvips/cm-super/cm-super-t1.enc}</sw/spack-levante/texlive-live2021-l5o6sw/t
 exmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></sw/spack-levante/texlive-
-live2021-l5o6sw/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></sw/spack-
-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10
-.pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public/a
-msfonts/cm/cmr8.pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fonts
-/type1/public/amsfonts/cm/cmsy10.pfb></sw/spack-levante/texlive-live2021-l5o6sw
-/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></sw/spack-levante/texlive
--live2021-l5o6sw/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></sw/spack
--levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public/cm-super/sfbx109
-5.pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public/
-cm-super/sfbx1200.pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fon
-ts/type1/public/cm-super/sfbx1440.pfb></sw/spack-levante/texlive-live2021-l5o6s
-w/texmf-dist/fonts/type1/public/cm-super/sfbx1728.pfb></sw/spack-levante/texliv
-e-live2021-l5o6sw/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></sw/spac
-k-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public/cm-super/sfrm10
-95.pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public
-/cm-super/sfrm1200.pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fo
-nts/type1/public/cm-super/sfti1000.pfb></sw/spack-levante/texlive-live2021-l5o6
-sw/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></sw/spack-levante/texli
-ve-live2021-l5o6sw/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb>
-Output written on orography_smb_coupling.pdf (7 pages, 328275 bytes).
+live2021-l5o6sw/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></sw/spack-
+levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.
+pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public/am
+sfonts/cm/cmsy10.pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/font
+s/type1/public/amsfonts/cm/cmsy8.pfb></sw/spack-levante/texlive-live2021-l5o6sw
+/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></sw/spack-levante/texlive
+-live2021-l5o6sw/texmf-dist/fonts/type1/public/cm-super/sfbx1095.pfb></sw/spack
+-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public/cm-super/sfbx120
+0.pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public/
+cm-super/sfbx1440.pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fon
+ts/type1/public/cm-super/sfbx1728.pfb></sw/spack-levante/texlive-live2021-l5o6s
+w/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></sw/spack-levante/texliv
+e-live2021-l5o6sw/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></sw/spac
+k-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public/cm-super/sfrm12
+00.pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fonts/type1/public
+/cm-super/sfti1095.pfb></sw/spack-levante/texlive-live2021-l5o6sw/texmf-dist/fo
+nts/type1/public/cm-super/sftt1000.pfb>
+Output written on orography_smb_coupling.pdf (5 pages, 295674 bytes).
 PDF statistics:
- 241 PDF objects out of 1000 (max. 8388607)
- 195 compressed objects within 2 object streams
- 30 named destinations out of 1000 (max. 500000)
- 153 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 184 PDF objects out of 1000 (max. 8388607)
+ 144 compressed objects within 2 object streams
+ 21 named destinations out of 1000 (max. 500000)
+ 121 words of extra memory for PDF output out of 10000 (max. 10000000)
 
