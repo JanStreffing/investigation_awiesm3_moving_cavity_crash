@@ -285,16 +285,108 @@ esm\_tools \code{b0555452f}.
 \medskip\noindent
 \textbf{\code{ismtest10}: the first SMB we believe.} $P=168$, $E=12.9$, $R=8.4$, so
 $\mathrm{SMB}=P-E-R=147$\,mm\,w.e./yr over the PISM ice mask, 99.4\% of the precipitation solid,
-mean soil layer 4 at 239\,K. Observed Antarctic surface mass balance is of order
-170\,mm\,w.e./yr and the area-mean surface temperature is around $-35\,^\circ$C. The runoff agrees
-with OIFS's own ice-sheet \code{ro} to 3\%, which is the sharpest single check we have that the
-remap is not distorting anything.
+mean soil layer 4 at 239\,K. Verified in detail in \S\ref{sec:verify}.
 
-The one number sitting low is $P$: 168 against OIFS's 212 over its own ice cells. That gap is not
-necessarily an error. The two masks are different objects, PISM's \code{thk}$>$10\,m at 8\,km
-against an annual-mean snow depth threshold on the 192$\times$400 remapped output, and the latter
-is coarser and coastal-biased where accumulation is heaviest. Worth closing properly before any
-mass-budget statement, but it is not a blocker for feeding PISM.
+\subsection{Verifying the delivered field (2026-08-04)}
+\label{sec:verify}
+
+Three questions. Does the remap preserve the field, is the field itself any good, and where does
+it sit against what is known about Antarctic precipitation in this class of model.
+
+\medskip\noindent
+\textbf{An orientation trap first.} The PISM file's \code{y} coordinate variable runs opposite to
+its own data arrays. Forward-projecting the file's \code{lat}/\code{lon} at a given index lands at
+$-y[i]$, not $y[i]$. The file's \code{lat}/\code{lon} are the trustworthy pair: the northernmost
+ice cell they identify is at $-62.93^\circ$, $-60.56^\circ$, which is the tip of the Peninsula. Read
+straight off the \code{y} axis instead and the same cell comes out at $-119^\circ$, in the Amundsen
+Sea, where no ice reaches that latitude. Sampling an OIFS field onto the PISM mask through the
+\code{y} axis therefore mirrors Antarctica through the pole, and because the ice sheet is roughly
+polar-centred the result still looks plausible. What settles it independently is the lapse rate.
+Correlating the delivered \code{antar\_Soil4T} against PISM's own surface elevation gives $-0.896$
+and $-10.30$\,K/km as written, against $-0.693$ and $-8.38$\,K/km mirrored. So the \code{ismp}
+grid ocp-tool built agrees with PISM's data arrays, and the delivered fields are in the right
+place.
+
+\medskip\noindent
+\textbf{The remap is faithful to 1\%.} Sampling every OIFS output cell whose centre falls inside
+PISM's \code{thk}$>$10\,m mask, 7918 cells, and comparing against the same mask on the PISM side:
+
+\begin{center}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+$P$ [mm\,w.e./yr] & OIFS \code{lsp+cp} & delivered on \code{ismp} & difference \\
+\midrule
+all ice                      & 166.7 & 168.2 & $+0.9\%$ \\
+grounded margin, $<2500$\,m  & 245.3 & 247.1 & $+0.7\%$ \\
+grounded plateau, $\geq2500$\,m & 48.0 & 50.5 & $+5.2\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+GAUSWGT is not conservative, so this is agreement rather than a guarantee, but at under 1\% over
+the ice sheet the OASIS chain is not where any remaining error lives. $E$ and $R$ are not expected
+to match this closely and do not: \code{A\_Evap\_ISM} is tiles 3--9 only, weighted by tile
+fraction, while OIFS's \code{e} is the grid-box total including the ocean tiles.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{ismtest10_smb_verification.png}
+\caption{The first OIFS-driven surface mass balance, \code{ismtest10}, year 1900.
+(a) $P-E-R$ delivered on the PISM grid; the black line is the 2500\,m contour and the red patches
+on the Peninsula are the only cells with negative SMB. (b) Precipitation against surface
+elevation over grounded ice in 250\,m bins, falling monotonically from 391\,mm\,w.e./yr below
+500\,m to 38 above 3000\,m. The plateau values sit above CloudSat and below ERA5.
+(c) The same three footprints computed from OIFS's own output and from what arrived on the PISM
+grid. Agreement is within 1\% over the ice sheet, so the remap is not where the error is. The
+continental mean, 167, is 10\% \emph{below} CloudSat, while ERA5 is 16\% above it.}
+\label{fig:smbverif}
+\end{figure}
+
+\medskip\noindent
+\textbf{The field itself.} Precipitation falls monotonically with elevation across seven 250\,m
+bins, 391\,mm\,w.e./yr below 500\,m down to 38 above 3000\,m, which is the right shape for an ice
+sheet fed by coastal cyclones. Integrated: 1725\,Gt/yr over the 12.18$\times10^6$\,km$^2$ of
+grounded ice and 297\,Gt/yr over the 1.59$\times10^6$\,km$^2$ of shelves, 2022\,Gt/yr in total.
+Grounded SMB from RACMO is of order 2100\,Gt/yr, so we are roughly 18\% low, consistent with being
+10\% low on continental precipitation.
+
+\medskip\noindent
+\textbf{Against the literature.} This is a known and well-documented bias family, so the numbers
+have a reference frame. Roussel et al.\ (2020, \emph{The Cryosphere} 14, 2715) evaluated ERA5
+against CloudSat: CloudSat gives 186\,mm\,yr$^{-1}$ continentally and ERA5 is about
+$+30$\,mm\,yr$^{-1}$ on top, and over the plateau the gap widens to 29 against 65. A 2025 ACP
+study found ERA5 and ten CMIP6 models all overestimate the frequency of supercooled-liquid-bearing
+clouds and the snowfall from them, with biases so similar across the ensemble that the authors
+attribute them to cloud microphysics rather than to the meteorology. Palerme et al.\ (2017) found
+the same overestimate across CMIP5.
+
+Where we land:
+
+\begin{center}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+$P$ [mm\,w.e./yr] & CloudSat & ERA5 (IFS cy41r2) & ours (OIFS cy48r1, TCO95) \\
+\midrule
+continental       & 186 & 216 $(+16\%)$ & 167 $(-10\%)$ \\
+plateau           &  29 &  65 $(+124\%)$ &  50 $(+72\%)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+So we are drier than ERA5 everywhere, below CloudSat continentally, and still carry a plateau wet
+bias, though a weaker one than ERA5's. The plateau comparison is the least secure part of this
+because CloudSat's near-surface blind zone is roughly the lowest kilometre, which is exactly where
+plateau clear-sky precipitation lives. The coastal numbers are on firmer ground.
+
+The second mechanism in the literature is resolution, and it is the one that should worry us at
+TCO95. Genthon and Krinner made the margin-versus-plateau split the whole point: smoothed
+orography gives weaker lifting at the coastal escarpment, so less moisture is wrung out at the
+margin and more of it survives inland. Our dipole, low continentally but high on the plateau, is
+that signature. For an ice sheet this matters more than the continental mean suggests, because it
+moves accumulation off the fast-flowing outlet catchments and onto the dome, where it thickens ice
+that takes millennia to respond. A total that looks right can hide a pattern that is not.
 
 \section{State of the coupling (2026-08-04)}
 \label{sec:state}
@@ -313,15 +405,21 @@ mass-budget statement, but it is not a blocker for feeding PISM.
 \item A full year runs coupled and writes \code{antar\_smb\_1900.nc} on the PISM grid, monthly,
       with no sentinels and no NaNs (\S\ref{sec:running}).
 \item Daily coupling with \code{LOCTRANS AVERAGE}, so 365 exchanges a year rather than 8760.
-\item The delivered SMB is physical: 147\,mm\,w.e./yr over the ice mask, 99.4\% solid
-      precipitation, runoff within 3\% of OIFS's own ice-sheet diagnostic (\S\ref{sec:running}).
+\item The delivered SMB is physical: 147\,mm\,w.e./yr over the ice mask, 2022\,Gt/yr in total,
+      99.4\% solid precipitation, monotonic in elevation across seven bins (\S\ref{sec:verify}).
+\item The remap preserves precipitation to within 1\% over the ice sheet, checked against OIFS's
+      own output on an identical footprint (Fig.~\ref{fig:smbverif}c).
+\item The delivered fields are correctly oriented, confirmed independently by a $-10.3$\,K/km
+      lapse rate against PISM's own surface elevation.
 \end{itemize}
 
 \subsection{Open}
 
 \begin{itemize}
-\item \textbf{$P$ is 168 against OIFS's 212} over ice-sheet cells. Probably the two masks, not a
-      bug, but it has to be closed on a like-for-like footprint before any mass-budget claim.
+\item \textbf{Plateau wet bias, margin dry bias.} $+72\%$ against CloudSat above 2500\,m while
+      10\% low continentally (\S\ref{sec:verify}). Expected at TCO95 and shared with ERA5, but it
+      redistributes accumulation from the outlet catchments to the dome, which is the pattern PISM
+      is most sensitive to. Nothing to fix today; something to state whenever a run is interpreted.
 \item \textbf{Consume the SMB:} turn \code{\{region\}\_smb\_\{year\}.nc} into
       \code{atmosphere\_file\_for\_ice.nc}, replacing the stub of \S\ref{sec:taint}. This is what
       retires the 130\,ka taint.
@@ -396,6 +494,11 @@ accumulates \code{-huge} for a whole leg. This is the same failure class as the 
       arithmetic, not this line.
 \item \dead{All ISM source fields belong on \code{atma}.} \code{atma} is ocean-masked. Everything
       except SST belongs on \code{atmr} (\S\ref{sec:running}).
+\item \dead{The delivered $P$ is 168 against OIFS's own 212, so the remap may be losing
+      precipitation.} The 212 came from a snow-depth proxy mask on the remapped output, which is
+      coastal-biased. On an identical footprint the two agree to 0.9\% (\S\ref{sec:verify}).
+\item \dead{OIFS sits at ERA5's continental Antarctic precipitation of about 216\,mm/yr.} Same
+      proxy-mask error. It is 167, which is 10\% \emph{below} CloudSat.
 \end{itemize}
 
 \subsection{Method notes}
@@ -415,9 +518,13 @@ accumulates \code{-huge} for a whole leg. This is the same failure class as the 
       is kg\,m$^{-2}$\,s$^{-1}$, and they travel in the same exchange line. Guessing wrong turned
       a factor of 2.6 into an apparent factor of 350 and pointed at the wrong bug.
 \item Compare a remapped field against the source model's own output over the \emph{same} mask,
-      not over a latitude band. South of $60^\circ$S the domain is mostly ocean, and precipitation
-      over the Southern Ocean is twice the ice-sheet value, so a band mean hides the error the
-      mask exposes.
+      not over a latitude band and not over a proxy for the mask. Both shortcuts produced a wrong
+      answer here, in opposite directions.
+\item A polar grid can be mirrored through the pole and still look right, because the ice sheet is
+      roughly polar-centred and latitude is unchanged by the mirror. Longitude is not, so check a
+      known asymmetric landmark. The Peninsula tip at $-62.9^\circ$, $-60.6^\circ$ settled it here.
+      An independent physical check is better still: temperature against elevation gave $-10.3$
+      versus $-8.4$\,K/km for the two orientations.
 \end{itemize}
 
 \subsection{Assets}
@@ -428,6 +535,9 @@ accumulates \code{-huge} for a whole leg. This is the same failure class as the 
 what & where \\
 \midrule
 Reference document & \code{esm\_tools/ece4-pism-coupling.md} \\
+Verification figure script & \code{scripts/plotting/plot\_smb\_ismtest10.py} \\
+First believed SMB & \code{ismtest10/outdata/ismm/antar\_smb\_1900.nc} \\
+\code{cplng2} \code{-HUGE} issue draft & \code{/work/ab0246/a270092/tmp/oifs\_issue\_draft.md} \\
 PISM OASIS grid (reference copy) & \code{/work/ab0246/a270092/input/pism/oasis/} \\
 Weight-generation test output & \code{/work/ab0246/a270092/tmp/ismp\_wgen\{,2\}/} \\
 ocp-tool ice-enabled config & \code{configs/TCO95\_CORE3\_ICE.yaml} \\
@@ -440,9 +550,9 @@ ocp-tool ice-enabled config & \code{configs/TCO95\_CORE3\_ICE.yaml} \\
 \toprule
 repository & branch & state \\
 \midrule
-\code{esm\_tools} & \code{awiesm3-is-orography-and-smb-coupling} & \code{c94d11f89} local \\
+\code{esm\_tools} & \code{awiesm3-is-orography-and-smb-coupling} & \code{b0555452f} pushed \\
 \code{ocp-tool}   & \code{feat/pism-oasis-grid}                  & PR \#57, draft \\
-\code{oifs-48r1}  & \code{movcav-landice+co2-concdriven}         & pushed \\
+\code{oifs-48r1}  & \code{movcav-landice+co2-concdriven}         & \code{460015f} pushed \\
 \code{ecearth4}   & \code{cissembel-levante-intel}               & pushed \\
 \bottomrule
 \end{tabular}
