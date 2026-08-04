@@ -13,7 +13,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-08-03}
+\date{Last updated: 2026-08-04}
 
 \begin{document}
 \maketitle
@@ -27,9 +27,11 @@ surface elevation OIFS runs with following the ice sheet PISM produced. The ocea
 by the moving-cavity campaign; this is its companion.
 
 \medskip\noindent
-\textbf{Where we are.} The ISM-mapper builds and links as an esm\_tools component, the PISM grid
-and all three coupling links are generated and verified, and the OASIS exchange is declared, but
-nothing has yet run coupled.
+\textbf{Where we are.} The SMB direction runs and the numbers hold up. A full coupled year
+produces a monthly surface mass balance file on the PISM grid, through OASIS, from the OIFS leg
+that just ran: $P-E-R=147$\,mm\,w.e./yr over the ice mask, against an observed Antarctic value of
+order 170. PISM does not consume the file yet, so the 130\,ka taint of \S\ref{sec:taint} still
+stands, and the orography direction has not started.
 
 \medskip\noindent
 Timeline in \S\ref{sec:campaign}, current state and open items in \S\ref{sec:state}, dead claims
@@ -196,7 +198,105 @@ not care. Same geometry as the reason the areas use spherical excess.
 fraction \code{ECE\_LANDICE\_THRESH} is written to read. EC-Earth's bilinear would give the same,
 so we are no worse than the reference, but the threshold semantics are looser than ideal.
 
-\section{State of the coupling (2026-08-03)}
+\subsection{Running it: ten legs to a plausible number (2026-08-04)}
+\label{sec:running}
+
+Ten test legs, \code{ismtest1} to \code{ismtest10}. The first six were plumbing, the last four were
+physics. Plumbing, briefly: the ism-mapper binary was stale because it had been built by hand
+rather than through esm\_master and did not declare the namelist flags the generated
+\code{namelist.ismm} set; \code{ismp} was missing from the chunk-1 staged grids because chunk 1
+stages from \code{pism\_cavity\_ini/oasis/} and not from the fixed-mesh pool, so both pools now
+carry it; and \code{LSendToRunoffMapper} gated the \code{ADD\_FLD} call but not
+\code{UpdateISMForcing}, which then looked for a field that had never been declared.
+
+\medskip\noindent
+\textbf{The mask wipe.} \code{ismtest6} and \code{ismtest7} died the same way, at the clamp in
+\code{ece\_updclie\_cpl.F90}. \code{updtim} runs every timestep, the ISM coupling period is
+86400\,s and the OIFS timestep is 3600\,s, so 23 steps out of 24 deliver nothing. On those steps
+the receive buffer still holds the \code{-HUGE} it was initialised to, and \code{CPLNG2\_EXCHANGE}
+does not tell the caller that nothing arrived: it accepts \code{OASIS\_Ok}, which means \emph{call
+succeeded, no transfer}, in the same branch as the five statuses that do mean data arrived. An
+OASIS restart does not save you. It is read correctly at $t=0$ and overwritten on the next step.
+
+We fixed it on our side with \code{ECE\_LANDICE\_FROM\_OASIS}, default \code{.false.}, so the
+OASIS-driven mask update is opt-in and \code{ECE\_LANDICE} keeps reading \code{plit\_oifs} at leg
+init. That is a workaround, not a fix. Any other \code{OASIS\_IN} field whose coupling period
+exceeds the timestep has the same exposure. Issue drafted for the SMHI tracker.
+
+\medskip\noindent
+\textbf{Temperatures ten times too large.} \code{ismtest8} delivered \code{antar\_Soil4T} around
+2600\,K. The \code{gauswgt\_avg} method had been copied from \code{gauswgt\_c} and inherited its
+\code{CONSERV GLBPOS} postprocessing, which rescales the target field so the global integral
+matches the source. Source and target cover different areas, so the ratio is the whole error:
+A096 active area $359.41\times10^6$\,km$^2$ over \code{ismp} active area $36.03\times10^6$\,km$^2$
+is $9.975$. \code{CONSERV} belongs on a flux you are closing a budget with, between grids that
+cover the same domain. Neither holds here. Removed.
+
+\medskip\noindent
+\textbf{Too wet and too warm: the source grid was ocean-masked.} \code{ismtest9} ran clean and
+produced \code{antar\_smb\_1900.nc} with no sentinels, which is the first end-to-end success. The
+numbers were still wrong, and the way they were wrong took a second look to see, because a
+first pass mistook the precipitation units. \code{A\_Precip\_liquid} and \code{A\_Precip\_solid}
+are divided by \code{RHOH2O} where they are set, so they are m/s. \code{A\_Evap\_ISM} is not, so
+it is kg\,m$^{-2}$\,s$^{-1}$. Mixed units in one exchange line.
+
+The comparison that matters is against OIFS's own gridded output from the same leg, over cells
+that are actually ice sheet, annual means in mm\,w.e./yr:
+
+\begin{center}
+\begin{tabular}{@{}lrrrl@{}}
+\toprule
+ & $P$ & $E$ & $R$ & $T_{\text{soil4}}$ \\
+\midrule
+OIFS \code{lsp+cp}, \code{e}, \code{ro} over its own ice cells & 212 & 31 & 8.6 & -- \\
+\code{ismtest9}, all ISM fields on \code{atma}   & 426 & 28.1 & 11.4 & 256.9\,K \\
+\code{ismtest10}, land fields on \code{atmr}     & 168 & 12.9 & 8.4 & 239.1\,K \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+All three ISM-mapper rows are masked to PISM's own \code{thk}$>$10\,m, 215030 cells,
+$13.8\times10^6$\,km$^2$. \code{ismtest9} was 2.6 times too wet and 18\,K too warm. Every ISM
+field had been declared on \code{atma}, the ocean-masked A096, where 95\% of the cells south of
+$75^\circ$S are excluded; the GAUSWGT stencil then draws from what is left, which is the Southern
+Ocean. Ocean precipitation is heavier and the ocean is warmer, and both show up exactly that way.
+
+\code{atmr} (R096) is the same 40320-point reduced Gaussian grid with the land mask instead, it is
+already declared in \code{oifs.grids}, \code{A\_Runoff} already uses it, and the
+\code{R096 $\to$ ismp} weights already exist. Moving \code{A\_Evap\_ISM} and \code{A\_Soil4T\_ISM}
+to it is a one-line config change. \code{A\_Precip\_liquid} and \code{A\_Precip\_solid} are not,
+because they are the same fields the ocean coupling uses, and the ocean needs them on \code{atma}.
+
+\medskip\noindent
+\textbf{\code{FIELD@grid}.} EC-Earth solves this by naming a different grid per namcouple entry,
+which is what OASIS is built for. esm\_tools cannot: \code{coupling\_fields[field]["grid"]} holds
+one grid per field, full stop. The obvious workaround is to declare \code{A\_Precip\_*\_ISM}
+aliases in OIFS, but that means editing code AWI-ESM3 shares with EC-Earth in order to work around
+a weakness in our own runscript engine, which is the wrong direction.
+
+So the syntax gained a per-link override. \code{A\_Precip\_liquid@atmr} in a
+\code{coupling\_target\_fields} line uses \code{atmr} for that line and leaves the field
+declaration alone. It is 30 lines in \code{coupler.py}: one splitter, applied at each of the three
+places that parse a coupling string. Verified against the generated \code{namcouple}, where the
+ISM line now reads \code{R096 ismp} and the ocean line still reads \code{A096 feom}.
+esm\_tools \code{b0555452f}.
+
+\medskip\noindent
+\textbf{\code{ismtest10}: the first SMB we believe.} $P=168$, $E=12.9$, $R=8.4$, so
+$\mathrm{SMB}=P-E-R=147$\,mm\,w.e./yr over the PISM ice mask, 99.4\% of the precipitation solid,
+mean soil layer 4 at 239\,K. Observed Antarctic surface mass balance is of order
+170\,mm\,w.e./yr and the area-mean surface temperature is around $-35\,^\circ$C. The runoff agrees
+with OIFS's own ice-sheet \code{ro} to 3\%, which is the sharpest single check we have that the
+remap is not distorting anything.
+
+The one number sitting low is $P$: 168 against OIFS's 212 over its own ice cells. That gap is not
+necessarily an error. The two masks are different objects, PISM's \code{thk}$>$10\,m at 8\,km
+against an annual-mean snow depth threshold on the 192$\times$400 remapped output, and the latter
+is coarser and coastal-biased where accumulation is heaviest. Worth closing properly before any
+mass-budget statement, but it is not a blocker for feeding PISM.
+
+\section{State of the coupling (2026-08-04)}
 \label{sec:state}
 
 \subsection{Proven}
@@ -208,28 +308,41 @@ so we are no worse than the reference, but the threshold semantics are looser th
 \item All three coupling links generate on compute (\S\ref{sec:weights}).
 \item The esm\_tools config assembles: \code{ismm} in \code{process\_ordering}, \code{rstism.nc}
       a recognised OASIS restart, four exchange lines resolving with the prefix substituted.
+\item A six-component OASIS \code{enddef} succeeds with ISMMAP alongside OIFS, FESOM, XIOS,
+      LPJ-GUESS and the runoff mapper.
+\item A full year runs coupled and writes \code{antar\_smb\_1900.nc} on the PISM grid, monthly,
+      with no sentinels and no NaNs (\S\ref{sec:running}).
+\item Daily coupling with \code{LOCTRANS AVERAGE}, so 365 exchanges a year rather than 8760.
+\item The delivered SMB is physical: 147\,mm\,w.e./yr over the ice mask, 99.4\% solid
+      precipitation, runoff within 3\% of OIFS's own ice-sheet diagnostic (\S\ref{sec:running}).
 \end{itemize}
 
 \subsection{Open}
 
 \begin{itemize}
-\item \textbf{Nothing has run coupled.} No leg has been launched with \code{ismm} in it.
-\item \textbf{\code{ECE\_CPL\_ISMM} not yet set.} It belongs in the runscript next to
-      \code{ECE\_LANDICE}/\code{ISMRGNPFX}; \code{NAMECECFG} is \code{add\_}'d per chunk there and
-      a second \code{add\_} from the setup collides.
-\item \textbf{PISM links not wired into \code{regenerate\_oasis\_weights}}, which still defaults to
-      the feom set. Also \code{nlinks} there defaults to 4 while \code{awiesm3\_feom\_links()}
-      returns 5, so one link already serialises; PISM takes it to 8.
-\item \textbf{Per-leg \code{namelist.ismm}} and the \code{cpl\_dir/\{aux,prev\_year\}} staging.
+\item \textbf{$P$ is 168 against OIFS's 212} over ice-sheet cells. Probably the two masks, not a
+      bug, but it has to be closed on a like-for-like footprint before any mass-budget claim.
 \item \textbf{Consume the SMB:} turn \code{\{region\}\_smb\_\{year\}.nc} into
-      \code{atmosphere\_file\_for\_ice.nc}, replacing the stub of \S\ref{sec:taint}.
+      \code{atmosphere\_file\_for\_ice.nc}, replacing the stub of \S\ref{sec:taint}. This is what
+      retires the 130\,ka taint.
+\item \textbf{HTESSEL glacier-tile refreezing} is unchecked. It decides whether the shelf-margin
+      SMB is meaningful before PISM ever sees it.
+\item \textbf{\code{A\_Calving} double-count.} OIFS caps snow at 10\,m w.e.\ and sheds the excess
+      to the ocean as calving. With PISM coupled the same snowfall goes two ways. Has to be
+      settled together with the freshwater return.
 \item \textbf{\code{orog} for the downscaling reference.} \code{field\_def.xml:176} has a \code{z}
       but it is in the \code{3D\_ml} group, so model-level geopotential. Source it from the ICMGG
       with eccodes for param 129, as \code{make\_plit\_oifs.py} does for \code{lsm}.
-\item \textbf{\code{usurf\_oifs} writer} and replacing the ICMGG-derived \code{plit} with PISM's
-      own mask.
+\item \textbf{\code{usurf\_oifs} writer}, replacing the ICMGG-derived \code{plit} with PISM's own
+      mask, and turning \code{ECE\_ISM\_OROG} on.
+\item \textbf{\code{PLIT\_antar} is received on \code{atma}}, because \code{ismp $\to$ R096}
+      weights were never generated. Harmless while \code{ECE\_LANDICE\_FROM\_OASIS} is off, wrong
+      the moment it is turned on for the orography half.
 \item \textbf{Freshwater return.} PISM basal melt and discharge do not reach FESOM. Not needed for
       SMB or orography, but it is the remaining leg of the mass budget.
+\item \textbf{Field set is welded to scheme in ismm.} The direct path supplies 6 fields, dEBM needs
+      7 and shares only 2 of them. Splitting the two would unblock dEBM for Greenland and for warm
+      scenarios where a positive-degree-day treatment stops being adequate.
 \item \textbf{atlas 0.31.1 $\to$ 0.39.0} came in with the vendor merge and is unbuilt.
 \end{itemize}
 
@@ -246,6 +359,10 @@ what & where & commit \\
 Runoff / runoff-mapper exchanges made optional (\code{-huge} trap) & ecearth4 & \code{f9d0349} \\
 \code{ECE\_ISMM\_SET\_STATE} call had no \code{intfb} include & oifs-48r1 & \code{38c3ab0} \\
 \code{debm} missing from \code{add\_other\_components}, esm\_master aborted & esm\_tools & \code{55a7935} \\
+\code{LSendToRunoffMapper} gated \code{ADD\_FLD} but not \code{UpdateISMForcing} & ecearth4 & \code{94511fb} \\
+OASIS-driven land-ice mask update made opt-in & oifs-48r1 & \code{d23116d} \\
+\code{gauswgt\_avg} inherited \code{CONSERV GLBPOS} from \code{gauswgt\_c} & esm\_tools & \code{c47fea07e} \\
+Per-link source grid override, \code{FIELD@grid} & esm\_tools & \code{b0555452f} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -273,6 +390,12 @@ accumulates \code{-huge} for a whole leg. This is the same failure class as the 
 \item \dead{The ice$\to$atm link is \code{BILINEAR D}.} The SCRIPR letter is the \emph{source}
       grid type and \code{ismp} is logically rectangular, so \code{LR}; and \code{BILINEAR} fails
       here regardless.
+\item \dead{\code{plit-active=0} in the log is the symptom of the mask being wiped.} That line
+      appears 363 times a leg in \code{eval5}, which runs fine. It is a normal diagnostic and says
+      nothing about the crash. The evidence for the wipe is the clamp itself and the delivery
+      arithmetic, not this line.
+\item \dead{All ISM source fields belong on \code{atma}.} \code{atma} is ocean-masked. Everything
+      except SST belongs on \code{atmr} (\S\ref{sec:running}).
 \end{itemize}
 
 \subsection{Method notes}
@@ -287,6 +410,14 @@ accumulates \code{-huge} for a whole leg. This is the same failure class as the 
       node could not write the job output.
 \item Grid winding is invisible to an area check, which takes an absolute value. Test it
       separately by dotting the corner-polygon normal with the outward radial vector.
+\item Do not guess the units of an OASIS field. Read the line that sets it.
+      \code{A\_Precip\_*} are divided by \code{RHOH2O} and are m/s, \code{A\_Evap\_ISM} is not and
+      is kg\,m$^{-2}$\,s$^{-1}$, and they travel in the same exchange line. Guessing wrong turned
+      a factor of 2.6 into an apparent factor of 350 and pointed at the wrong bug.
+\item Compare a remapped field against the source model's own output over the \emph{same} mask,
+      not over a latitude band. South of $60^\circ$S the domain is mostly ocean, and precipitation
+      over the Southern Ocean is twice the ice-sheet value, so a band mean hides the error the
+      mask exposes.
 \end{itemize}
 
 \subsection{Assets}
