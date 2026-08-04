@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  4 AUG 2026 13:31
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  4 AUG 2026 15:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -564,7 +564,7 @@ LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10.95> not available
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
 (Font)              Font shape `T1/cmtt/m/n' tried instead on input line 272.
  [4]
-<ismtest10_smb_verification.png, id=112, 852.786pt x 342.078pt>
+<ismtest10_smb_verification.png, id=116, 852.786pt x 342.078pt>
 File: ismtest10_smb_verification.png Graphic file (type png)
 <use ismtest10_smb_verification.png>
 Package pdftex.def Info: ismtest10_smb_verification.png  used on input line 334
@@ -582,15 +582,15 @@ s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
 l.390 
-       <./ismtest10_smb_verification.png>] [7]
-Overfull \hbox (47.1501pt too wide) in paragraph at lines 468--474
+       <./ismtest10_smb_verification.png>] [7] [8]
+Overfull \hbox (47.1501pt too wide) in paragraph at lines 507--513
 \T1/cmr/m/n/10.95 The \T1/cmtt/m/n/10 -huge \T1/cmr/m/n/10.95 trap is worth sta
 t-ing once in full: re-ceive buffers are ini-tialised to \T1/cmtt/m/n/10 -huge\
 T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10 AccumulateECEForcingFields
  []
 
-[8]
-Overfull \hbox (10.94617pt too wide) in paragraph at lines 507--509
+
+Overfull \hbox (10.94617pt too wide) in paragraph at lines 546--548
 []\T1/cmtt/m/n/10 esm_runscripts -c \T1/cmr/m/n/10.95 as-sem-bles the full run-
 time con-fig and catches grid-consistency and component-
  []
@@ -602,13 +602,13 @@ L3 programming layer <2025-11-06>
  ***********
 Package rerunfilecheck Info: File `orography_smb_coupling.out' has not changed.
 
-(rerunfilecheck)             Checksum: C00BB58751885BBF53D29AA5FFBF53CF;3883.
+(rerunfilecheck)             Checksum: 75DCAA6DA3DC51FAB273D6D8E8FF9336;4272.
  ) 
 Here is how much of TeX's memory you used:
- 11256 strings out of 467538
- 171198 string characters out of 5410173
- 612543 words of memory out of 5000000
- 39977 multiletter control sequences out of 15000+600000
+ 11261 strings out of 467538
+ 171301 string characters out of 5410173
+ 617632 words of memory out of 5000000
+ 39981 multiletter control sequences out of 15000+600000
  648171 words of font info for 95 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  75i,11n,79p,883b,558s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -631,11 +631,12 @@ s/type1/public/cm-super/sfrm1000.pfb></sw/spack-levante/texlive-live2025-uaw7o7
 -live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></sw/spack
 -levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfti109
 5.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/
-cm-super/sftt1000.pfb>
-Output written on orography_smb_coupling.pdf (10 pages, 490043 bytes).
+cm-super/sftt1000.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fon
+ts/type1/public/cm-super/sftt1095.pfb>
+Output written on orography_smb_coupling.pdf (10 pages, 524748 bytes).
 PDF statistics:
- 232 PDF objects out of 1000 (max. 8388607)
- 183 compressed objects within 2 object streams
- 29 named destinations out of 1000 (max. 500000)
- 142 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 242 PDF objects out of 1000 (max. 8388607)
+ 191 compressed objects within 2 object streams
+ 30 named destinations out of 1000 (max. 500000)
+ 150 words of extra memory for PDF output out of 10000 (max. 10000000)
 

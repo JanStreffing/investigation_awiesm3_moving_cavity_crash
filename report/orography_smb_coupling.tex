@@ -388,6 +388,44 @@ that signature. For an ice sheet this matters more than the continental mean sug
 moves accumulation off the fast-flowing outlet catchments and onto the dome, where it thickens ice
 that takes millennia to respond. A total that looks right can hide a pattern that is not.
 
+\subsection{The snow cap sends the same water to the ocean (2026-08-04)}
+\label{sec:calving}
+
+\code{ece\_fesom\_set\_ocean\_fluxes.F90} caps the HTESSEL snowpack at 10\,m water
+equivalent and sends everything above the cap to the ocean as \code{A\_Calving}:
+
+\begin{verbatim}
+ZEXSNOW = MAX(SUM(PSP_SG(...)) + SUM(PSNSE1(...))*TSTEP - 10000.0, 0.)
+PSURF%PSNSE1(...,1) = PSURF%PSNSE1(...,1) - ZEXSNOW/TSTEP
+CPLNG2_FLD(CPLNG2_IDX('A_Calving'))%D(...) = (ZEXSNOW/TSTEP)/1000
+\end{verbatim}
+
+\noindent
+This is the right closure for an atmosphere with no ice sheet underneath it. Snow falls on
+Antarctica, the pack would otherwise grow without bound, and returning the excess to the ocean
+mimics an ice sheet in balance calving what it accumulates.
+
+The cap is saturated. Annual-mean snow depth over the PISM ice footprint is 9.952\,m with a global
+maximum of 10.0004, and 98.7\% of ice cells sit at or above 9.99\,m. A saturated pack cannot store
+anything, so the shed rate equals the net input, which is the same $P-E-R$ we now hand to PISM.
+That puts \code{A\_Calving} over Antarctica at roughly 2000\,Gt/yr, against 2033\,Gt/yr of
+delivered surface mass balance over the same mask.
+
+\medskip\noindent
+\textbf{So the water is counted twice} the moment PISM is in the loop. It grows the ice sheet and
+it freshens the Southern Ocean, and only one of those can be right. There is no runoff-mapper
+diagnostic in the output, so this is inferred from the saturation condition rather than measured.
+Adding one is the cheapest way to close it.
+
+The fix is to stop OIFS shedding over the PISM domain and let PISM's own calving and basal melt be
+what reaches FESOM. That cannot be done first: the freshwater return does not exist yet, so
+switching off the shedding on its own would take about 2000\,Gt/yr out of the Southern Ocean with
+nothing replacing it. The two have to land together.
+
+\medskip\noindent
+\textbf{This does not taint the moving-cavity results.} Without PISM returning mass, the shedding
+was the correct closure and the ocean saw a balanced ice sheet, which is what those runs assumed.
+
 \section{State of the coupling (2026-08-04)}
 \label{sec:state}
 
@@ -425,9 +463,10 @@ that takes millennia to respond. A total that looks right can hide a pattern tha
       retires the 130\,ka taint.
 \item \textbf{HTESSEL glacier-tile refreezing} is unchecked. It decides whether the shelf-margin
       SMB is meaningful before PISM ever sees it.
-\item \textbf{\code{A\_Calving} double-count.} OIFS caps snow at 10\,m w.e.\ and sheds the excess
-      to the ocean as calving. With PISM coupled the same snowfall goes two ways. Has to be
-      settled together with the freshwater return.
+\item \textbf{\code{A\_Calving} double-count, about 2000\,Gt/yr} (\S\ref{sec:calving}). Confirmed:
+      the snowpack is saturated at the 10\,m w.e.\ cap over 98.7\% of the ice sheet, so everything
+      that accumulates is shed to the ocean, and the same water now also grows PISM. Must land
+      together with the freshwater return, never before it.
 \item \textbf{\code{orog} for the downscaling reference.} \code{field\_def.xml:176} has a \code{z}
       but it is in the \code{3D\_ml} group, so model-level geopotential. Source it from the ICMGG
       with eccodes for param 129, as \code{make\_plit\_oifs.py} does for \code{lsm}.
