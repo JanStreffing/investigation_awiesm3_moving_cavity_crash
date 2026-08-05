@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  5 AUG 2026 14:30
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  5 AUG 2026 15:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -618,20 +618,20 @@ choose_with_icb \T1/cmr/bx/n/10.95 is never read. \T1/cmr/m/n/10.95 The live re
 cipe is \T1/cmtt/m/n/10 general.prepcompute_recipe\T1/cmr/m/n/10.95 ;
  []
 
-[10] [11]
-Overfull \hbox (47.1501pt too wide) in paragraph at lines 771--777
+[10] [11] [12]
+Overfull \hbox (47.1501pt too wide) in paragraph at lines 805--811
 \T1/cmr/m/n/10.95 The \T1/cmtt/m/n/10 -huge \T1/cmr/m/n/10.95 trap is worth sta
 t-ing once in full: re-ceive buffers are ini-tialised to \T1/cmtt/m/n/10 -huge\
 T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10 AccumulateECEForcingFields
  []
 
-[12]
-Overfull \hbox (10.94617pt too wide) in paragraph at lines 810--812
+[13]
+Overfull \hbox (10.94617pt too wide) in paragraph at lines 844--846
 []\T1/cmtt/m/n/10 esm_runscripts -c \T1/cmr/m/n/10.95 as-sem-bles the full run-
 time con-fig and catches grid-consistency and component-
  []
 
-[13] [14] (./orography_smb_coupling.aux)
+[14] [15] (./orography_smb_coupling.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-06>
@@ -641,8 +641,8 @@ Package rerunfilecheck Info: File `orography_smb_coupling.out' has not changed.
 (rerunfilecheck)             Checksum: 2CFA800C988DFE5A5619DA1D8CC2471D;5986.
  ) 
 Here is how much of TeX's memory you used:
- 11291 strings out of 467538
- 171666 string characters out of 5410173
+ 11292 strings out of 467538
+ 171673 string characters out of 5410173
  617053 words of memory out of 5000000
  39993 multiletter control sequences out of 15000+600000
  648171 words of font info for 95 fonts, out of 8000000 for 9000
@@ -673,10 +673,10 @@ s/type1/public/cm-super/sfrm1200.pfb></sw/spack-levante/texlive-live2025-uaw7o7
 -live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb></sw/spack
 -levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sftt109
 5.pfb>
-Output written on orography_smb_coupling.pdf (14 pages, 578671 bytes).
+Output written on orography_smb_coupling.pdf (15 pages, 581499 bytes).
 PDF statistics:
- 318 PDF objects out of 1000 (max. 8388607)
- 256 compressed objects within 3 object streams
- 48 named destinations out of 1000 (max. 500000)
+ 323 PDF objects out of 1000 (max. 8388607)
+ 260 compressed objects within 3 object streams
+ 49 named destinations out of 1000 (max. 500000)
  190 words of extra memory for PDF output out of 10000 (max. 10000000)
 

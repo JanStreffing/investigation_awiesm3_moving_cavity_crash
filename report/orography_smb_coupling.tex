@@ -682,6 +682,40 @@ set standing in for more; the awiesm-2.1 reference compressed the count with
 \code{scaling\_factor [100, 50, 10, 1, 1, 1]}, worth revisiting if advection is slow.
 
 \medskip\noindent
+\textbf{How many bergs.} A PISM discharge of 4141\,Gt/yr produces 63015 bergs at
+\code{scaling\_factor} 1, and 72\% of them are under 0.1\,km$^2$. Measured against an otherwise
+identical leg with \code{ib\_num=0}: 0.0948 against 0.0754\,s per FESOM step, so the uncompressed
+set costs $+26\%$, about 33 minutes against 26 for the year.
+
+That is affordable, and the first instinct was to keep the sampling and pay it. The code says
+otherwise. \code{icb\_thermo.F90} scales the flux to the ocean by \code{scaling(ib)}:
+
+\begin{verbatim}
+hfb_flux_ib(ib) = H_b * length_ib*length_ib*scaling(ib)
+dh_b = M_b*dt*REAL(steps_per_ib_step)   !*scaling(ib)
+\end{verbatim}
+
+\noindent
+but deliberately not the decay. A model berg melts at the rate of a berg of its chunk's
+\emph{mean} size, and melt is non-linear in size, so the factors change the answer. They are a
+physics parameter, not a cost knob, and an unrun value is an unchecked one. So the awiesm-2.1
+values \code{[100, 50, 10, 1, 1, 1]}: 1227 model bergs standing for 65219 real ones, mass
+conserved exactly at 2756\,Gt.
+
+The CAV-ICB reference goes further, \code{[250, 100, 30, 2, 1, 1]} for 485 bergs, on a finer mesh
+where advection bites harder. The $+26\%$ measurement is recorded here so that sampling more, if it
+is ever wanted, is an experiment against a baseline rather than a guess.
+
+\medskip\noindent
+\textbf{Finn Heuer's CAV-ICB plugin} solves the neighbouring problem: it derives the calving mass as
+a residual of FESOM's own cavity melt minus accumulated Antarctic snow, which is what you need when
+there is \emph{no} ice sheet model. With PISM the discharge is known, so its core is not for us.
+Three of its downstream details are better than ours and worth taking: calving days with an austral
+summer intensification for the small classes rather than a flat spread,
+\code{exclude\_occupied\_elements}, and a considered \code{ibareamax} of 100 against the inherited
+default of 400.
+
+\medskip\noindent
 \textbf{Still not verified.} No leg has generated bergs \emph{in run}. Chunk 2 is the first, and it
 is also the leg that exercises the \code{feom} fix of \S\ref{sec:regenbug}.
 
