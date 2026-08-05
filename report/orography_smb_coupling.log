@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  4 AUG 2026 15:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.14)  5 AUG 2026 14:30
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -519,7 +519,7 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 20.
 d
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Overfull \hbox (244.96536pt too wide) in paragraph at lines 47--52
+Overfull \hbox (244.96536pt too wide) in paragraph at lines 46--51
 \T1/cmtt/m/n/10 couplings/oifs/just_copy_stuff.functions \T1/cmr/m/n/10.95 copi
 es \T1/cmtt/m/n/10 atmosphere_file_for_ice.nc \T1/cmr/m/n/10.95 ver-ba-tim out 
 of \T1/cmtt/m/n/10 a270122/lars_and_paul/experiments/E130ka_coupled3\T1/cmr/m/n
@@ -531,20 +531,20 @@ of \T1/cmtt/m/n/10 a270122/lars_and_paul/experiments/E130ka_coupled3\T1/cmr/m/n
 {/sw/spack-levante/texlive-live2025-uaw7o7/texmf-var/fonts/map/pdftex/updmap/pd
 ftex.map}{/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/enc/dvips/
 cm-super/cm-super-t1.enc}]
-Overfull \hbox (2.3633pt too wide) in paragraph at lines 104--109
+Overfull \hbox (2.3633pt too wide) in paragraph at lines 103--108
 \T1/cmr/m/n/10.95 SIS 5.2 links against our 5.0-smhi; it does, with no source c
 hange. The bi-nary car-ries \T1/cmtt/m/n/10 oasis_init_comp\T1/cmr/m/n/10.95 ,
  []
 
 
-Overfull \hbox (35.90436pt too wide) in paragraph at lines 113--120
+Overfull \hbox (35.90436pt too wide) in paragraph at lines 112--119
 \T1/cmr/m/n/10.95 The ISM-mapper is an OA-SIS com-po-nent, so the PISM do-main 
 must ap-pear in \T1/cmtt/m/n/10 grids.nc\T1/cmr/m/n/10.95 /\T1/cmtt/m/n/10 mask
 s.nc\T1/cmr/m/n/10.95 /\T1/cmtt/m/n/10 areas.nc\T1/cmr/m/n/10.95 .
  []
 
 
-Overfull \hbox (44.95358pt too wide) in paragraph at lines 146--152
+Overfull \hbox (44.95358pt too wide) in paragraph at lines 145--151
 \T1/cmr/m/n/10.95 Field names on the ice side come from the ism-mapper it-self 
 (\T1/cmtt/m/n/10 cplng_config_mod.F90\T1/cmr/m/n/10.95 ): \T1/cmtt/m/n/10 <pref
 ix>_Precip_liquid\T1/cmr/m/n/10.95 ,
@@ -552,7 +552,7 @@ ix>_Precip_liquid\T1/cmr/m/n/10.95 ,
 
 [2{/sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/enc/dvips/cm-supe
 r/cm-super-ts1.enc}]
-Overfull \hbox (7.70946pt too wide) in paragraph at lines 196--200
+Overfull \hbox (7.70946pt too wide) in paragraph at lines 195--199
 \T1/cmr/bx/n/10.95 Consequence. \T1/cmtt/m/n/10 plit \T1/cmr/m/n/10.95 reaches 
 \T1/cmtt/m/n/10 suorog \T1/cmr/m/n/10.95 as an in-ter-po-lated value, not the a
 rea frac-tion \T1/cmtt/m/n/10 ECE_LANDICE_THRESH
@@ -560,18 +560,18 @@ rea frac-tion \T1/cmtt/m/n/10 ECE_LANDICE_THRESH
 
 [3]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10.95> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 272.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 271.
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 272.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 271.
  [4]
-<ismtest10_smb_verification.png, id=116, 852.786pt x 342.078pt>
+<ismtest10_smb_verification.png, id=136, 852.786pt x 342.078pt>
 File: ismtest10_smb_verification.png Graphic file (type png)
 <use ismtest10_smb_verification.png>
-Package pdftex.def Info: ismtest10_smb_verification.png  used on input line 334
+Package pdftex.def Info: ismtest10_smb_verification.png  used on input line 333
 .
 (pdftex.def)             Requested size: 472.31595pt x 189.45883pt.
  [5]
-Overfull \hbox (20.94603pt too wide) in paragraph at lines 346--353
+Overfull \hbox (20.94603pt too wide) in paragraph at lines 345--352
 \T1/cmr/bx/n/10.95 The field it-self. \T1/cmr/m/n/10.95 Pre-cip-i-ta-tion falls
  mono-ton-i-cally with el-e-va-tion across seven 250m bins, 391mmw.e./yr
  []
@@ -581,62 +581,102 @@ pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.390 
-       <./ismtest10_smb_verification.png>] [7] [8]
-Overfull \hbox (47.1501pt too wide) in paragraph at lines 507--513
+l.389 
+       <./ismtest10_smb_verification.png>] [7]
+Overfull \hbox (52.36176pt too wide) in paragraph at lines 504--509
+[]\T1/cmr/m/n/10.95 The cause was ours, from two days ear-lier. Gat-ing ocp-too
+l's FE-SOM ex-port be-hind \T1/cmtt/m/n/10 ocean.write_oasis_grid
+ []
+
+[8]
+Overfull \hbox (30.14772pt too wide) in paragraph at lines 547--555
+\T1/cmr/m/n/10.95 im-port: \T1/cmtt/m/n/10 libproj \T1/cmr/m/n/10.95 wants a \T
+1/cmtt/m/n/10 libstdc++ \T1/cmr/m/n/10.95 newer than \T1/cmtt/m/n/10 /lib64 \T1
+/cmr/m/n/10.95 has, and \T1/cmtt/m/n/10 cmocean \T1/cmr/m/n/10.95 calls \T1/cmt
+t/m/n/10 matplotlib.cm.register_cmap\T1/cmr/m/n/10.95 ,
+ []
+
+
+Overfull \hbox (51.7715pt too wide) in paragraph at lines 599--607
+\T1/cmtt/m/n/10 libproj \T1/cmr/m/n/10.95 needs \T1/cmtt/m/n/10 GLIBCXX_3.4.26 
+\T1/cmr/m/n/10.95 and \T1/cmtt/m/n/10 /lib64 \T1/cmr/m/n/10.95 stops at 3.4.25,
+ and \T1/cmtt/m/n/10 cmocean \T1/cmr/m/n/10.95 calls \T1/cmtt/m/n/10 matplotlib
+.cm.register_cmap\T1/cmr/m/n/10.95 ,
+ []
+
+[9]
+Overfull \hbox (7.07222pt too wide) in paragraph at lines 610--614
+[]\T1/cmtt/m/n/10 bleach 5.0.0 \T1/cmr/m/n/10.95 in the shared spack python has
+ a mal-formed re-quire-ment, \T1/cmtt/m/n/10 tinycss2 (>=1.1.0<1.2)\T1/cmr/m/n/
+10.95 ,
+ []
+
+
+Overfull \hbox (63.53958pt too wide) in paragraph at lines 614--619
+[]\T1/cmtt/m/n/10 prepcompute_recipe \T1/cmr/bx/n/10.95 un-der \T1/cmtt/m/n/10 
+choose_with_icb \T1/cmr/bx/n/10.95 is never read. \T1/cmr/m/n/10.95 The live re
+cipe is \T1/cmtt/m/n/10 general.prepcompute_recipe\T1/cmr/m/n/10.95 ;
+ []
+
+[10] [11]
+Overfull \hbox (47.1501pt too wide) in paragraph at lines 771--777
 \T1/cmr/m/n/10.95 The \T1/cmtt/m/n/10 -huge \T1/cmr/m/n/10.95 trap is worth sta
 t-ing once in full: re-ceive buffers are ini-tialised to \T1/cmtt/m/n/10 -huge\
 T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10 AccumulateECEForcingFields
  []
 
-
-Overfull \hbox (10.94617pt too wide) in paragraph at lines 546--548
+[12]
+Overfull \hbox (10.94617pt too wide) in paragraph at lines 810--812
 []\T1/cmtt/m/n/10 esm_runscripts -c \T1/cmr/m/n/10.95 as-sem-bles the full run-
 time con-fig and catches grid-consistency and component-
  []
 
-[9] [10] (./orography_smb_coupling.aux)
+[13] [14] (./orography_smb_coupling.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-06>
  ***********
 Package rerunfilecheck Info: File `orography_smb_coupling.out' has not changed.
 
-(rerunfilecheck)             Checksum: 75DCAA6DA3DC51FAB273D6D8E8FF9336;4272.
+(rerunfilecheck)             Checksum: 2CFA800C988DFE5A5619DA1D8CC2471D;5986.
  ) 
 Here is how much of TeX's memory you used:
- 11261 strings out of 467538
- 171301 string characters out of 5410173
- 617632 words of memory out of 5000000
- 39981 multiletter control sequences out of 15000+600000
+ 11291 strings out of 467538
+ 171666 string characters out of 5410173
+ 617053 words of memory out of 5000000
+ 39993 multiletter control sequences out of 15000+600000
  648171 words of font info for 95 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,11n,79p,883b,558s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,11n,79p,883b,556s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/amsf
 onts/cm/cmmi10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/
-type1/public/amsfonts/cm/cmr10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/t
-exmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></sw/spack-levante/texlive-li
-ve2025-uaw7o7/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></sw/spack-l
-evante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.
+type1/public/amsfonts/cm/cmmi8.pfb></sw/spack-levante/texlive-live2025-uaw7o7/t
+exmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></sw/spack-levante/texlive-l
+ive2025-uaw7o7/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></sw/spack-le
+vante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pf
+b></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/amsf
+onts/cm/cmsy10.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/
+type1/public/amsfonts/cm/cmsy7.pfb></sw/spack-levante/texlive-live2025-uaw7o7/t
+exmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></sw/spack-levante/texlive-l
+ive2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></sw/spack-l
+evante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx1095.
 pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm
--super/sfbx1000.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts
-/type1/public/cm-super/sfbx1095.pfb></sw/spack-levante/texlive-live2025-uaw7o7/
-texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></sw/spack-levante/texlive-
-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></sw/spack-
-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfbx1728
+-super/sfbx1200.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts
+/type1/public/cm-super/sfbx1440.pfb></sw/spack-levante/texlive-live2025-uaw7o7/
+texmf-dist/fonts/type1/public/cm-super/sfbx1728.pfb></sw/spack-levante/texlive-
+live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm0800.pfb></sw/spack-
+levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm1000
 .pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/c
-m-super/sfrm0800.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/font
-s/type1/public/cm-super/sfrm1000.pfb></sw/spack-levante/texlive-live2025-uaw7o7
-/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></sw/spack-levante/texlive
--live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></sw/spack
--levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sfti109
-5.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/
-cm-super/sftt1000.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/fon
-ts/type1/public/cm-super/sftt1095.pfb>
-Output written on orography_smb_coupling.pdf (10 pages, 524748 bytes).
+m-super/sfrm1095.pfb></sw/spack-levante/texlive-live2025-uaw7o7/texmf-dist/font
+s/type1/public/cm-super/sfrm1200.pfb></sw/spack-levante/texlive-live2025-uaw7o7
+/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></sw/spack-levante/texlive
+-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb></sw/spack
+-levante/texlive-live2025-uaw7o7/texmf-dist/fonts/type1/public/cm-super/sftt109
+5.pfb>
+Output written on orography_smb_coupling.pdf (14 pages, 578671 bytes).
 PDF statistics:
- 242 PDF objects out of 1000 (max. 8388607)
- 191 compressed objects within 2 object streams
- 30 named destinations out of 1000 (max. 500000)
- 150 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 318 PDF objects out of 1000 (max. 8388607)
+ 256 compressed objects within 3 object streams
+ 48 named destinations out of 1000 (max. 500000)
+ 190 words of extra memory for PDF output out of 10000 (max. 10000000)
 

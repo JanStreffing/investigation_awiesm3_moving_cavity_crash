@@ -13,7 +13,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-08-04}
+\date{Last updated: 2026-08-05}
 
 \begin{document}
 \maketitle
@@ -27,11 +27,10 @@ surface elevation OIFS runs with following the ice sheet PISM produced. The ocea
 by the moving-cavity campaign; this is its companion.
 
 \medskip\noindent
-\textbf{Where we are.} The SMB direction runs and the numbers hold up. A full coupled year
-produces a monthly surface mass balance file on the PISM grid, through OASIS, from the OIFS leg
-that just ran: $P-E-R=147$\,mm\,w.e./yr over the ice mask, against an observed Antarctic value of
-order 170. PISM does not consume the file yet, so the 130\,ka taint of \S\ref{sec:taint} still
-stands, and the orography direction has not started.
+\textbf{Where we are.} The SMB direction is closed. OIFS's own $P-E-R$ reaches PISM and PISM
+integrates on it, which retires the 130\,ka taint of \S\ref{sec:taint}: the paleo file was driving
+the ice sheet 50\% too wet. The ice sheet's discharge is wired back to the ocean as icebergs,
+built but not yet run. The orography direction has not started.
 
 \medskip\noindent
 Timeline in \S\ref{sec:campaign}, current state and open items in \S\ref{sec:state}, dead claims
@@ -417,16 +416,276 @@ it freshens the Southern Ocean, and only one of those can be right. There is no 
 diagnostic in the output, so this is inferred from the saturation condition rather than measured.
 Adding one is the cheapest way to close it.
 
-The fix is to stop OIFS shedding over the PISM domain and let PISM's own calving and basal melt be
-what reaches FESOM. That cannot be done first: the freshwater return does not exist yet, so
-switching off the shedding on its own would take about 2000\,Gt/yr out of the Southern Ocean with
-nothing replacing it. The two have to land together.
+The fix is to stop OIFS shedding over the PISM domain and let PISM's own discharge be what reaches
+FESOM instead. \textbf{That return path already exists.} \code{pism2esm} calls \code{pism2ocean}
+unconditionally, \code{iter\_coup\_interact\_method\_ice2oce} is already
+\code{BASALSHELF\_WATER\_ICEBERG\_MODEL}, and
+\code{iterative\_coupling\_pism\_ocean\_prepare\_ocean\_icebergmodel\_forcing} writes
+\code{latest\_discharge.nc} from PISM's \code{tendency\_of\_ice\_amount\_due\_to\_discharge}. On the
+other side, fesom-2.7 already has \code{disch\_file} pointing at exactly that file, behind
+\code{use\_landice\_water} and \code{use\_icesheet\_coupling}.
+
+The whole chain is switched off by one flag. \code{iceberg\_coupling: 0} in the runscript becomes
+\code{PISM\_TO\_OCEAN=0} and \code{fesom\_use\_iceberg=0}, and \code{pism2ocean} returns in 0.06\,s
+with \emph{NOT generating ice forcing for ocean model}. So closing the double count is a
+configuration change and a test, not a piece of development.
+
+Note what the selected method deliberately leaves out: the basal-shelf line is commented out, so
+only discharge returns, not basal melt. That is right for us. FESOM computes the cavity melt
+itself and PISM consumes it through \code{-ocean given}, so sending PISM's basal melt back would
+double count in the other direction.
+
+What is genuinely untested is whether it runs. \code{use\_icebergs} is \code{.false.} in every
+FESOM namelist we ship, and the helper that would tell the iceberg module how many bergs to seed,
+\code{get\_ib\_num\_after\_ice\_sheet\_coupling}, is commented out.
 
 \medskip\noindent
 \textbf{This does not taint the moving-cavity results.} Without PISM returning mass, the shedding
 was the correct closure and the ocean saw a balanced ice sheet, which is what those runs assumed.
 
-\section{State of the coupling (2026-08-04)}
+\subsection{PISM eats what OIFS gives (2026-08-05)}
+\label{sec:direct}
+
+\code{just\_copy\_stuff.functions} copied \code{atmosphere\_file\_for\_ice.nc} out of another
+user's 130\,ka experiment (\S\ref{sec:taint}). It is gone. \code{smb2ice} hands over the
+ISM-mapper's own output instead, and falls back to the old copy only when \code{smb\_coupled} is
+off.
+
+On the ice side, \code{ablation\_method: DIRECT} builds the surface-given file straight from the
+atmosphere's water budget, $\mathrm{climatic\_mass\_balance} = (P_{\text{liq}}+P_{\text{sol}}-R)\rho_w - E$,
+with \code{ice\_surface\_temp} from soil layer 4. No melt model: over Antarctica HTESSEL's budget
+already \emph{is} the surface mass balance. \code{regrid\_method: NONE}, because the ISM-mapper
+delivers on the ice sheet's own grid.
+
+Two things surfaced while building it. The pool mask for \code{antarct\_cr} is a symlink to a
+$192\times96$ ECHAM grid, so it cannot mask a $761\times761$ field at all; the mask now comes from
+\code{thk} and \code{topg} in PISM's own state. And without any mask the coastal values the
+GAUSWGT stencil smears over the Southern Ocean would nucleate ice offshore.
+
+\medskip\noindent
+\textbf{What changed for PISM.} Against \code{ismtest10}, the last run on the paleo file, with the
+same PISM configuration:
+
+\begin{center}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+ & dEBM on the 130\,ka file & DIRECT on OIFS's $P-E-R$ \\
+\midrule
+SMB tendency [Gt/yr]    & $3103 \to 3106$   & $2010 \to 1984$ \\
+discharge [Gt/yr]       & $-35345 \to -9578$ & $-28628 \to -8342$ \\
+basal mass flux [Gt/yr] & $-1428 \to -817$  & $-1438 \to -805$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The paleo file drove PISM at 3103\,Gt/yr against an observed Antarctic 2100--2400. So the taint was
+worth about $+50\%$, and the replacement is inside the observed range. Basal mass flux is unchanged
+to 1\%, which is the control: it comes from FESOM's cavity melt, which this did not touch.
+
+\medskip\noindent
+\textcolor{red}{\textbf{Not a statement about the ice sheet.}} Both runs shed 8000--9600\,Gt/yr and
+carry a discharge 3--4 times an in-balance Antarctica even at year 10. That is the inherited
+spinup relaxing, not the coupling. \S\ref{sec:spinup} deals with it.
+
+\subsection{The mesh regeneration stopped writing the ocean grid (2026-08-05)}
+\label{sec:regenbug}
+
+\code{ismtest11}'s second cycle died on every one of 1792 ranks:
+
+\begin{verbatim}
+MCT::m_SparseMatrixPlus:: FATAL--length of vector x different from column count
+of sMat. Length of x = 208432   Number of columns in sMat = 208810
+\end{verbatim}
+
+208432 is the new mesh, 208810 the old. The chunk-2 namcouple correctly declared the new size while
+all three staged \code{rmp\_*feom*.nc} still carried the old one.
+
+The cause was ours, from two days earlier. Gating ocp-tool's FESOM export behind
+\code{ocean.write\_oasis\_grid} is right for the initial pool, where FESOM writes \code{feom} itself
+at runtime. It is wrong for the regeneration, which needs the grid present precisely so the new
+weights can be built against it. \code{permute\_feom\_to\_runtime} then found nothing to permute and
+refused to continue, correctly.
+
+\medskip\noindent
+\textbf{A second bug, not ours, and worse.} \code{couple\_in} did exit 1. The generated run script
+backgrounds it and lets \code{observe\_couple\_in} submit the next leg regardless of its status:
+
+\begin{verbatim}
+ice2fesom > log 2>&1 &
+process=$!
+esm_runscripts ... -t observe_couple_in -p ${process} ...
+wait
+\end{verbatim}
+
+So a cleanly reported failure still cost a 32-node MCT abort. Left alone, since it is shared
+\code{esm\_runscripts} behaviour for every setup. Mitigated instead by a post-condition: after
+regeneration the new weights are checked against \code{nod2d.out} and a mismatch is named with both
+sizes rather than reaching MCT.
+
+\subsection{Which way the ice sheet's water reaches the ocean (2026-08-05)}
+\label{sec:fwreturn}
+
+Two routes exist. The runoff mapper can take the ISM's basal melt and discharge directly, summing
+them into runoff and calving. Or the discharge can become icebergs.
+
+The first was built and then thrown away. It worked, and the arithmetic checked out: converting
+PISM's gridded \code{kg\,m$^{-2}$\,yr$^{-1}$} to m/s and integrating gave $-11222.3$\,Gt/yr of
+discharge against $-11222.3$ in PISM's own \code{ts} file. But it ran PISM's discharge through the
+feedback file, the ISM-mapper and a new OASIS link to arrive where the runoff mapper could have
+been handed it, and it is not the route we want physically. Icebergs drift and melt over months
+across a wide area; a runoff-mapper flux is deposited at the calving front immediately.
+
+\medskip\noindent
+\textbf{Kept from that work:} the runoff mapper upgrade. Ours was an ancestor of EC-Earth4's, four
+coupling fields and a three-entry namelist. The new one brings \code{IgnoreCalvingBasins}, which is
+needed whichever route the water takes: the atmosphere's snow-cap calving over Antarctica has to
+stop, or it is counted twice (\S\ref{sec:calving}). Basin 66 is Antarctica exactly, 13383 land cells
+from $89.5^\circ$S to $64.2^\circ$S, none north of $60^\circ$S, and 1537 ocean calving points. Our
+one local change, dropping the calving enthalpy conversion, was already upstream.
+
+\medskip\noindent
+\textbf{The iceberg route, and why not the plugin.} \code{fesom\_icb\_pism} registers
+\code{esm\_tools.plugins} entry points, and \code{esm\_plugin\_manager} imports every registered
+plugin at startup. Installing it pulled \code{pyfesom2} into every \code{esm\_runscripts} call,
+icebergs on or off, and on this machine that stack does not import: \code{libproj} wants a
+\code{libstdc++} newer than \code{/lib64} has, and \code{cmocean} calls
+\code{matplotlib.cm.register\_cmap}, gone since matplotlib 3.9. An unrelated config check died
+because of an iceberg plugin.
+
+So the two halves are split by weight, the way ocp-tool is already handled. The generator needs
+\code{pyfesom2} and runs as a subprocess under the ocp-tool python, from \code{couple\_in}, right
+after \code{latest\_discharge.nc} is written. Counting the bergs into \code{icebergs\%ib\_num} needs
+nothing and is a core prepcompute step with no entry point.
+
+No berg set is seeded. \code{icb\_felem} indexes the mesh, and the mesh changes every chunk, so the
+set is rebuilt per leg from that leg's discharge and mesh. Run 1 starts empty, because PISM has not
+run yet.
+
+\subsection{Starting PISM from a relaxed state (2026-08-05)}
+\label{sec:spinup}
+
+The discharge is the iceberg forcing now, so the spinup transient stopped being a background
+annoyance. Over a270234's \code{repro\_movcav45}, 570 years of coupled PISM on the same 8\,km
+\code{antarct\_cr} grid:
+
+\begin{center}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+chunk & discharge & basal & SMB & $\Delta$mass \\
+\midrule
+year 0   & $-14253$ & $-1009$ & 3099 & $-9763$ \\
+year 10  & $-9729$  & $-784$  & 3112 & $-7338$ \\
+year 530 & $-3966$  & $-713$  & 3152 & $-1448$ \\
+year 560 & $-4141$  & $-685$  & 3157 & $-1666$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Discharge falls by 3.4 and the mass loss by nearly 6. The year-560 restart is now the start state.
+Still above a balanced $\sim$2000\,Gt/yr, but in a range where the ocean response is worth reading;
+the old spinup would have delivered roughly five times that.
+
+\subsection{Bringing up icebergs: six defects (2026-08-05)}
+\label{sec:icb}
+
+The freshwater route is icebergs, not the runoff mapper's own ISM inputs
+(\S\ref{sec:fwreturn}). Getting a leg to start took seven submissions. Five of the six things in
+the way were already broken; one was ours. Listed because the pattern says something about how
+much of this path had been exercised before.
+
+\begin{enumerate}
+\item \textbf{The plugin poisons every run.} \code{fesom\_icb\_pism} registers
+      \code{esm\_tools.plugins} entry points, and \code{esm\_plugin\_manager} imports every
+      registered plugin at startup. Installing it pulls \code{pyfesom2} into every
+      \code{esm\_runscripts} call, icebergs on or off. On this machine that stack does not import:
+      \code{libproj} needs \code{GLIBCXX\_3.4.26} and \code{/lib64} stops at 3.4.25, and
+      \code{cmocean} calls \code{matplotlib.cm.register\_cmap}, removed in matplotlib 3.9. An
+      unrelated config check died because of an iceberg plugin. Proved by \code{LD\_PRELOAD} both
+      ways: the old \code{libstdc++} first reproduces it, the conda one first fixes it.
+\item \textbf{\code{with\_icb} cannot be set from a \code{choose\_} block.} fesom's
+      \code{choose\_with\_icb} resolves first, so the whole iceberg block stays off while every
+      flag reads true. It goes in the driver runscript beside \code{with\_recom}.
+\item \textbf{\code{bleach 5.0.0}} in the shared spack python has a malformed requirement,
+      \code{tinycss2 (>=1.1.0<1.2)}, missing a comma. It breaks \code{pkg\_resources} whenever
+      plugins are scanned, which is exactly when \code{with\_icb} is on. Upstream's 5.0.1
+      changelog entry is \emph{Add missing comma to tinycss2 require}.
+\item \textbf{\code{prepcompute\_recipe} under \code{choose\_with\_icb} is never read.} The live
+      recipe is \code{general.prepcompute\_recipe}; the fesom one sits in the finished config
+      unused, 17 steps against 19. So \code{prep\_icebergs} and
+      \code{apply\_iceberg\_calving\_to\_namelists} have \emph{never run for anyone}, and the
+      plugin's only effect to date has been the import of item 1.
+\item \textbf{\code{icb\_calving\_day.dat} is missing everywhere.} FESOM opens it
+      \code{status='old'} and reads \code{ib\_num} values, in both \code{init\_icebergs} and
+      \code{init\_icebergs\_with\_icesheet}. It is in neither \code{icb\_inputs} nor the staging
+      lists, and \code{\_icb\_generator} does not write it: that writes longitude, latitude,
+      length, height, scaling and felem. Found the format in a working ini directory of
+      a270124's, one day-of-year per berg.
+\item \textbf{Ours.} A config file staged into \code{work/} takes the basename of its
+      \emph{source}, so a template named \code{namelist.runoffmapper.ismm} lands under that name
+      and the runoff mapper dies on a missing \code{namelist.runoffmapper}. Fixed with a versioned
+      directory rather than a rename, since \code{config\_in\_work} set from
+      \code{choose\_version} does not merge either.
+\end{enumerate}
+
+\medskip\noindent
+\textbf{What we built instead of using the plugin.} The two halves are split by weight, the way
+ocp-tool is already handled. \code{make\_icebergs.py} needs \code{pyfesom2} and runs as a
+subprocess under the ocp-tool python from \code{couple\_in}, right after
+\code{latest\_discharge.nc} is written. \code{count\_icebergs\_into\_namelist} counts them into
+\code{icebergs\%ib\_num} and is a core prepcompute step with no entry point, so nothing heavy is
+imported unless bergs are actually being made.
+
+That counter cost two of the seven submissions on its own. It has to write to
+\code{namelist\_changes} and run \emph{before} \code{modify\_namelists}, which loads, modifies and
+writes in one step. Editing the loaded object afterwards, which is what the upstream plugin does,
+changes nothing on disk. The first version was right and sat in the dead recipe of item 4, so it
+logged the correct \code{ib\_num = 0} while the file on disk kept the template's 1.
+
+\medskip\noindent
+\textbf{Three more, found by running it.} The count reached nine.
+
+\begin{enumerate}
+\setcounter{enumi}{6}
+\item \textbf{\code{icb\_calving\_day.dat} is missing everywhere} (already listed as 5 above).
+\item \textbf{Zero bergs kills FESOM.} \code{init\_buoy\_output} defines
+      \code{number\_tracer} with extent \code{ib\_num} and then \code{time} as
+      \code{NF\_UNLIMITED}. In classic netCDF a zero-size dimension \emph{is} unlimited and only
+      one is allowed, so the run dies at step 1 with \code{NC\_UNLIMITED size already in use}.
+      \code{ib\_num} is never tested against zero anywhere in the iceberg code; the stepping
+      itself is fine with it. Fixed by guarding the five output call sites,
+      \href{https://github.com/FESOM/fesom2/pull/962}{FESOM/fesom2\#962}. Verified: before, dies
+      at step 1; after, reaches step 3649 and integrates normally.
+\item \textbf{The generator needs cell corners nothing writes.} \code{\_get\_coords} reads
+      \code{lon\_bnds}/\code{lat\_bnds} to place bergs inside a discharge cell. The PISM griddes
+      in the pool carries centres only, so \code{cdo -setgrid} cannot add them and
+      \code{latest\_discharge.nc} comes out without: the real pipeline would have failed the same
+      way. \code{add\_cell\_bounds.py} supplies them from ocp-tool's own
+      \code{PISM.cell\_corners}.
+\end{enumerate}
+
+\medskip\noindent
+\textbf{The worst one was silent.} \code{count\_icebergs\_into\_namelist} read the couple
+directory, which is right from run 2, when the generator writes there. On run 1 the bergs come
+from the seed directory instead, so a staged set of 63015 came out as \code{ib\_num = 0} and FESOM
+would have ignored every one of them. No crash, no warning, just a run with no icebergs that
+looked fine. The zero-berg guard of item 8 is exactly what would have let that pass unnoticed.
+
+\medskip\noindent
+\textbf{The generator works.} 63015 bergs from the discharge of the same movcav45 state the PISM
+restart comes from (\S\ref{sec:spinup}). All seven files consistent, \code{icb\_felem} inside the
+mesh's 405888 elements, latitudes $-76.4$ to $-60.5$ along the Antarctic coast, total mass of
+order 2800\,Gt against that state's 4141\,Gt/yr. Banked as the chunk-1 set, valid for that mesh
+only. \code{scaling} is 1 throughout, so these are 63015 individual bergs rather than a smaller
+set standing in for more; the awiesm-2.1 reference compressed the count with
+\code{scaling\_factor [100, 50, 10, 1, 1, 1]}, worth revisiting if advection is slow.
+
+\medskip\noindent
+\textbf{Still not verified.} No leg has generated bergs \emph{in run}. Chunk 2 is the first, and it
+is also the leg that exercises the \code{feom} fix of \S\ref{sec:regenbug}.
+
+\section{State of the coupling (2026-08-05)}
 \label{sec:state}
 
 \subsection{Proven}
@@ -443,6 +702,8 @@ was the correct closure and the ocean saw a balanced ice sheet, which is what th
 \item A full year runs coupled and writes \code{antar\_smb\_1900.nc} on the PISM grid, monthly,
       with no sentinels and no NaNs (\S\ref{sec:running}).
 \item Daily coupling with \code{LOCTRANS AVERAGE}, so 365 exchanges a year rather than 8760.
+\item PISM integrates on it. \code{just\_copy} is gone, and the paleo file it served was driving
+      PISM at 3103\,Gt/yr against an observed 2100--2400 (\S\ref{sec:direct}).
 \item The delivered SMB is physical: 147\,mm\,w.e./yr over the ice mask, 2022\,Gt/yr in total,
       99.4\% solid precipitation, monotonic in elevation across seven bins (\S\ref{sec:verify}).
 \item The remap preserves precipitation to within 1\% over the ice sheet, checked against OIFS's
@@ -458,9 +719,12 @@ was the correct closure and the ocean saw a balanced ice sheet, which is what th
       10\% low continentally (\S\ref{sec:verify}). Expected at TCO95 and shared with ERA5, but it
       redistributes accumulation from the outlet catchments to the dome, which is the pattern PISM
       is most sensitive to. Nothing to fix today; something to state whenever a run is interpreted.
-\item \textbf{Consume the SMB:} turn \code{\{region\}\_smb\_\{year\}.nc} into
-      \code{atmosphere\_file\_for\_ice.nc}, replacing the stub of \S\ref{sec:taint}. This is what
-      retires the 130\,ka taint.
+\item \textbf{Nothing has run with icebergs on.} The generator imports and the call site is
+      wired, but no leg has invoked it on real discharge. Chunk 1 makes none by design, so chunk 2
+      is the first real test, and it is the same leg that exercises the \code{feom} fix of
+      \S\ref{sec:regenbug}.
+\item \textbf{A failed \code{couple\_in} still cannot stop the chain} (\S\ref{sec:regenbug}). Left
+      alone deliberately; it is shared \code{esm\_runscripts} behaviour.
 \item \textbf{HTESSEL glacier-tile refreezing} is unchecked. It decides whether the shelf-margin
       SMB is meaningful before PISM ever sees it.
 \item \textbf{\code{A\_Calving} double-count, about 2000\,Gt/yr} (\S\ref{sec:calving}). Confirmed:
@@ -550,6 +814,17 @@ accumulates \code{-huge} for a whole leg. This is the same failure class as the 
 \item Weight generation must run from a shared filesystem. A first attempt with the working
       directory on \code{/tmp} died in 14\,s: \code{/tmp} is node-local on Levante, so the compute
       node could not write the job output.
+\item \textbf{A \code{choose\_} block cannot override what another \code{choose\_} block sets.}
+      This cost three separate rounds: \code{with\_icb} set from
+      \code{choose\_general.ism\_freshwater\_return} left the whole iceberg block off while every
+      flag read true; \code{required\_plugins} and \code{prepcompute\_recipe} set from the setup
+      lost to fesom's \code{choose\_with\_icb}; \code{config\_in\_work} set from
+      \code{choose\_version} never merged. Each time the fix was to move the value to where it
+      resolves first, not to try to outrank it. Literals in the driver runscript win, and a
+      versioned directory beats renaming a file.
+\item The name a config file gets in \code{work/} is the \emph{basename of its source}, not the key
+      it is filed under. A template named \code{namelist.runoffmapper.ismm} is staged under that
+      name and the model dies on a missing \code{namelist.runoffmapper}.
 \item Grid winding is invisible to an area check, which takes an absolute value. Test it
       separately by dotting the corner-polygon normal with the outward radial vector.
 \item Do not guess the units of an OASIS field. Read the line that sets it.
