@@ -13,7 +13,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-08-05}
+\date{Last updated: 2026-08-06}
 
 \begin{document}
 \maketitle
@@ -587,7 +587,7 @@ Discharge falls by 3.4 and the mass loss by nearly 6. The year-560 restart is no
 Still above a balanced $\sim$2000\,Gt/yr, but in a range where the ocean response is worth reading;
 the old spinup would have delivered roughly five times that.
 
-\subsection{Bringing up icebergs: six defects (2026-08-05)}
+\subsection{Bringing up icebergs: ten defects (2026-08-05)}
 \label{sec:icb}
 
 The freshwater route is icebergs, not the runoff mapper's own ISM inputs
@@ -644,7 +644,7 @@ changes nothing on disk. The first version was right and sat in the dead recipe 
 logged the correct \code{ib\_num = 0} while the file on disk kept the template's 1.
 
 \medskip\noindent
-\textbf{Three more, found by running it.} The count reached nine.
+\textbf{Four more, found by running it.} The count reached ten.
 
 \begin{enumerate}
 \setcounter{enumi}{6}
@@ -663,6 +663,19 @@ logged the correct \code{ib\_num = 0} while the file on disk kept the template's
       \code{latest\_discharge.nc} comes out without: the real pipeline would have failed the same
       way. \code{add\_cell\_bounds.py} supplies them from ocp-tool's own
       \code{PISM.cell\_corners}.
+\item \textbf{A guard reads out of bounds on the case it exists to skip.} Nodes of a berg's
+      element that a PE does not own are marked 0 seven lines above, and the loop below guards
+      against that marker and against nodes with no ocean column in one statement:
+      \code{if (iceberg\_node <= 0 .or. ulevels\_nod2d(iceberg\_node) == 0) cycle}. Fortran does
+      not promise to evaluate the left side first and ifort does not, so
+      \code{ulevels\_nod2d(0)} is read for every halo node, which on a partition boundary is the
+      common case rather than a corner one. The control flow was always right, since the
+      \code{cycle} is taken either way; the read is not, and in an optimised build it silently
+      returns whatever precedes the array. Found by the bounds-checked build of
+      \S\ref{sec:icbrestart} within 100 timesteps, fixed as
+      \href{https://github.com/FESOM/fesom2/pull/963}{FESOM/fesom2\#963}. Same family as the two
+      out-of-bounds reads of \code{\#960}. It is the only instance of the pattern in the iceberg
+      sources.
 \end{enumerate}
 
 \medskip\noindent
@@ -716,10 +729,145 @@ summer intensification for the small classes rather than a flat spread,
 default of 400.
 
 \medskip\noindent
-\textbf{Still not verified.} No leg has generated bergs \emph{in run}. Chunk 2 is the first, and it
-is also the leg that exercises the \code{feom} fix of \S\ref{sec:regenbug}.
+\textbf{Since verified.} Chunk 2 generated its bergs in run and exercised the \code{feom} fix of
+\S\ref{sec:regenbug} at the same time, both on the first attempt (\S\ref{sec:chunk2}).
 
-\section{State of the coupling (2026-08-05)}
+\subsection{The corrupted iceberg restart: an off-by-one in a calving day (2026-08-05$\to$06)}
+\label{sec:icbrestart}
+
+Chunk 1 ran its full year with 1227 bergs and then wrote a restart FESOM cannot read back. One
+row of 1227 had 25 fields instead of 26, with field 18 reading \code{0.0000000E+0010995116}.
+The \code{'(18e15.7,I8,L,3e15.7,L,I5,L)'} format puts no separator between fields, so an
+\code{iceberg\_elem} that fills all eight digits of the \code{I8} butts against the preceding
+\code{e15.7} and the record stops parsing. The corrupt row was always the last one, and the other
+1226 carried valid elements between 1385 and 404434 on a 405888-element mesh.
+
+The obvious suspect was the local-to-global conversion, \code{iceberg\_elem =
+partit\%myList\_elem2D(iceberg\_elem)}, which has no range check on either side. FESOM was rebuilt
+with \code{-check bounds -check pointers -traceback -g -O0} on the seven iceberg sources to trap
+it.
+
+That build did not trap the corruption, but it did trap something else within 100 timesteps,
+which is item 10 below and is now
+\href{https://github.com/FESOM/fesom2/pull/963}{FESOM/fesom2\#963}. With that fixed the year ran
+clean to the restart write, and the restart reproduced the defect exactly: 1227 rows, one
+malformed, row 1227.
+
+\medskip\noindent
+\textbf{It was ours, and bounds checking could never have found it.} The generator writes
+\code{icb\_calving\_day.dat} by spreading the set across the year as
+$1 + 364\,i/(n-1)$, which gives the last berg exactly \code{365.0000}. FESOM calves on
+
+\begin{verbatim}
+if( real(istep) > real(step_per_day)*calving_day(ib) ) then !iceberg calved
+\end{verbatim}
+
+\noindent
+so that berg needs step 26281 in a year of $72 \times 365 = 26280$. It never calves,
+\code{iceberg\_step1} never runs for it, and \code{iceberg\_elem(ib)} is only ever assigned inside
+that routine. The array is allocated and never initialised, which is visible on the very next line
+of \code{icb\_allocate.F90}:
+
+\begin{verbatim}
+allocate(iceberg_elem(ib_num))
+allocate(find_iceberg_elem(ib_num))
+find_iceberg_elem = .true.
+\end{verbatim}
+
+\noindent
+so \code{iceberg\_out} writes whatever was in that memory. Nothing ever indexes with the value, so
+there is no out-of-bounds access for \code{-check bounds} to see. The decisive evidence is field 19
+of the bad row: \code{find\_iceberg\_elem} is still \code{T}, where every calved berg has it
+\code{.false.} after its element search, and the velocities are zero for the same reason. The value
+10995116 is byte-identical across two runs, so it is deterministic uninitialised memory rather than
+anything random.
+
+Fixed by ending the spread at day 364 (\code{a6e0f496}). The existing restarts were repaired in
+place by dropping the single bad row, which costs one berg of \code{scaling} 1 that never entered
+the ocean and delivered no freshwater. 1226 rows, all well formed, all elements inside the mesh.
+
+The FESOM half is worth a patch on its own and is not yet sent: an uninitialised array should not
+reach a restart file, and any berg whose calving day falls past the end of a leg hits this,
+not only ours.
+
+\subsection{Chunk 2: what the second leg cost (2026-08-06)}
+\label{sec:chunk2}
+
+Chunk 2 is the first leg that generates bergs in run and the first that exercises the \code{feom}
+fix of \S\ref{sec:regenbug}. Both worked on the first attempt. The coupling produced 842 bergs from
+PISM's discharge with 1226 carried over, added \code{lon\_bnds} inside the pipeline, regenerated the
+mesh to 208094 nodes, validated the weights against it and remapped the OASIS restarts. Two
+further defects then stopped the leg, both of the same family: a per-leg file wired to a path that
+nothing maintains.
+
+\medskip\noindent
+\textbf{The iceberg inputs were frozen at run 1.} \code{reuse\_sources} redirects every reusable
+filetype to the experiment input pool from run 2 onwards. The bergs are \code{input} files, so
+FESOM was given run 1's 1227-line set while \code{ib\_num} had been counted from the new one at
+$1226 + 842 = 2068$, and the read loop
+
+\begin{verbatim}
+do i = 1+num_non_melted_icb, ib_num
+   read(97,*) lon_deg(i)
+\end{verbatim}
+
+\noindent
+ran off the end of the file. Fixed by giving fesom its own \code{reusable\_filetypes} without
+\code{input} (\code{b91ae5af}); that pool holds the iceberg files and nothing else, so the
+optimisation was buying nothing here. With it in place the staging delivers 842, 1226 and 2068 and
+FESOM logs \code{read iceberg restart file} and initialises on all of it.
+
+\medskip\noindent
+\textbf{The ISM-mapper's forcing file was truncated by our own script.} It aborts at startup with
+
+\begin{verbatim}
+2273: *EE*OASISNetCDF: Invalid dimension ID or name
+2273: Aborting ISM-Mapper.
+\end{verbatim}
+
+\noindent
+Despite the prefix that is not OASIS. \code{oasis\_enddef} completes cleanly in
+\code{debug.root.06}; the string is netCDF's \code{NC\_EBADDIM} passed through the mapper's own
+wrapper, \code{call ERROR("OASIS"//nf90\_strerror(iret))}, and it is raised by
+\code{nf90\_inq\_dimid(forcing\_file\_id, "time"/"y"/"x")}.
+
+That forcing file is \code{antar\_pism2ece.nc}, and it has two consumers on two grids. OIFS's
+\code{suorog} reads \code{plit\_oifs(ny{=}1, nx{=}40320)} in gridpoint order, and the ISM-mapper
+reads \code{plit(time, y, x)} on PISM's $761 \times 761$ grid. Our \code{make\_plit\_oifs.py}
+opened it \code{nc.Dataset(out, "w")}, which truncates: it wrote its own half and destroyed the
+mapper's.
+
+\begin{verbatim}
+chunk 1:  ny, nx, time=14, y=761, x=761    plit_oifs + plit
+chunk 2:  ny, nx                            plit_oifs only
+\end{verbatim}
+
+\noindent
+Chunk 1 never sees it because \code{couple\_in} is skipped there and the pre-staged file keeps both
+halves. Chunk 2 is the first leg that runs the script, so it is the first leg that breaks the file.
+Fixed by appending rather than truncating, with a size check on \code{nx}
+(\code{18c712b2}). The damaged file was rebuilt from PISM's chunk-1 end state, which is a better
+\code{plit} than the initial geometry it had carried before: 37.0\% ice cells.
+
+\medskip\noindent
+\textbf{And a stale \code{rstism.nc}, which was real but was not this.} The chunk-2 rule pointed it
+at \code{oasis\_regen/}, where nothing writes an \code{rstism}, so it served a 4.6\,MB seed holding
+only \code{antar\_plit} against the 8.5\,MB file chunk 1 had written with all seven fields and
+their \code{LOCTRANS} accumulators. Fixed by carrying it forward from the previous leg like any
+other OASIS restart; no remapping is involved, since none of the \code{ismm} links touch
+\code{feom}. Staging the correct file did not stop the abort, which is what pointed at the forcing
+file instead (\S\ref{sec:falsified}).
+
+\medskip\noindent
+\textbf{On reading logs from the wrong end.} That one line sits 17000 lines above 362 copies of
+\code{Transport retry count exceeded} on the InfiniBand link, and the transport errors are simply
+the other ranks timing out against a dead peer. All 362 are OIFS ranks and none are FESOM, which
+fits, and they all name the same remote queue pair. Three submissions and a node exclusion went
+into the fabric reading before the head of the log was read (\S\ref{sec:falsified}). The tell was
+available from the start: two of those failures drew the same allocation, but the third drew
+\code{l[10700-10731]} and died identically.
+
+\section{State of the coupling (2026-08-06)}
 \label{sec:state}
 
 \subsection{Proven}
@@ -744,6 +892,13 @@ is also the leg that exercises the \code{feom} fix of \S\ref{sec:regenbug}.
       own output on an identical footprint (Fig.~\ref{fig:smbverif}c).
 \item The delivered fields are correctly oriented, confirmed independently by a $-10.3$\,K/km
       lapse rate against PISM's own surface elevation.
+\item Icebergs run. Chunk 1 integrates a full year with 1227 bergs, mass conserved at 2756\,Gt
+      (\S\ref{sec:icb}).
+\item Bergs are generated in run from PISM's discharge, and the mesh regeneration they depend on
+      works on the same leg: 842 new against 1226 carried, \code{ib\_num = 2068}, read and
+      initialised by FESOM on a mesh regenerated to 208094 nodes (\S\ref{sec:chunk2}).
+\item The iceberg restart round-trips. 1226 rows, every \code{iceberg\_elem} inside the mesh's
+      405888 elements, after the calving-day fix of \S\ref{sec:icbrestart}.
 \end{itemize}
 
 \subsection{Open}
@@ -753,10 +908,19 @@ is also the leg that exercises the \code{feom} fix of \S\ref{sec:regenbug}.
       10\% low continentally (\S\ref{sec:verify}). Expected at TCO95 and shared with ERA5, but it
       redistributes accumulation from the outlet catchments to the dome, which is the pattern PISM
       is most sensitive to. Nothing to fix today; something to state whenever a run is interpreted.
-\item \textbf{Nothing has run with icebergs on.} The generator imports and the call site is
-      wired, but no leg has invoked it on real discharge. Chunk 1 makes none by design, so chunk 2
-      is the first real test, and it is the same leg that exercises the \code{feom} fix of
-      \S\ref{sec:regenbug}.
+\item \textbf{No leg has completed with icebergs delivering freshwater to the ocean.} Chunk 1
+      integrates the year and chunk 2 generates and reads its set, but chunk 2 has not yet run to
+      the end, so the Southern Ocean budget below is still unmeasured.
+\item \textbf{The Southern Ocean freshwater budget is unchecked.} Basin 66 calving is switched off
+      in the runoff mapper and the bergs are meant to replace it. Nobody has yet compared what
+      leaves the ice sheet against what enters the ocean.
+\item \textbf{\code{iceberg\_elem} is uninitialised in FESOM} (\S\ref{sec:icbrestart}). Our
+      calving days no longer trigger it, but any berg whose calving day falls past the end of a leg
+      still writes uninitialised memory into the restart. Worth a patch alongside \code{\#962} and
+      \code{\#963}.
+\item \textbf{The iceberg sources are still built with \code{-check bounds} at \code{-O0}}, left on
+      from the hunt of \S\ref{sec:icbrestart}. Harmless but slow, and the default in
+      \code{src/CMakeLists.txt} must go back before any production leg.
 \item \textbf{A failed \code{couple\_in} still cannot stop the chain} (\S\ref{sec:regenbug}). Left
       alone deliberately; it is shared \code{esm\_runscripts} behaviour.
 \item \textbf{HTESSEL glacier-tile refreezing} is unchecked. It decides whether the shelf-margin
@@ -773,8 +937,9 @@ is also the leg that exercises the \code{feom} fix of \S\ref{sec:regenbug}.
 \item \textbf{\code{PLIT\_antar} is received on \code{atma}}, because \code{ismp $\to$ R096}
       weights were never generated. Harmless while \code{ECE\_LANDICE\_FROM\_OASIS} is off, wrong
       the moment it is turned on for the orography half.
-\item \textbf{Freshwater return.} PISM basal melt and discharge do not reach FESOM. Not needed for
-      SMB or orography, but it is the remaining leg of the mass budget.
+\item \textbf{Freshwater return, partially.} Discharge now reaches FESOM as icebergs
+      (\S\ref{sec:icb}). PISM basal melt still does not, and that is the remaining leg of the mass
+      budget.
 \item \textbf{Field set is welded to scheme in ismm.} The direct path supplies 6 fields, dEBM needs
       7 and shares only 2 of them. Splitting the two would unblock dEBM for Greenland and for warm
       scenarios where a positive-degree-day treatment stops being adequate.
@@ -825,6 +990,25 @@ accumulates \code{-huge} for a whole leg. This is the same failure class as the 
 \item \dead{The ice$\to$atm link is \code{BILINEAR D}.} The SCRIPR letter is the \emph{source}
       grid type and \code{ismp} is logically rectangular, so \code{LR}; and \code{BILINEAR} fails
       here regardless.
+\item \dead{The chunk-2 crash is an InfiniBand fault. Two allocations died at step 1 with
+      \code{Transport retry count exceeded}, so the nodes are bad and excluding them is the fix.}
+      Wrong. The third submission drew a different node set entirely,
+      \code{l[10700-10731]}, and died identically. The 362 transport errors are the other ranks
+      timing out against a peer that had already aborted 17000 log lines earlier, and the real
+      fault is one quiet line, \code{*EE*OASISNetCDF: Invalid dimension ID or name} from the
+      ISM-mapper (\S\ref{sec:chunk2}). Cost three submissions and a node exclusion, all from
+      reading the tail of the log rather than the head.
+\item \dead{The ISM-mapper aborts because chunk 2 staged a stale \code{rstism.nc} holding only
+      \code{antar\_plit}, so OASIS fails on the first LAGged link whose source field is absent.}
+      The stale file was real and is fixed, but it is not the cause: with the correct 8.5\,MB
+      restart staged the mapper aborted identically. The message is not OASIS's at all
+      (\S\ref{sec:chunk2}).
+\item \dead{The corrupt \code{iceberg\_elem} is written by the local-to-global conversion
+      \code{myList\_elem2D(iceberg\_elem)}, which has no range check, or by the invalid
+      \code{MPI\_IN\_PLACE} mixing in \code{com\_integer}.} Neither. The value is never written at
+      all: the last berg never calves, so \code{iceberg\_step1} never runs for it and the
+      uninitialised array reaches the restart (\S\ref{sec:icbrestart}). Both suspects are real
+      defects and neither causes this. A bounds-checked build cleared them by not trapping.
 \item \dead{\code{plit-active=0} in the log is the symptom of the mask being wiped.} That line
       appears 363 times a leg in \code{eval5}, which runs fine. It is a normal diagnostic and says
       nothing about the crash. The evidence for the wipe is the clamp itself and the delivery
