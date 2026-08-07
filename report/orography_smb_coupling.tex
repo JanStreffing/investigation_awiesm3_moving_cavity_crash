@@ -13,7 +13,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-08-06}
+\date{Last updated: 2026-08-07}
 
 \begin{document}
 \maketitle
@@ -867,7 +867,52 @@ into the fabric reading before the head of the log was read (\S\ref{sec:falsifie
 available from the start: two of those failures drew the same allocation, but the third drew
 \code{l[10700-10731]} and died identically.
 
-\section{State of the coupling (2026-08-06)}
+\subsection{Getting chunk 2 to run, and two things I had wrong (2026-08-07)}
+\label{sec:chunk2run}
+
+Chunk 2 ran. \code{ib\_num = 1883}, 948 bergs carried and 935 calved, on a mesh regenerated to
+208094 nodes, with no ISM-mapper abort and no OIFS overflow. It took a clean experiment to get
+there, because \code{ismtest25} had accumulated too many hand repairs to be evidence of anything:
+a repaired restart, hand-filtered berg files, a manually rebuilt \code{plit}, eighteen resumes.
+
+\medskip\noindent
+\textbf{The ISM-mapper abort was a field nobody writes.} \S\ref{sec:chunk2} blamed
+\code{make\_plit\_oifs.py} truncating \code{antar\_pism2ece.nc}, and that was real but only half
+of it. On the clean run the script logged \code{mode=w, kept []}: the file did not exist at all, so
+appending had nothing to append to. The PISM-grid \code{plit(time,y,x)} the mapper reads is written
+by \code{make\_pism2ece\_plit.py}, which is a hand-run prep script with \emph{no call site
+anywhere}. Chunk 1 survives only because it stages a pool copy that someone once prepared by hand
+and which happens to carry both halves; chunk 2 builds the file fresh and gets the OIFS half alone.
+Now built in \code{couple\_in} from the leg's own \code{latest\_ice\_geometry.nc}
+(\code{c420e243}). That file carries PISM's ice-type mask rather than thickness, so the script
+takes \code{mask} $\in \{2,3\}$, grounded and floating, which agrees with \code{thk > 1}\,m to
+within 40 cells of 214082 on the same state. It refreshes rather than skips, so the mask follows
+the moving ice sheet instead of freezing at the initial geometry.
+
+\medskip\noindent
+\textbf{The OIFS overflow was a corpse, not a cause.} Chunk 2 died repeatedly with
+\code{forrtl: error (72): floating overflow} at \code{callpar.F90:680}, which is
+\code{EXP(PSD\_VD(JL,YLZ0H))}, the exponential of the log roughness length for heat. That is a
+convincing thing to chase: \code{couple\_in} regenerates the OIFS land-sea mask every mesh-change
+leg, so a bad \code{LZ0H} at a newly-ocean cell would be exactly this. It was about to become a
+GRIB-field hunt. With the mapper alive the overflow does not occur at all: it was the atmosphere
+falling over after a dead peer, the same way the transport errors of \S\ref{sec:chunk2} were.
+
+\medskip\noindent
+\textbf{PR \href{https://github.com/FESOM/fesom2/pull/964}{FESOM/fesom2\#964}} was merged before
+this leg and carries two things we need. \code{cap\_ibhf\_n} bounds iceberg-driven cooling at
+$-1.85$\,\textdegree C per cell per step, and it binds: 447 firings in the first 1600 steps, 207
+cells and $1.17\times10^{12}$\,J discarded in one of them. Whether that rate is the safety net
+working or a statement about our iceberg heat flux is an open question, not a settled one. It also
+replaces the \code{par\_ex}-then-\code{stop} on an out-of-range \code{iceberg\_elem}, which hung all
+1792 ranks, with marking the berg melted. That retires a defect we were going to report.
+
+\medskip\noindent
+\textbf{The calving-day fix, verified where it counts.} The clean run's chunk-1 restart is 1227
+rows with \emph{zero} malformed, against exactly one before (\S\ref{sec:icbrestart}), and every
+\code{iceberg\_elem} inside 1218..404422.
+
+\section{State of the coupling (2026-08-07)}
 \label{sec:state}
 
 \subsection{Proven}
@@ -908,9 +953,9 @@ available from the start: two of those failures drew the same allocation, but th
       10\% low continentally (\S\ref{sec:verify}). Expected at TCO95 and shared with ERA5, but it
       redistributes accumulation from the outlet catchments to the dome, which is the pattern PISM
       is most sensitive to. Nothing to fix today; something to state whenever a run is interpreted.
-\item \textbf{No leg has completed with icebergs delivering freshwater to the ocean.} Chunk 1
-      integrates the year and chunk 2 generates and reads its set, but chunk 2 has not yet run to
-      the end, so the Southern Ocean budget below is still unmeasured.
+\item \textbf{Chunk 2 runs} (\S\ref{sec:chunk2run}): \code{ib\_num = 1883}, 948 carried and 935
+      calved, no ISM-mapper abort and no OIFS overflow. Whether it reaches the end of the year, and
+      what the Southern Ocean budget looks like, is the next thing to measure.
 \item \textbf{The Southern Ocean freshwater budget is unchecked.} Basin 66 calving is switched off
       in the runoff mapper and the bergs are meant to replace it. Nobody has yet compared what
       leaves the ice sheet against what enters the ocean.
@@ -990,6 +1035,28 @@ accumulates \code{-huge} for a whole leg. This is the same failure class as the 
 \item \dead{The ice$\to$atm link is \code{BILINEAR D}.} The SCRIPR letter is the \emph{source}
       grid type and \code{ismp} is logically rectangular, so \code{LR}; and \code{BILINEAR} fails
       here regardless.
+\item \dead{Chunk 2's iceberg freshwater flux is 20 to 50 times too high: chunk 1 ends the year at
+      1208 and chunk 2 opens at 25641 with the same bergs, so they must be misplaced, and the
+      element-area spread amplifies what a misplaced berg delivers.} The premise was a misread.
+      Chunk 1 does not end at 1208, it ends at 56093 with a peak of 57367; 1208 is a value from its
+      first days, taken from a progress line early in the run and then used as the end-of-year
+      baseline in every comparison after. Against the real figure, chunk 2 opening at 25641 with
+      $\sim$1200 bergs already afloat is unremarkable. Hours went into re-seating carried bergs and
+      arguing about element areas to explain a number that needed no explaining. The re-seat and
+      the submesh placement are still right, since stale indices and bergs on land are wrong on
+      their own terms, but they were not fixing this.
+\item \dead{The OIFS floating overflow at \code{callpar.F90:680}, \code{EXP(LZ0H)}, is a bad
+      roughness length in the regenerated ICMGG at a newly-ocean cell.} Never tested, and wrong.
+      With the ISM-mapper's \code{plit} present the mapper starts and the overflow does not happen
+      (\S\ref{sec:chunk2run}). It was the atmosphere dying after a dead peer.
+\item \dead{\code{couple\_in} should run as its own batch job so it is not at the mercy of the
+      login node.} It already ran on compute whenever the workflow drove it, inside PISM's 4-node
+      allocation (job 26718445, 4 nodes, COMPLETED in 28:59), and that is where
+      \code{regenerate\_oasis\_weights}' inner \code{srun -n 1 --cpus-per-task=64} finds a step to
+      land on. Giving it a single-node job of its own deadlocked it against itself,
+      \code{step creation temporarily disabled (Requested nodes are busy)}. The login-node failure
+      that prompted the change was an editor session holding 1999 of the 2048 RLIMIT\_NPROC
+      threads, not a flaw in the design.
 \item \dead{The chunk-2 crash is an InfiniBand fault. Two allocations died at step 1 with
       \code{Transport retry count exceeded}, so the nodes are bad and excluding them is the fix.}
       Wrong. The third submission drew a different node set entirely,
