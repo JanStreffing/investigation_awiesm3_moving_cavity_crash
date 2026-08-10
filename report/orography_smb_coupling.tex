@@ -13,7 +13,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-08-07}
+\date{Last updated: 2026-08-10}
 
 \begin{document}
 \maketitle
@@ -29,8 +29,11 @@ by the moving-cavity campaign; this is its companion.
 \medskip\noindent
 \textbf{Where we are.} The SMB direction is closed. OIFS's own $P-E-R$ reaches PISM and PISM
 integrates on it, which retires the 130\,ka taint of \S\ref{sec:taint}: the paleo file was driving
-the ice sheet 50\% too wet. The ice sheet's discharge is wired back to the ocean as icebergs,
-built but not yet run. The orography direction has not started.
+the ice sheet 50\% too wet. The ice sheet's discharge reaches the ocean as icebergs and runs. The
+concurrent chain works end to end, so the PISM decade runs inside the ocean year rather than after
+it (\S\ref{sec:concurrent}). One blocker is live and intermittent: an OIFS overflow in
+\code{EXP(LZ0H)} that has now killed a leg with nothing else wrong (\S\ref{sec:lz0h}). The
+orography direction has not started.
 
 \medskip\noindent
 Timeline in \S\ref{sec:campaign}, current state and open items in \S\ref{sec:state}, dead claims
@@ -890,13 +893,13 @@ within 40 cells of 214082 on the same state. It refreshes rather than skips, so 
 the moving ice sheet instead of freezing at the initial geometry.
 
 \medskip\noindent
-\textbf{The OIFS overflow was a corpse, not a cause.} Chunk 2 died repeatedly with
+\textbf{The OIFS overflow did not recur on this leg.} Chunk 2 had died repeatedly with
 \code{forrtl: error (72): floating overflow} at \code{callpar.F90:680}, which is
-\code{EXP(PSD\_VD(JL,YLZ0H))}, the exponential of the log roughness length for heat. That is a
-convincing thing to chase: \code{couple\_in} regenerates the OIFS land-sea mask every mesh-change
-leg, so a bad \code{LZ0H} at a newly-ocean cell would be exactly this. It was about to become a
-GRIB-field hunt. With the mapper alive the overflow does not occur at all: it was the atmosphere
-falling over after a dead peer, the same way the transport errors of \S\ref{sec:chunk2} were.
+\code{EXP(PSD\_VD(JL,YLZ0H))}, the exponential of the log roughness length for heat. With the
+mapper alive this leg ran through without it, and at the time that read as the overflow being the
+atmosphere falling over after a dead peer, the same way the transport errors of
+\S\ref{sec:chunk2} were. It came back on 2026-08-10 with the mapper running and no dead peer
+(\S\ref{sec:lz0h}), so the absence here was the intermittency, not a cure.
 
 \medskip\noindent
 \textbf{PR \href{https://github.com/FESOM/fesom2/pull/964}{FESOM/fesom2\#964}} was merged before
@@ -912,7 +915,132 @@ replaces the \code{par\_ex}-then-\code{stop} on an out-of-range \code{iceberg\_e
 rows with \emph{zero} malformed, against exactly one before (\S\ref{sec:icbrestart}), and every
 \code{iceberg\_elem} inside 1218..404422.
 
-\section{State of the coupling (2026-08-07)}
+\subsection{The concurrent chain, and two failures that left nothing on disk (2026-08-10)}
+\label{sec:concurrent}
+
+The point of \code{coupling\_mode: concurrent} is that the AWI year and the PISM decade run at the
+same time and hand over through \code{<model>\_chunk\_<N>.done} markers, instead of the decade
+serialising behind the ocean year. It works, and it took two failures to get there, both of which
+ended with nothing in the queue and no error anywhere a person would look.
+
+\medskip\noindent
+\textbf{Chunk 1 has no AWI year to consume, so it boots from the pool.} The harvested set the
+resolver picked was from 24 July, and its \code{atmosphere\_file\_for\_ice.nc} is a 48\,MB field on
+a 192$\times$96 Gaussian grid, from a pipeline where the atmosphere forcing had not yet moved onto
+the ice grid. Ours is 334\,MB on PISM's 761$\times$761. With \code{regrid\_method: NONE} the guard
+in \code{coupling\_atmosphere2pism.functions} compared 192 against \code{ice.griddes}' 761 and
+stopped, which is correct. PISM then died in 43 seconds with no output, and the log said
+\code{PISM ERROR: No such file or directory} about \code{latest\_atmo\_forcing\_file.nc}, because
+the guard exited without writing the sentinel \code{observe.py} reads, so the chain started PISM
+anyway and the message naming the grid never surfaced.
+
+The pool went stale because the harvest was never switched on: \code{ismtest} runscripts set
+neither \code{harvest\_parallel\_ini} nor \code{pism\_grid\_tag}, so \code{COUPLING\_IDENTITY} came
+out empty and \code{harvest\_pism\_bootstrap} returned early on every serial leg that could have
+refreshed it. Both keys are set now, the July set is retired in place, and the pool carries a set
+taken from \code{ismtest26}'s own \code{couple/} directory, verified at \code{xsize} 761 against
+\code{ice.griddes} before publishing. The guard writes the sentinel (\code{afa683d5}).
+
+\medskip\noindent
+\textbf{Then the chains deadlocked, and the design says they cannot.} PISM ran its decade, wrote a
+restart, and its \code{couple\_out} died at \code{add\_cell\_bounds} before reaching
+\code{touch\_coupling\_marker}. No \code{pism\_chunk\_1.done}, no sentinel either, so the AWI chain
+parked on a marker that would never arrive and PISM exited clean into its second decade.
+\code{concurrent\_coupling.py} argues mutual parking is impossible because ``markers are monotone
+per chain, and a chain only parks on a marker the sibling has not yet produced, which implies the
+sibling is still running''. That holds only if a leg either writes its marker or crashes loudly.
+This one did neither.
+
+The cause is a name collision. \code{coupling\_pism2esm.functions} sourced
+\code{coupling\_pism2ocean.functions} and then
+\code{../fesom/coupling\_ice2fesom\_interactive\_mesh.functions}, and both define
+\code{iterative\_coupling\_pism\_ocean\_prepare\_ocean\_icebergmodel\_forcing}. The later
+definition wins, so the dispatch in \code{coupling\_pism2ocean.functions} reached the AWI berg
+pipeline rather than this chain's own two-line discharge step. That pipeline wants
+\code{ICB\_BASIN\_FILE} and \code{OCP\_TOOL\_DIR}, which \code{env\_fesom.py} supplies on the other
+chain, so \code{add\_cell\_bounds} was called with one argument instead of two and printed its
+usage.
+
+In serial the same failure is harmless and had been happening unnoticed in both of
+\code{ismtest26}'s PISM legs, because the AWI chain's \code{couple\_in} does the real berg
+generation and that part works: \code{all 875 placeable} and \code{all 935 placeable}. In
+concurrent mode the identical \code{exit 1} lands in front of the handshake.
+
+Nothing in the PISM \code{couple\_out} chain needs that file. Checking all thirteen functions it
+defines against the three files in the chain, the only matches were the colliding name and a
+comment reading \code{\# ice2fesom (other file)}. The source line is gone (\code{14797ecb}). The
+whole coupling tree has exactly three cross-model sources, and this was the one that closed a
+cycle: \code{pism2esm} $\to$ \code{fesom/ice2fesom} $\to$ \code{pism/ocean2pism}.
+
+\medskip\noindent
+\textbf{With that removed the cycle closes by itself.} \code{pism\_chunk\_1.done} at 16:12, PISM
+parked, \code{awiesm3\_chunk\_1.done} at 16:17, \code{reviving parked chain pism} in the same
+second, and PISM went on to finish a second decade and write \code{pism\_chunk\_2.done} unattended.
+The decade takes about 16 minutes and now runs inside the ocean year rather than after it.
+
+\medskip\noindent
+\textbf{The launcher is under-resourced.} The chain doctor submits its own job per chain with
+\code{--nodes=1} hardcoded and a 30 minute default. A mesh-change \code{couple\_in} took 19:15
+there, and 29:31 in the serial arrangement where the same work rides inside PISM's four nodes. Ten
+minutes of headroom on a step that has already run for twenty-nine, and the failure mode is a leg
+dying just before it finishes. \code{coupling\_launcher\_nodes} now exists, defaulting to 4, and
+the walltime default is 1:30. All eight bare \code{exit 1} paths in \code{ice2fesom} were converted
+to \code{couple\_fail} in the same commit (\code{9edaee35}), so a coupling failure there leaves the
+sentinel rather than a parked sibling.
+
+\subsection{The OIFS overflow is not a corpse (2026-08-10)}
+\label{sec:lz0h}
+
+The chunk-2 AWI leg died 90 seconds in with \code{forrtl: error (72): floating overflow} at
+\code{callpar.F90:680}, with the ISM-mapper alive and no dead peer. \S\ref{sec:chunk2run} said this
+crash was the atmosphere falling over behind a dead mapper; that is wrong and is struck in
+\S\ref{sec:falsified}.
+
+\medskip\noindent
+\textbf{It is a corrupt value, not a drifted one.} \code{LZ0H} is the log of the roughness length
+for heat, physically about $10^{-4}$\,m over ocean and $10^{-3}$\,m over snow, so the field lives
+between roughly $-10$ and 0. The physics is the single-precision build, where \code{EXP} overflows
+above 88.7, meaning $z_{0h} > 10^{38}$\,m. Ninety orders of magnitude separate the physical range
+from the crash threshold, which is not a distance bad surface fluxes cover.
+
+\medskip\noindent
+\textbf{Two suspects killed by measurement.} The regenerated ICMGG is not the source: \code{lsrh}
+(paramId 234, \code{NGRBLSRH}) is identically 0.000 in both the pristine
+\code{ICMGGab45INIT\_CORE3} and the ocp-tool regenerated \code{ICMGGab45INIT\_feomdyn}, globally
+and inside the cap. Nor is the first step: \code{callpar.F90:552} guards the
+\code{VD(LZ0H) = VF(LZ0H)} assignment with \code{NSTEP == NSTART}, so every leg including a warm
+start begins from that zero, and the crash arrives 90 seconds later.
+
+The \code{libwam.SP.so} frame directly above \code{callpar} in the traceback is not the wave model.
+\code{libwam.SP.so} exports its own \code{expf} and \code{\_\_libm\_expf}, and \code{libarpifs}
+links against it, so the \code{EXP} call resolves there.
+
+\medskip\noindent
+\textbf{What did change between the legs.} 64 cells altered character in the Antarctic cap, 36 from
+land to sea and 28 from sea to land, spanning $-83$ to $-62$ latitude. The \code{updtim} LANDICE
+hook does not touch them: despite its own header comment it does not flip the land-sea mask, it
+seeds SST and skin temperature and leaves the cells as ocean, and on this leg it reseeded 0 cells
+on every rank. Both crashing ranks were among the 20 of 384 that own \code{plit}-active cells,
+which locates the failure but says only that those ranks hold land-ice columns.
+
+\medskip\noindent
+\textbf{A print, and a staging trap.} \code{callpar.F90:680} now reports the value before the
+\code{EXP} whenever $|\code{LZ0H}| > 20$, together with the neighbouring \code{SD\_VF} slots.
+\code{LZ0H} is the element immediately after the sub-grid orography and land-sea block in the
+packed surface array, so a recognisable fill value, an arbitrary bit pattern and a merely large
+computed number each point somewhere different. Rebuilding was not enough: \code{esm\_runscripts}
+does not re-stage libraries from run 2 on, and all four copies under the experiment were still the
+4 August build with zero occurrences of the marker. The library had to be pushed into the
+experiment's own \code{bin/} pool.
+
+\medskip\noindent
+\textbf{It did not reproduce.} The rerun of the same leg ran the full year and wrote
+\code{awiesm3\_chunk\_2.done}, where the first attempt was dead at 90 seconds, and the print never
+fired. The overflow is intermittent, and chunk 2 is closed on the AWI side. The diagnostic lives in
+the experiment's \code{bin/} pool, so every later leg carries it and the next firing costs no round
+trip.
+
+\section{State of the coupling (2026-08-10)}
 \label{sec:state}
 
 \subsection{Proven}
@@ -944,6 +1072,13 @@ rows with \emph{zero} malformed, against exactly one before (\S\ref{sec:icbresta
       initialised by FESOM on a mesh regenerated to 208094 nodes (\S\ref{sec:chunk2}).
 \item The iceberg restart round-trips. 1226 rows, every \code{iceberg\_elem} inside the mesh's
       405888 elements, after the calving-day fix of \S\ref{sec:icbrestart}.
+\item The concurrent chain closes a full cycle unattended: both chunk-1 markers written, the park
+      claimed and the sibling revived, and PISM on to a second decade
+      (\S\ref{sec:concurrent}). The decade runs inside the ocean year, about 16 minutes hidden
+      rather than added.
+\item A coupling failure in \code{ice2fesom} now stops the workflow. All eight bare exits go
+      through \code{couple\_fail} and leave the sentinel \code{observe.py} reads
+      (\code{9edaee35}).
 \end{itemize}
 
 \subsection{Open}
@@ -953,9 +1088,15 @@ rows with \emph{zero} malformed, against exactly one before (\S\ref{sec:icbresta
       10\% low continentally (\S\ref{sec:verify}). Expected at TCO95 and shared with ERA5, but it
       redistributes accumulation from the outlet catchments to the dome, which is the pattern PISM
       is most sensitive to. Nothing to fix today; something to state whenever a run is interpreted.
-\item \textbf{Chunk 2 runs} (\S\ref{sec:chunk2run}): \code{ib\_num = 1883}, 948 carried and 935
-      calved, no ISM-mapper abort and no OIFS overflow. Whether it reaches the end of the year, and
-      what the Southern Ocean budget looks like, is the next thing to measure.
+\item \textbf{The \code{EXP(LZ0H)} overflow is live and intermittent} (\S\ref{sec:lz0h}). It
+      killed a chunk-2 leg 90 seconds in with the ISM-mapper alive, and did not recur on the rerun
+      of the same leg. The value has to be corrupt rather than drifted, ninety orders of magnitude
+      past physical. The regenerated ICMGG and the first step are ruled out by measurement. A print
+      at \code{callpar.F90:680} is in the experiment's \code{bin/} pool and will catch the next
+      firing with the neighbouring \code{SD\_VF} slots.
+\item \textbf{The concurrent launcher was under-resourced}, one hardcoded node and 30 minutes
+      against a \code{couple\_in} that runs 20 to 30. Fixed with
+      \code{coupling\_launcher\_nodes}, but no concurrent leg has yet exercised the new default.
 \item \textbf{The Southern Ocean freshwater budget is unchecked.} Basin 66 calving is switched off
       in the runoff mapper and the bergs are meant to replace it. Nobody has yet compared what
       leaves the ice sheet against what enters the ocean.
@@ -963,11 +1104,10 @@ rows with \emph{zero} malformed, against exactly one before (\S\ref{sec:icbresta
       calving days no longer trigger it, but any berg whose calving day falls past the end of a leg
       still writes uninitialised memory into the restart. Worth a patch alongside \code{\#962} and
       \code{\#963}.
-\item \textbf{The iceberg sources are still built with \code{-check bounds} at \code{-O0}}, left on
-      from the hunt of \S\ref{sec:icbrestart}. Harmless but slow, and the default in
-      \code{src/CMakeLists.txt} must go back before any production leg.
-\item \textbf{A failed \code{couple\_in} still cannot stop the chain} (\S\ref{sec:regenbug}). Left
-      alone deliberately; it is shared \code{esm\_runscripts} behaviour.
+\item \textbf{A failed \code{couple\_in} still cannot stop the chain by its exit code}
+      (\S\ref{sec:regenbug}); that is shared \code{esm\_runscripts} behaviour and is left alone.
+      Every failure path we own now writes the sentinel instead, which is what \code{observe.py}
+      acts on.
 \item \textbf{HTESSEL glacier-tile refreezing} is unchecked. It decides whether the shelf-margin
       SMB is meaningful before PISM ever sees it.
 \item \textbf{\code{A\_Calving} double-count, about 2000\,Gt/yr} (\S\ref{sec:calving}). Confirmed:
@@ -1046,9 +1186,13 @@ accumulates \code{-huge} for a whole leg. This is the same failure class as the 
       the submesh placement are still right, since stale indices and bergs on land are wrong on
       their own terms, but they were not fixing this.
 \item \dead{The OIFS floating overflow at \code{callpar.F90:680}, \code{EXP(LZ0H)}, is a bad
-      roughness length in the regenerated ICMGG at a newly-ocean cell.} Never tested, and wrong.
-      With the ISM-mapper's \code{plit} present the mapper starts and the overflow does not happen
-      (\S\ref{sec:chunk2run}). It was the atmosphere dying after a dead peer.
+      roughness length in the regenerated ICMGG at a newly-ocean cell.} Tested on 2026-08-10 and
+      wrong: \code{lsrh} is identically 0.000 in both the pristine and the regenerated ICMGG
+      (\S\ref{sec:lz0h}).
+\item \dead{The overflow is the atmosphere dying after a dead peer, and does not happen once the
+      ISM-mapper starts.} Held for one leg and then failed. It recurred on 2026-08-10 with the
+      mapper alive and nothing else dead, and did not recur on the rerun of the same leg
+      (\S\ref{sec:lz0h}). Two clean legs were read as a cure for something intermittent.
 \item \dead{\code{couple\_in} should run as its own batch job so it is not at the mercy of the
       login node.} It already ran on compute whenever the workflow drove it, inside PISM's 4-node
       allocation (job 26718445, 4 nodes, COMPLETED in 28:59), and that is where
