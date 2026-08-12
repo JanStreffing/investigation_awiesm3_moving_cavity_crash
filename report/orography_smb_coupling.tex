@@ -13,7 +13,7 @@
        \large the investigation report\\[0.4em]
        \normalsize\textit{Single living document. Superseded claims are struck through, not deleted.}}
 \author{}
-\date{Last updated: 2026-08-10}
+\date{Last updated: 2026-08-12}
 
 \begin{document}
 \maketitle
@@ -1040,7 +1040,79 @@ fired. The overflow is intermittent, and chunk 2 is closed on the AWI side. The 
 the experiment's \code{bin/} pool, so every later leg carries it and the next firing costs no round
 trip.
 
-\section{State of the coupling (2026-08-10)}
+
+\subsection{The pooled LPJ-GUESS state had never been read (2026-08-11$\to$12)}
+
+Chunk 1 started dying four minutes in, LPJ-GUESS exit 99 at \code{soil.cpp:3475}, a water
+mass balance error of $-0.018$ against a hard threshold of $10^{-3}$. My first explanation was
+the repaired \code{\_v2} soil map, which moves 302 simulated cells off soil code 6, and
+\code{soil.cpp} gives the two organic codes their own soil-property branch. That explanation is
+dead: ismtest31 and ismtest33 carry the \emph{old} map and fail identically, and the failing
+value is bit-identical, \code{invalid ice volume content -0.016162}, under a binary predating
+every LPJ-GUESS land-fraction hardening commit and one containing all of them. Deterministic,
+and not the code.
+
+It is the state. \code{lpjg\_state\_3850} does not load, and nothing had ever tried. Until
+\code{9df993774} the staged directory carried the spinup year while \code{create\_deserializer}
+looks for the leg year, so the deserialiser was never constructed:
+\code{deserializer\_ece.get() 0, islpjgspinup 0}. Every earlier \code{-is} leg 1 cold-started in
+silence. The 10610 cells I had recorded as proof the restart worked were leg 2 reading the state
+\emph{leg 1 had written an hour earlier}, self-consistent by construction.
+
+\begin{center}
+\begin{tabular}{llrl}
+\toprule
+run & staged & remapped & outcome \\
+\midrule
+ismtest28 leg 1 & \code{lpjg\_state\_1901} & 0 & cold start \\
+ismtest29 leg 1 & \code{lpjg\_state\_1901}, \code{\_3850} & 0 & cold start \\
+ismtest29 leg 2 & \code{lpjg\_state\_1901} & 10610 & read leg 1's own output \\
+ismtest30 leg 1 & \code{lpjg\_state\_1900} & 10581 & first real read, died \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+So fixing the naming is what exposed it. \code{fast\_ocean.yaml} now sets
+\code{lresume: false} explicitly, which changes nothing the model does and makes visible what it
+was already doing. Restoring it needs a state that loads.
+
+\subsection{Two bugs in FESOM's blowup reporter (2026-08-12)}
+
+Leg 2 then died with \code{forrtl: severe (151): allocatable array is already allocated}, and the
+traceback landed in \code{check\_blowup\_}. The crash is not the failure: FESOM detected a real
+blowup, started printing per-node diagnostics and died inside its own reporter.
+\code{local\_idx\_of} is \code{save, allocatable} and is allocated at each of five iceberg dump
+sites with no deallocation anywhere, so the second node to blow up on a rank aborts. Guarded on
+first use, \code{6d6ac3dd}.
+
+That exposed the next one. \code{global2local} does \code{aux = 0} and fills only local elements,
+so an iceberg on another rank maps to 0 and the following line indexes \code{elem2d\_nodes(1, 0)}.
+With about 1900 icebergs over 1792 ranks that is nearly every iceberg on nearly every rank, and
+the rerun segfaulted across dozens of ranks instead. Skipped for non-local elements,
+\code{a6479f6d}; the same shape as \code{8aaca2d1}. An OpenMP race was suspected and ruled out:
+all five \code{!\$OMP CRITICAL} regions are unnamed and share one lock.
+
+Both sites date from \code{12db0d66} (2025-08-06) and are gated on \code{use\_icebergs}, so they
+sat unreachable for a year and fired the first time this run series turned icebergs on. Neither
+fix can prevent a blowup; they let the reporter reach \code{call blowup} and write the netCDF
+state dump, which has never happened. Offered upstream as FESOM/fesom2\#973, still
+\textcolor{red}{UNVALIDATED} because nothing has blown up since.
+
+\subsection{A ten-cycle run that stopped without failing (2026-08-12)}
+
+Extending to ten cycles, the chain stopped twice with an empty queue, no sentinel and no error.
+Both times the cause was bookkeeping, not the model. \code{fast\_ocean.yaml} was set to ten
+cycles and \code{fast\_pism.yaml} left at two decades, so PISM logged \code{Experiment over} and
+never wrote \code{pism\_chunk\_4.done}, leaving the AWI chain parked on a marker that would never
+arrive. Correcting the source did not help either, because \code{esm\_runscripts} reads the
+experiment's own copy under \code{<exp>/scripts/}; the edit had to be made there.
+
+The intermittent blowup has not recurred. Six cycles of model time, against an ismtest29 baseline
+of 19.3 and 16.4 minutes: 20.7, 38.5, 18.9, 20.9, 16.3, 15.5. Chunk 2 is the lone outlier and the
+binaries are clear of it.
+
+
+\section{State of the coupling (2026-08-12)}
 \label{sec:state}
 
 \subsection{Proven}
@@ -1082,6 +1154,20 @@ trip.
 \end{itemize}
 
 \subsection{Open}
+
+\begin{itemize}
+\item \code{lpjg\_state\_3850} does not load and never has. Either locate the offending cell,
+respin on the repaired soil map, or take it to whoever produced the June spinup. Until then
+LPJ-GUESS cold-starts, which is what every earlier \code{-is} run did anyway.
+\item The FESOM blowup is intermittent and unexplained: \code{ssh\_rhs} of 215 against a
+near-zero expectation and \code{m\_ice} collapsing from 0.478 to 0 in one step, on shallow
+six-level nodes, seen twice on the mesh-change leg and not since.
+\item \code{6d6ac3dd} and \code{a6479f6d} are \textcolor{red}{UNVALIDATED}: the reporter has
+still never run to completion, so no blowup file has ever been written.
+\item \code{lpjg\_slt\_suffix} is held at the old soil map pending one run on the repaired one.
+The other two branches point LPJ-GUESS at the repaired map already, so they are out of step.
+\end{itemize}
+
 
 \begin{itemize}
 \item \textbf{Plateau wet bias, margin dry bias.} $+72\%$ against CloudSat above 2500\,m while
@@ -1135,6 +1221,19 @@ trip.
 
 \subsection{Secondary fixes}
 
+\begin{itemize}
+\item \code{6d6ac3dd} (FESOM) --- \code{check\_blowup} builds the global-to-local map once
+instead of allocating it at five sites and never freeing it.
+\item \code{a6479f6d} (FESOM) --- \code{check\_blowup} skips icebergs owned by another rank
+rather than indexing \code{elem2d\_nodes} at 0.
+\item \code{8d4ebf4} (ocp-tool) --- \code{\_v2} output naming, the missing \code{TCO319\_DARS2}
+config, and \code{ncrename} failing loudly instead of silently emitting \code{slt} for
+\code{var43}.
+\item \code{97e5859c9} --- ICMGG and LPJ-GUESS soil suffixes split, so the ICMGG can take the
+repaired files while the soil map waits for a test.
+\end{itemize}
+
+
 \begin{center}
 \begin{tabular}{@{}lll@{}}
 \toprule
@@ -1160,6 +1259,20 @@ accumulates \code{-huge} for a whole leg. This is the same failure class as the 
 \code{-HUGE} first-send bug, arriving from the other end.
 
 \subsection{Falsified claims (kept, struck through)}
+
+\begin{itemize}
+\item \dead{The LPJ-GUESS restart works: leg 2 loaded 10610 cells with 0 failures.} Leg 2 was
+reading the state leg 1 had just written. The pooled \code{lpjg\_state\_3850} was never read by
+anything, because the staged directory carried the spinup year while \code{create\_deserializer}
+looks for the leg year. When it finally is read, it fails.
+\item \dead{The repaired \code{\_v2} soil map killed the run, so soil map and spun-up state must
+move together.} ismtest31 and ismtest33 carry the old map and die with a bit-identical value.
+The soil map was never involved.
+\item \dead{Guarding the allocation in \code{check\_blowup} introduced an OpenMP race on a
+\code{save} array.} The five \code{!\$OMP CRITICAL} regions are unnamed and therefore share one
+lock. The segfault was a second, independent out-of-bounds bug one line further on.
+\end{itemize}
+
 \label{sec:falsified}
 
 \begin{itemize}
